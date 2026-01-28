@@ -27,12 +27,16 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 
 GROUP PHOTO. Add a group photo here.
 
-- Group member 1, name, email, role
-- Group member 2, name, email, role
-- Group member 3, name, email, role
-- Group member 4, name, email, role
-- Group member 5, name, email, role
-- Group member 6, name, email, role
+| Person    | Primary Ownership                              | Secondary Ownership |
+|-----------|------------------------------------------------|---------------------|
+| Tracy     | Gameplay Vision & Architecture                 | Project Oversight   |
+| Yawen     | AI & Gameplay Implementation                   | UI / UX             |
+| Haris     | Game Flow, Level Design & Documentation        | UI / UX             |
+| Frida     | Testing & Evaluation                           | GitHub / Process    |
+| Zhang HQ  | Video & Demo                                   | Testing Support     |
+| Jinni     | Project Mgmt & Analytics                       | Architecture        |
+| Everyone  | AI & Algorithm Research                        | —                   |
+
 
 ## Project Report
 
