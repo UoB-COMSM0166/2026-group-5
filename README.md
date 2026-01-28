@@ -27,15 +27,15 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 
 GROUP PHOTO. Add a group photo here.
 
-| Person    | Primary Ownership                              | Secondary Ownership |
-|-----------|------------------------------------------------|---------------------|
-| Tracy     | Gameplay Vision & Architecture                 | Project Oversight   |
-| Yawen     | AI & Gameplay Implementation                   | UI / UX             |
-| Haris     | Game Flow, Level Design & Documentation        | UI / UX             |
-| Frida     | Testing & Evaluation                           | GitHub / Process    |
-| Zhang HQ  | Video & Demo                                   | Testing Support     |
-| Jinni     | Project Mgmt & Analytics                       | Architecture        |
-| Everyone  | AI & Algorithm Research                        | —                   |
+| Person         | Primary Ownership                               | Secondary Ownership |
+|----------------|-------------------------------------------------|---------------------|
+| Tracy Cui      | Gameplay Vision & Architecture                  | Project Oversight   |
+| Yawen Zhang    | AI & Gameplay Implementation                    | UI / UX             |
+| Haris Kovac    | Game Flow, Level Design & Documentation         | UI / UX             |
+| Frida Chen     | Testing & Evaluation                            | GitHub / Process    |
+| Hanqing Zhang  | Video & Demo                                    | Testing Support     |
+| Jinni Li       | Project Mgmt & Analytics                        | Architecture        |
+| Everyone       | AI & Algorithm Research                         | —                   |
 
 
 ## Project Report
