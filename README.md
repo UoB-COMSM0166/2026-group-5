@@ -27,16 +27,15 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 
 GROUP PHOTO. Add a group photo here.
 
-| Person        | Email                     | GitHub                    | Primary Ownership                       | Secondary Ownership |
-| ------------- | ------------------------- | ------------------------- | --------------------------------------  | ------------------- |
-| Tracy Cui     | sk25619@bristol.ac.uk     | @Tracy-fuyao              | Gameplay Vision & Architecture          | Project Oversight   |
-| Yawen Zhang   | vm25514@bristol.ac.uk     | @joan9yawen-source        | AI & Gameplay Implementation            | UI / UX             |
-| Haris Kovac   | yw25220@bristol.ac.uk     | @hariskovac               | Game Flow, Level Design & Documentation | UI / UX             |
-| Frida Chen    | ba25966@bristol.ac.uk     | @fridachen1127            | Testing & Evaluation                    | GitHub / Process    |
-| Hanqing Zhang | sv25099@bristol.ac.uk     | @zhq1374547005-UOB        | Video & Demo                            | Testing Support     |
-| Jinni Li      | ra25313@bristol.ac.uk     | @Jinni-Li                 | Project Mgmt & Analytics                | Architecture        |
-| Everyone      | —                         | —                         | AI & Algorithm Research                 | —                   |
-
+| Person        | Email                    | GitHub                    | Primary Ownership                         | Secondary Ownership |
+| ------------- | ------------------------ | ------------------------- | ----------------------------------------  | ------------------- |
+| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Gameplay Vision & Architecture            | Project Oversight   |
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | AI & Gameplay Implementation              | UI / UX             |
+| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Game Flow, Level Design & Documentation   | UI / UX             |
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Testing & Evaluation                      | GitHub / Process    |
+| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Video & Demo                              | Testing Support     |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Project Mgmt & Analytics                  | Architecture        |
+| Everyone      | —                        | —                         | AI & Algorithm Research                   | —                   |
 
 
 ## Project Report
