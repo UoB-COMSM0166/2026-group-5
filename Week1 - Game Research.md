@@ -486,16 +486,3 @@
     
 
 ---
-
-**Source:** faithful restructuring of the provided document
-
-如果你下一步需要：
-
-- 把这些“角度”统一成**分析模板**
-    
-- 或压缩成**一页式 research brief**
-    
-- 或改写成**论文 / pitch deck 用版本**
-    
-
-可以直接说用途，我按目标再帮你精修一轮。
