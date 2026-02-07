@@ -1,4 +1,4 @@
-# Paper Prototype 
+# Paper Prototype 01
 ## Prototype Video
 [![Game Prototype by Group 5](https://img.youtube.com/vi/drjMkGWVmFo/hqdefault.jpg)]  
 (https://www.youtube.com/watch?v=drjMkGWVmFo](https://www.youtube.com/watch?v=drjMkGWVmFo)
