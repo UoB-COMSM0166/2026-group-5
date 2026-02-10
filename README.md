@@ -27,15 +27,14 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 
 ![Group pic](docs/images/group_pic.jpeg)
 
-| Person        | Email                    | GitHub                    | Primary Ownership                         | Secondary Ownership               |
-| ------------- | ------------------------ | ------------------------- | ----------------------------------------- | --------------------------------- |
-| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture & Integration                | Project Oversight                 |
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     |                                   |
-| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation                             | Game Flow, Level Design & UI / UX |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Testing                                   | GitHub / Process & Documentation  |
-| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | Testing Support                   |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Project Mgmt & Analytics                  | Architecture & UI/UX              |
-| Everyone      | —                        | —                         | AI & Algorithm Research                   | —                                 |
+| Person        | Email                    | GitHub                    | Roles                                     |
+| ------------- | ------------------------ | ------------------------- | ----------------------------------------- | 
+| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture & Integration                | 
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     | 
+| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | 
+| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation                             |
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Documentation, Github & Due Diligence     |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Project Mgmt & Analytics                  | 
 
 
 ## Project Report
