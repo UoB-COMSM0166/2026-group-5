@@ -34,31 +34,33 @@
 
 # Game Idea: Portal Bomber
 
+![Bomberman Gameplay](docs/images/bomberman.png)
+
 **Author**: Haris Kovac
 
 **Genre:** Local 2-Player Competitive Action Bomberman (with Portal Twist)
 
-**Core Concept:** Portal Bomber is an intense 2-player local multiplayer arena battler where rivals drop bombs to clear paths, snag power-ups, rack up points by smashing soft blocks and enemies, and try to eliminate each other before a 2-minute timer expires. Kicking bombs and placing portals add chaotic strategy—teleport yourself for escapes, funnel enemies into kill zones, or redirect blasts at your opponent—while procedural maps and escalating enemies ensure fair, replayable showdowns.
+**Core Concept:** Portal Bomber is an intense 2-player local multiplayer arena battler where rivals drop bombs to clear paths, snag power-ups, rack up points by smashing blocks and enemies, and try to eliminate each other before time runs out. Kicking bombs and placing portals add chaotic strategy—teleport yourself for escapes, funnel enemies into kill zones, or redirect blasts at your opponent—while procedural maps and escalating enemies ensure fair, replayable showdowns.
 
 **Gameplay Elements:**
 
 - **Movement, Bombs & Kicking Mechanics**  
   - P1: WASD to move, Space to drop bombs (starts with 2 active bombs, range 2 tiles), C to place portals (up to 2; third replaces oldest)  
   - P2: Arrows to move, Right Shift to drop, Right Ctrl for portals  
-  - Run into your dropped bomb to kick it—rolls until hitting enemy, player, or wall  
-  - Destroy soft blocks (10 points) to reveal paths/power-ups; avoid enemy/bomb hits or die instantly  
+  - Run into your dropped bomb to kick it, sending it rolling until it hits an enemy, player, or wall  
+  - Destroy soft blocks to earn points and reveal paths/power-ups; avoid enemy/bomb hits or die instantly  
 
 - **Portals, Enemies & Procedural Arena**  
-  - Portals teleport players, enemies, and kicked bombs instantly (enemies/bombs can use them too for deadly surprises)  
+  - Portals teleport players, enemies, and kicked bombs instantly (enemies/bombs can use portals too for deadly surprises)  
   - Procedural map generation places soft blocks fairly for both players; enemies spawn at visible safe spots with increasing frequency (hard mode: more enemies, fewer items)  
-  - Bat (fast random: 50 pts), Ghost (phases through blocks, slow chases: 75 pts), Teleporter (3 lives, directional with teleports on bomb hit: 100 pts)  
+  - Bat (fast, random movement), Ghost (slow, but phases through blocks and chases the nearest player), Teleporter (3 lives, teleports each time it's hit)  
 
 - **Power-Ups, Scoring & Win Conditions**  
-  - 10% drop chance from blocks/enemies: Fire (+blast range), Bomb-Up (+active bombs), Skate (+speed), Invincibility (X-sec immunity)  
-  - Score from enemies/blocks; instant win by killing opponent, else highest score after timer  
-  - Persistent local leaderboard (localStorage); MVP: basic map/power-ups/timer/score; full: enemies/portals/UI/keys display  
+  - 10% drop chance from blocks/enemies: Fire (increased blast range), Bomb-Up (more active bombs), Skate (speed boost), Invincibility (temporary immunity)  
+  - Increase your score by destroying enemies/blocks; instant win by killing opponent, else highest score after timer  
+  - Persistent local leaderboard (localStorage)
 
 **Themes and Appeal:**  
-- Frenetic chaos and mind games from portals turning defense into offense  
+- Frantic chaos and mind games from portals turning defense into offense  
 - Pure local multiplayer rivalry with fair procedural maps and escalating tension  
-- Addictive "one more round" replayability via power-up synergies, enemy variety, leaderboards, and hard mode challenges
+- Addictive "one more round" replayability via power-up synergies, enemy variety, leaderboards, and hard mode
