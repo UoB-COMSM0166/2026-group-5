@@ -12,7 +12,7 @@ Here are the references you can read:
 
 **Everything’s in main:**  
 The simplest way is to upload everything to main, which was adopted by 90% of groups since it’s a very small project. Individual contributions can be seen through insights and actions.
-
+ 
 **Concise branches and trade-off:**  
 Another way is to create concise branches based on task types, following the Conventional Commits convention. Having too many branches or long-lived branches is also a waste. 
 Once we choose this approach, we need to learn skills to avoid conflicts when multiple people want to modify the same file, for example the README in the main branch. Meanwhile, it can be risky if another member wants to add something to a branch you created. 
