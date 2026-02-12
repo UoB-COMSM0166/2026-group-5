@@ -10,9 +10,13 @@ Here are the references you can read:
 
 ## Branches
 
-**Everything’s in main:** The simplest way is to upload everything to main, which was adopted by 90% of groups since it’s a very small project. If someone is worrying that profs cannot see your contributions, just have a look at insights and actions which will be checked by profs. One thing is clear: they are not creepy as you thought.
+**Everything’s in main:**  
+The simplest way is to upload everything to main, which was adopted by 90% of groups since it’s a very small project. Individual contributions can be seen through insights and actions.
 
-**Concise branches and trade-off:** Another way is to create concise branches based on certain types, aka conventional commits. Professionally, in any repo, programmers won’t name branches with personal first names. Massive branches are also a waste. Once we choose this way, we need to learn skills to avoid conflicts when people want to modify the same document, i.e. README in main branches. Meanwhile, it will be risky if another member wants to add something in a branch created by you. Some people suggest this will let us get higher marks. It is, but most groups use the simplest way and still got even the highest mark. That’s basically the trade-off. In my perspective, interactions with other groups is also a great way to showcase our collaboration skills. 
+**Concise branches and trade-off:**  
+Another way is to create concise branches based on task types, following the Conventional Commits convention. Having too many branches or long-lived branches is also a waste. 
+Once we choose this approach, we need to learn skills to avoid conflicts when multiple people want to modify the same file, for example the README in the main branch. Meanwhile, it can be risky if another member wants to add something to a branch you created. 
+Some people suggest that using branches and pull requests can demonstrate more structured collaboration and potentially lead to higher marks. That may be true in some cases, but many groups achieve excellent results with simpler approaches as well. Ultimately, it's a trade-off between added safety and workflow simplicity. From my perspective, actively interacting and sharing ideas with other groups is also an excellent way to showcase our collaboration skills.
 
 ## Commits
 
