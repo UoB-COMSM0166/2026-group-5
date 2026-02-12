@@ -18,6 +18,6 @@ Here are the references you can read:
 
 Sometimes, automatically-generated descriptions are enough. However, if we want to do more complex features, we need to use description formats. Here are 2 quick screenshots for reference: 
 
-![commit example 1](docs/images/commit-example-1.jpg) ![commit example 2](docs/images/commit-example-2.jpg)
+<img src="images/commit-example-1.jpg" width="500" alt="commit example 1">
 
-
+<img src="images/commit-example-2.jpg" alt="commit example 2">
