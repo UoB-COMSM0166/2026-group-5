@@ -33,8 +33,8 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 | Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     | 
 | Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | 
 | Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation                             |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Documentation, Github & Due Diligence     |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Project Mgmt & Analytics                  | 
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Github & Due Diligence        |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Project Mgmt                              | 
 
 
 ## Project Report
