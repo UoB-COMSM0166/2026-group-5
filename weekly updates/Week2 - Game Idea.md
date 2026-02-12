@@ -1,6 +1,8 @@
 # Game Idea: Invisible Inc.
 
-**Author**: Tracy Cui
+![invisble_inc](../docs/images/invisible_inc.jpg)
+
+**Author:** Tracy Cui
 
 **Genre:** Turn-Based Tactical Stealth Game (with Roguelike Elements)
 
@@ -34,9 +36,9 @@
 
 # Game Idea: Portal Bomber
 
-![Bomberman Gameplay](docs/images/bomberman.png)
+![Bomberman Gameplay](../docs/images/bomberman.png)
 
-**Author**: Haris Kovac
+**Author:** Haris Kovac
 
 **Genre:** Local 2-Player Competitive Action Bomberman (with Portal Twist)
 
