@@ -13,9 +13,9 @@ You will be developing your game using [P5.js](https://p5js.org) a javascript li
 - [P5.js tutorials](https://p5js.org/tutorials/) 
 - [Coding Train P5.js](https://thecodingtrain.com/tracks/code-programming-with-p5-js) course - go here for enthusiastic video tutorials from Dan Shiffman (recommended!)
 
-## Your Game (change to title of your game)
+## Escape: Oh Dear Dragon!
 
-STRAPLINE. Add an exciting one sentence description of your game here.
+Sneak, sass, and save the princess in a neon-soaked castle. This plan has *zero* flaws.
 
 IMAGE. Add an image of your game here, keep this updated with a snapshot of your latest development.
 
@@ -42,7 +42,15 @@ VIDEO. Include a demo video of your game here (you don't have to wait until the 
 ### Introduction
 
 - 5% ~250 words 
-- Describe your game, what is based on, what makes it novel? (what's the "twist"?) 
+- Describe your game, what is based on, what makes it novel? (what's the "twist"?)
+
+**Escape: Oh Dear Dragon!** is a 2D top-down stealth game with a neon-cyberpunk castle aesthetic. Our brave hero sneaks through the castle's many chambers, each packed with patrolling guards, using stealth and subterfuge to reach the next level, and hopefully find the princess. Oh and portals...did we mention the portals? Yeah, we've got those too!
+
+Our game is inspired by Invisible Inc. and the Thief and Dishonored series for their stealth-focused gameplay and emphasis on problem solving over direct confrontation. Players must study patrol routes and sneak through the castle, avoiding being seen (or heard), unless they want to become a snack for the stylish, sunglasses-wearing dragon. 
+
+The twist mechanic was inspired by Valve's Portal series. Players can place linked portals to quickly and strategically navigate the castle's interior, bypass dangerous chokepoints, or recover from risky plays. This mechanic is built directly into our game's core stealth navigation, creating constant tactical choices between planning safe routes and improvising under pressure. 
+
+The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the kingdom's chaos may be an unintended consequence of one unbelievably un-self-aware hero.
 
 ### Requirements 
 
