@@ -1,5 +1,7 @@
 # Painting App
 
+Author: Frida
+
 A small p5.js drawing playground with two ways to create portraits:
 
 - Freehand drawing with brushes.
