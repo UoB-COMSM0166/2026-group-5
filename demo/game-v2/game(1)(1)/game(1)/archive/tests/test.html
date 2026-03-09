@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Map Config</title>
+</head>
+<body>
+    <h1>Map Config Test</h1>
+    <div id="output"></div>
+    
+    <script src="map1.js"></script>
+    <script>
+        // Test config loading.
+        if (typeof Map1Config !== 'undefined') {
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <h2>Map1Config loaded successfully!</h2>
+                <h3>Player Config:</h3>
+                <pre>${JSON.stringify(Map1Config.player, null, 2)}</pre>
+                <h3>NPC Count: ${Map1Config.npcs.length}</h3>
+                <h3>First NPC waypoints:</h3>
+                <pre>${JSON.stringify(Map1Config.npcs[0].waypoints, null, 2)}</pre>
+                <h3>Map Settings:</h3>
+                <pre>${JSON.stringify(Map1Config.settings, null, 2)}</pre>
+            `;
+        } else {
+            document.getElementById('output').innerHTML = '<p style="color: red;">Error: Map1Config not found!</p>';
+        }
+    </script>
+</body>
+</html>
