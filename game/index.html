@@ -1,15 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game</title>
-    <link rel="stylesheet" href="style.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/p5@1.11.10/lib/p5.min.js"></script>
-    <!-- <script defer src="https://cdn.jsdelivr.net/npm/p5@1.0.1/lib/addons/p5.sound.min.js"></script> -->
-    <script defer src="sketch.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- [Jinni][NEW] Added UI/screen fonts for menu and overlay presentation -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <title>Tiled Map Renderer (map2)</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#1a1a2e;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding:20px;
+    }
+    h1 {
+      color:#eee;
+      margin-bottom:20px;
+      text-shadow: 0 0 10px rgba(100,200,255,0.5);
+      text-align:center;
+    }
+    #game-container {
+      position:relative;
+      border:3px solid #4a4a6a;
+      border-radius:8px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      background:#0f0f1a;
+      overflow:hidden;
+    }
+    canvas {
+      display:block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background:#11161c;
+    }
+    #loading {
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:18px;
+      background: rgba(0,0,0,0.25);
+      z-index:2;
+    }
+    #map-error {
+      display:none;
+      margin-top:12px;
+      color:#ffb4b4;
+      font-size:14px;
+      text-align:center;
+    }
+    .controls {
+      margin-top:15px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    button {
+      padding:8px 16px;
+      background:#4a4a6a;
+      color:#fff;
+      border:none;
+      border-radius:4px;
+      cursor:pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background:#6a6a8a; }
+    #info {
+      margin-top:15px;
+      color:#888;
+      font-size:14px;
+      text-align:center;
+      line-height:1.8;
+      min-height:72px;
+    }
+    #debug-info {
+      margin-top:10px;
+      color:#666;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size:12px;
+      text-align:center;
+    }
+  </style>
 </head>
 <body>
-    <div id="game"></div>
+  <h1>🗺️ Tiled Map Renderer (map2)</h1>
+
+  <div id="game-container">
+    <canvas id="mapCanvas"></canvas>
+    <div id="loading">loading…</div>
+  </div>
+
+  <div class="controls">
+    <button id="zoomInBtn">Zoom In +</button>
+    <button id="zoomOutBtn">Zoom Out -</button>
+    <button id="resetBtn">Reset View</button>
+    <button id="gridBtn">Toggle Grid</button>
+    <button id="collisionBtn">Toggle Collision</button>
+  </div>
+
+  <div id="info">
+    <p>
+      Map Size: <span id="map-size">-</span> |
+      Tile Size: <span id="tile-size">-</span> |
+      Doors: <span id="door-count">-</span> |
+      Chests: <span id="chest-count">-</span> |
+      NPCs: <span id="npc-count">-</span>
+    </p>
+  </div>
+  <div id="debug-info"></div>
+  <div id="map-error"></div>
+
+  <script>
+    window.AUTO_ATTACH_MAP_SYSTEMS = true;
+    window.MAP_RENDERER_OPTIONS = {
+      mapName: 'map2',
+      scale: 2,
+      tilesetBasePath: './tilesets/'
+    };
+  </script>
+
+  <script src="basic%20test2.js"></script>
+  <script>
+    window.TileMaps = window.TileMaps || {};
+    if (!window.TileMaps['basic test'] && window.TileMaps['map2']) {
+      window.TileMaps['basic test'] = window.TileMaps['map2'];
+    }
+  </script>
+  <script src="./renderer.js"></script>
+  <script src="./collision.js"></script>
+  <script src="./entities.js"></script>
+  <script src="./doorSystem.js"></script>
+  <script src="./doorlineSystem.js"></script>
+  <script src="./boxSystem.js"></script>
+
+  <!-- [Jinni][EDIT] game.js now loads as an ES module because it imports external screen/audio systems -->
+  <script type="module" src="./game.js"></script>
 </body>
 </html>
