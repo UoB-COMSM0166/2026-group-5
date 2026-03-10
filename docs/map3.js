@@ -1,0 +1,363 @@
+(function () {
+  const map3_array = [
+    [1, 9, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 9, 9, 9, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 5, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 2, 2, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 2, 2, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 8, 8, 0, 0, 0, 9, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 3, 0, 0, 0, 0, 0, 3, 0, 0, 1, 0, 0, 0, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 4, 4, 4, 4, 4, 1],
+    [1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 4, 4, 4, 4, 4, 4, 1],
+    [1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 9, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 8, 8, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 6, 2, 2, 0, 0, 0, 0, 1],
+    [1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 0, 9, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 6, 2, 2, 0, 0, 0, 0, 1],
+    [1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 0, 9, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 8, 8, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 7, 7, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 7, 7, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 7, 7, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 1],
+    [1, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 5, 5, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 2, 2, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1],
+    [1, 0, 0, 7, 7, 7, 7, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1],
+    [1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1],
+    [1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 5, 5, 0, 0, 0, 5, 5, 0, 0, 0, 5, 5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 1]
+  ];
+
+  const mapWidth = 60;
+  const mapHeight = 40;
+  const normalizedMatrix = map3_array
+    .slice(0, mapHeight)
+    .map((row) => {
+      if (row.length >= mapWidth) {
+        return row.slice(0, mapWidth);
+      }
+      return row.concat(Array(mapWidth - row.length).fill(row[row.length - 1] ?? 1));
+    });
+
+  const runtimeMatrix = normalizedMatrix.map((row) => row.slice());
+  const noCollisionNineTiles = [
+    { x: 34, y: 24 },
+    { x: 35, y: 24 },
+    { x: 35, y: 25 },
+    { x: 34, y: 25 }
+  ];
+
+  noCollisionNineTiles.forEach(({ x, y }) => {
+    const rowIndex = y - 1;
+    const colIndex = x - 1;
+    if (runtimeMatrix[rowIndex] && typeof runtimeMatrix[rowIndex][colIndex] !== 'undefined') {
+      runtimeMatrix[rowIndex][colIndex] = 9;
+    }
+  });
+
+  const collisionMatrix = runtimeMatrix.map((row) => row.map((value) => (value === 0 || value === 9) ? 0 : 1));
+  const tileBaseGid = 100;
+  const tileGidMap = {
+    0: 100,
+    1: 101,
+    2: 102,
+    3: 103,
+    4: 104,
+    5: 105,
+    6: 106,
+    7: 107,
+    8: 108,
+    9: 109
+  };
+  const tileLayerData = runtimeMatrix.flatMap((row) => row.map((value) => tileGidMap[value] || 48));
+  const tileColors = {
+    0: '#ffffff',
+    1: '#000000',
+    2: '#2f80ed',
+    3: '#ff8a3d',
+    4: '#d98b2b',
+    5: '#33c26b',
+    6: '#21b7a8',
+    7: '#ff66c4',
+    8: '#8b5a2b',
+    9: '#f2c94c'
+  };
+
+  function createColorTileDataUrl(color, label) {
+    if (typeof document === 'undefined') {
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, 16, 16);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, 15, 15);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.fillRect(1, 10, 14, 5);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 9px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(label), 8, 12.5);
+
+    return canvas.toDataURL('image/png');
+  }
+
+  const customTilesetConfig = Object.fromEntries(
+    Object.entries(tileColors).map(([value, color]) => {
+      const firstgid = tileBaseGid + Number(value);
+      return [firstgid, {
+        name: `map3_color_${value}`,
+        image: createColorTileDataUrl(color, value),
+        tileWidth: 16,
+        tileHeight: 16,
+        mapTileWidth: 16,
+        mapTileHeight: 16,
+        columns: 1,
+        totalTiles: 1
+      }];
+    })
+  );
+
+  globalThis.CustomTilesetConfig = {
+    ...(globalThis.CustomTilesetConfig || {}),
+    ...customTilesetConfig
+  };
+
+  const map3TileData = {
+    compressionlevel: -1,
+    height: mapHeight,
+    infinite: false,
+    layers: [
+      {
+        data: tileLayerData,
+        height: mapHeight,
+        id: 1,
+        name: 'matrix_colors',
+        opacity: 1,
+        type: 'tilelayer',
+        visible: true,
+        width: mapWidth,
+        x: 0,
+        y: 0
+      }
+    ],
+    nextlayerid: 2,
+    nextobjectid: 1,
+    orientation: 'orthogonal',
+    renderorder: 'right-down',
+    tiledversion: '1.11.2',
+    tileheight: 16,
+    tilesets: Object.keys(tileColors).map((value) => ({
+      firstgid: tileBaseGid + Number(value),
+      source: `generated/map3_color_${value}.tsx`
+    })),
+    tilewidth: 16,
+    type: 'map',
+    version: '1.10',
+    width: mapWidth
+  };
+
+  const Map3Config = {
+    player: {
+      w: 10,
+      h: 14,
+      speed: 100,
+      sprint: 1.5,
+      stamina: 80,
+      staminaMax: 80,
+      staminaDrain: 30,
+      staminaRecover: 15,
+      staminaRecoverDelay: 3,
+      color: '#33ff66'
+    },
+    npcs: [
+      {
+        id: 'npc1',
+        x: 7,
+        y: 6,
+        w: 10,
+        h: 14,
+        speedPatrol: 55,
+        speedChase: 82,
+        state: 'PATROL',
+        facing: 'RIGHT',
+        wpIndex: 0,
+        waypoints: [
+          { x: 7, y: 6 },
+          { x: 7, y: 32 },
+          { x: 17, y: 32 },
+          { x: 7, y: 32 },
+          { x: 7, y: 6 }
+        ],
+        lastSeenX: 0,
+        lastSeenY: 0,
+        searchTimer: 0,
+        loseSight: 0,
+        alert: 0,
+        searchTargetX: 0,
+        searchTargetY: 0,
+        searchWanderTimer: 0,
+        searchMarker: null
+      },
+      {
+        id: 'npc2',
+        x: 14,
+        y: 10,
+        w: 10,
+        h: 14,
+        speedPatrol: 55,
+        speedChase: 82,
+        state: 'PATROL',
+        facing: 'RIGHT',
+        wpIndex: 0,
+        waypoints: [
+          { x: 14, y: 10 },
+          { x: 27, y: 10 },
+          { x: 27, y: 18 },
+          { x: 14, y: 18 },
+          { x: 14, y: 10 }
+        ],
+        lastSeenX: 0,
+        lastSeenY: 0,
+        searchTimer: 0,
+        loseSight: 0,
+        alert: 0,
+        searchTargetX: 0,
+        searchTargetY: 0,
+        searchWanderTimer: 0,
+        searchMarker: null
+      },
+      {
+        id: 'npc3',
+        x: 31,
+        y: 7,
+        w: 10,
+        h: 14,
+        speedPatrol: 55,
+        speedChase: 82,
+        state: 'PATROL',
+        facing: 'RIGHT',
+        wpIndex: 0,
+        waypoints: [
+          { x: 31, y: 6 },
+          { x: 36, y: 7 },
+          { x: 36, y: 22 },
+          { x: 31, y: 22 },
+          { x: 31, y: 6 }
+        ],
+        lastSeenX: 0,
+        lastSeenY: 0,
+        searchTimer: 0,
+        loseSight: 0,
+        alert: 0,
+        searchTargetX: 0,
+        searchTargetY: 0,
+        searchWanderTimer: 0,
+        searchMarker: null
+      },
+      {
+        id: 'npc4',
+        x: 43,
+        y: 38,
+        w: 10,
+        h: 14,
+        speedPatrol: 55,
+        speedChase: 82,
+        state: 'PATROL',
+        facing: 'RIGHT',
+        wpIndex: 0,
+        waypoints: [
+          { x: 43, y: 38 },
+          { x: 54, y: 38 },
+          { x: 54, y: 23 },
+          { x: 54, y: 38 },
+          { x: 43, y: 38 }
+        ],
+        lastSeenX: 0,
+        lastSeenY: 0,
+        searchTimer: 0,
+        loseSight: 0,
+        alert: 0,
+        searchTargetX: 0,
+        searchTargetY: 0,
+        searchWanderTimer: 0,
+        searchMarker: null
+      },
+      {
+        id: 'npc5',
+        x: 21,
+        y: 26,
+        w: 10,
+        h: 14,
+        speedPatrol: 55,
+        speedChase: 82,
+        state: 'PATROL',
+        facing: 'RIGHT',
+        wpIndex: 0,
+        waypoints: [
+          { x: 21, y: 26 },
+          { x: 43, y: 26 },
+          { x: 21, y: 26 }
+        ],
+        lastSeenX: 0,
+        lastSeenY: 0,
+        searchTimer: 0,
+        loseSight: 0,
+        alert: 0,
+        searchTargetX: 0,
+        searchTargetY: 0,
+        searchWanderTimer: 0,
+        searchMarker: null
+      }
+    ],
+    entities: {
+      doors: [],
+      chests: []
+    },
+    settings: {
+      baseTile: 16,
+      visionRange: 120,
+      searchDuration: 4,
+      searchRadius: 55,
+      footstepStride: 6,
+      footstepLifetime: 3500,
+      maxFootsteps: 60
+    },
+    collisionMatrix,
+    defaultSpawn: { x: 4, y: 1 }
+  };
+
+  if (typeof onTileMapLoaded === 'undefined') {
+    globalThis.TileMaps = globalThis.TileMaps || {};
+    globalThis.TileMaps.map3_generated_colormap = map3TileData;
+  } else {
+    onTileMapLoaded('map3_generated_colormap', map3TileData);
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Map3Config;
+  } else {
+    window.Map3Config = Map3Config;
+  }
+})();
