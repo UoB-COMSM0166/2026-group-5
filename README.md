@@ -1,6 +1,6 @@
 # 2026-group-5
 
-🎮 [Click this link to play our game.](https://uob-comsm0166.github.io/2026-group-5/demo/game-v2/game(1)(1)/game(1)/index.html)   
+🎮 [Click this link to play our game.](https://uob-comsm0166.github.io/2026-group-1/)   
 🎬 [Click this link to watch our game video.]()   
 📋 [This is the link to our Kanban board.]()
 
