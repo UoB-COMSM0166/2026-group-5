@@ -1,48 +1,26 @@
 # 2026-group-5
-2026 COMSM0166 group 5
 
-# COMSM0166 Project Template
-A project template for the Software Engineering Discipline and Practice module (COMSM0166).
+🎮 [Click this link to play our game.](https://uob-comsm0166.github.io/2026-group-5/index.html)   
+🎬 [Click this link to watch our game video.]()   
+📋 [This is the link to our Kanban board.]()
 
-## Info
+---
 
-This is the template for your group project repo/report. We'll be setting up your repo and assigning you to it after the group forming activity. You can delete this info section, but please keep the rest of the repo structure intact.
+# Table of Contents
 
-You will be developing your game using [P5.js](https://p5js.org) a javascript library that provides you will all the tools you need to make your game. However, we won't be teaching you javascript, this is a chance for you and your team to learn a (friendly) new language and framework quickly, something you will almost certainly have to do with your summer project and in future. There is a lot of documentation online, you can start with:
+1. [Introduction](#1-introduction)
+2. [Development Team](#2-development-team)
+3. [Requirements](#3-requirements)
+4. [Design](#4-design)
+5. [Implementation](#5-implementation)
+6. [Evaluation](#6-evaluation)
+7. [Process](#7-process)
+8. [Conclusion](#8-conclusion)
+9. [Contribution Statement](#9-contribution-statement)
 
-- [P5.js tutorials](https://p5js.org/tutorials/) 
-- [Coding Train P5.js](https://thecodingtrain.com/tracks/code-programming-with-p5-js) course - go here for enthusiastic video tutorials from Dan Shiffman (recommended!)
+---
 
-## Escape: Oh Dear Dragon!
-
-Sneak, sass, and save the princess in a neon-soaked castle. This plan has *zero* flaws.
-
-IMAGE. Add an image of your game here, keep this updated with a snapshot of your latest development.
-
-LINK. Add a link here to your deployed game, you can also make the image above link to your game if you wish. Your game lives in the [/docs](/docs) folder, and is published using Github pages. 
-
-VIDEO. Include a demo video of your game here (you don't have to wait until the end, you can insert a work in progress video)
-
-## Your Group
-
-![Group pic](docs/images/group_pic.jpeg)
-
-| Person        | Email                    | GitHub                    | Roles                                     |
-| ------------- | ------------------------ | ------------------------- | ----------------------------------------- | 
-| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture & Integration                | 
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     | 
-| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | 
-| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation & Scrum Master              |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Github & Research             |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | UI/UX, Maps, Testing                      | 
-
-
-## Project Report
-
-### Introduction
-
-- 5% ~250 words 
-- Describe your game, what is based on, what makes it novel? (what's the "twist"?)
+# 1. Introduction
 
 **Escape: Oh Dear Dragon!** is a 2D top-down stealth game with a neon-cyberpunk castle aesthetic. Our brave hero sneaks through the castle's many chambers, each packed with patrolling guards, using stealth and subterfuge to reach the next level, and hopefully find the princess. Oh and portals...did we mention the portals? Yeah, we've got those too!
 
@@ -52,45 +30,85 @@ The twist mechanic was inspired by Valve's Portal series. Players can place link
 
 The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the kingdom's chaos may be an unintended consequence of one unbelievably un-self-aware hero.
 
-### Requirements 
+
+# 2. Development Team
+
+<img src="docs/images/group_pic.jpeg" alt="Group pic" width="900" height="800">
+
+| Person        | Email                    | GitHub                    | Roles                                     |
+| ------------- | ------------------------ | ------------------------- | ----------------------------------------- | 
+| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture & Integration                | 
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     | 
+| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | 
+| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation & Scrum Master              |
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Github & Research             |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | UI/UX, Testing                            | 
+
+
+
+# 3. Requirements 
 
 - 15% ~750 words
-- Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories. 
+- Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
 
-### Design
+
+## Stakeholders
+
+The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
+
+<img src="docs/images/onion_model.jpg" alt="Onion Model" width="600" height="600">
+
+- Core Development Team
+  - Design, implementation, testing, evaluation and documentation
+- End-Users & Community
+  - Classmates & peer reviewers: provide usability and feature feedback to guide iterations
+  - Online players via GitHub Pages: use the deployed version and report issues or suggestions
+- Course Staff
+  - Instructors & Teaching Assistants: define requirements and grading criteria
+
+
+
+# 4. Design
 
 - 15% ~750 words 
-- System architecture. Class diagrams, behavioural diagrams. 
+- System architecture. Class diagrams, behavioural diagrams.
 
-### Implementation
+
+
+# 5. Implementation
 
 - 15% ~750 words
 
 - Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
 
-### Evaluation
+# 6. Evaluation
 
-- 15% ~750 words
+## Qualitative
 
-- One qualitative evaluation (of your choice) 
+<img src="docs/images/think_aloud.jpg" alt="think aloud mindmap" width="900" height="800">
 
-- One quantitative evaluation (of your choice) 
+Changes made:
 
-- Description of how code was tested. 
 
-### Process 
+## Quantitative 
+
+
+
+# 7. Process 
 
 - 15% ~750 words
 
 - Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
 
-### Conclusion
+
+
+# 8. Conclusion
 
 - 10% ~500 words
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
-### Contribution Statement
+# 9. Contribution Statement
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
 

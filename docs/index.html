@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Demo</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background:#1a1a2e;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding:20px;
+      color:#eee;
+    }
+    h1 { margin-bottom:16px; text-shadow:0 0 10px rgba(100,200,255,.45); }
+    #level-select {
+      position:fixed;
+      inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:rgba(26, 26, 46, 0.95); backdrop-filter:blur(4px); z-index:1000;
+    }
+    .level-grid {
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; max-width:800px; width:100%;
+    }
+    .level-card {
+      background:#0f0f1a; border:2px solid #4a4a6a; border-radius:12px; padding:24px; text-align:center;
+      cursor:pointer; transition:all 0.2s; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .level-card:hover { transform:translateY(-4px); border-color:#6a6a8a; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+    .level-card h2 { font-size:24px; margin-bottom:8px; color:#fff; }
+    .level-card p { font-size:14px; color:#aaa; margin-bottom:16px; }
+    .level-card .play-btn {
+      background:#2563eb; color:#fff; border:none; border-radius:6px; padding:10px 20px; font-weight:600;
+      cursor:pointer; transition:background 0.2s;
+    }
+    .level-card .play-btn:hover { background:#3b82f6; }
+    .level-card.disabled {
+      opacity:0.5; cursor:not-allowed;
+    }
+    .level-card.disabled:hover {
+      transform:none; border-color:#4a4a6a; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    }
+    .level-card.disabled .play-btn {
+      background:#4a4a6a; cursor:not-allowed;
+    }
+    .level-card.disabled .play-btn:hover {
+      background:#4a4a6a;
+    }
+    #game-container {
+      position:relative;
+      border:3px solid #4a4a6a;
+      border-radius:8px;
+      box-shadow:0 0 30px rgba(0,0,0,.5);
+      background:#0f0f1a;
+      overflow:hidden;
+      display:none;
+    }
+    canvas { display:block; image-rendering: pixelated; image-rendering: crisp-edges; }
+    #loading {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:18px; background:rgba(0,0,0,.25);
+    }
+    .controls { margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    button {
+      padding:8px 16px; background:#4a4a6a; color:#fff; border:none; border-radius:4px; cursor:pointer;
+    }
+    button:hover { background:#6a6a8a; }
+    #info, #debug-info { margin-top:10px; font-size:14px; color:#aaa; text-align:center; }
+    #debug-info { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; color:#8f98aa; }
+  </style>
+</head>
+<body>
+  <div id="level-select">
+    <h1 style="margin-bottom:32px;">Select Level</h1>
+    <div class="level-grid">
+      <div class="level-card" data-level="1">
+        <h2>Level 1</h2>
+        <p>Original map</p>
+        <button class="play-btn">Start Game</button>
+      </div>
+      <div class="level-card" data-level="2">
+        <h2>Level 2</h2>
+        <p>Colorized collision map</p>
+        <button class="play-btn">Start Game</button>
+      </div>
+      <div class="level-card" data-level="3">
+        <h2>Level 3</h2>
+        <p>Generated from matrix data</p>
+        <button class="play-btn">Start Game</button>
+      </div>
+    </div>
+  </div>
+
+  <h1 id="game-title" style="display:none;">Game Demo</h1>
+  <div id="game-container">
+    <canvas id="mapCanvas"></canvas>
+    <div id="loading">loading…</div>
+  </div>
+  <div class="controls" style="display:none;">
+    <button id="zoomInBtn">Zoom In +</button>
+    <button id="zoomOutBtn">Zoom Out -</button>
+    <button id="resetBtn">Reset View</button>
+    <button id="gridBtn">Toggle Grid</button>
+    <button id="collisionBtn">Toggle Collision</button>
+    <button id="backBtn">Back to Level Select</button>
+  </div>
+  <div id="info" style="display:none;">
+    <p>
+      Map Size: <span id="map-size">-</span> |
+      Tile Size: <span id="tile-size">-</span> |
+      Layer Count: <span id="layer-count">-</span>
+    </p>
+    <p>Move with WASD or arrow keys. Hold Shift to sprint.</p>
+  </div>
+  <div id="debug-info" style="display:none;"></div>
+
+  <script src="basic%20test2.js"></script>
+  <script src="map2bomp_merged_colormap.js"></script>
+  <script src="renderer.remap_doors.js"></script>
+  <script src="map1.js"></script>
+  <script src="map2.js"></script>
+  <script src="map3.js"></script>
+  <script src="mapManager.js"></script>
+  <script src="game.js"></script>
+  <script>
+    // Auto-register map configs
+    if (typeof autoRegisterMaps === 'function') {
+      autoRegisterMaps();
+    }
+    
+    document.querySelectorAll('.level-card:not(.disabled)').forEach(card => {
+      card.addEventListener('click', () => {
+        const level = parseInt(card.dataset.level);
+        startGame(level);
+      });
+    });
+
+    function startGame(level) {
+      document.getElementById('level-select').style.display = 'none';
+      document.getElementById('game-title').style.display = 'block';
+      document.getElementById('game-container').style.display = 'block';
+      document.querySelector('.controls').style.display = 'flex';
+      document.getElementById('info').style.display = 'block';
+      document.getElementById('debug-info').style.display = 'block';
+      
+      if (typeof window.initGame === 'function') {
+        window.initGame(level);
+      }
+    }
+
+    document.getElementById('backBtn')?.addEventListener('click', () => {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
