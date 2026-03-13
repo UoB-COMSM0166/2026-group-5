@@ -5,27 +5,25 @@ import { drawWinScreen } from "./winScreen.js";
 import { drawLoseScreen } from "./loseScreen.js";
 
 export const screenOverlaySystem = {
-  renderer: null,
+  p: null,
 
-  init(renderer) {
-    this.renderer = renderer;
+  init(p) {
+    this.p = p;
   },
 
   afterRender() {
-    if (!this.renderer) return;
-
-    const { ctx, canvas } = this.renderer;
-
+    if (!this.p) return;
+    this.p.clear();
     if (game.state === "playing") return;
 
     if (game.state === "start") {
-      drawStartScreen(ctx, canvas);
+      drawStartScreen(this.p);
     } else if (game.state === "intro") {
-      drawIntroScreen(ctx, canvas);
+      drawIntroScreen(this.p);
     } else if (game.state === "win") {
-      drawWinScreen(ctx, canvas);
+      drawWinScreen(this.p);
     } else if (game.state === "lose") {
-      drawLoseScreen(ctx, canvas);
+      drawLoseScreen(this.p);
     }
   }
 };

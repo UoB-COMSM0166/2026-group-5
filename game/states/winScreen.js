@@ -2,42 +2,39 @@ import { resetGame } from "../game.js";
 import { setFont, FONTS } from "../utils/fonts.js";
 import { getLayout, sx, sy } from "../utils/screenLayout.js";
 
-export function drawWinScreen(ctx, canvas) {
-  const t = Date.now() * 0.004;
-  const pulse = 1 + Math.sin(t) * 0.03;
-  const alpha = 0.6 + Math.sin(t * 1.8) * 0.4;
-  const layout = getLayout(canvas);
+export function drawWinScreen(p) {
+  const t = p.millis() * 0.002;
+  const layout = getLayout(p);
+  const alpha = (0.45 + Math.sin(t * 3) * 0.55) * 255;
+  const pulse = 1 + Math.sin(t * 2.2) * 0.03;
 
-  ctx.fillStyle = "rgba(0, 30, 10, 0.9)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  p.push();
+  p.noStroke();
+  p.fill(10, 40, 25, 240);
+  p.rect(0, 0, p.width, p.height);
 
-  ctx.save();
-  ctx.translate(layout.offsetX, layout.offsetY);
+  p.translate(layout.offsetX, layout.offsetY);
 
   // Title effect
-  ctx.save();
-  ctx.translate(layout.width / 2, sy(170, layout));
-  ctx.scale(pulse, pulse);
-  ctx.fillStyle = "#61ffb0";
-  setFont(ctx, Math.max(18, sx(22, layout)), FONTS.title);
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("YOU WIN!", 0, 0);
-  ctx.restore();
+  p.push();
+  p.translate(layout.width / 2, sy(170, layout));
+  p.scale(pulse);
+  p.fill("#61ffb0");
+  setFont(p, Math.max(18, sx(22, layout)), FONTS.title);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.text("YOU WIN!", 0, 0);
+  p.pop();
 
   // Normal text settings
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "#d9ffe9";
-  setFont(ctx, Math.max(12, sx(12, layout)), FONTS.ui);
-  ctx.fillText("Princess is now safe and sound!", layout.width / 2, sy(245, layout));
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = "#ffffff";
-  setFont(ctx, Math.max(12, sx(12, layout)), FONTS.ui);
-  ctx.fillText("Press R to restart", layout.width / 2, sy(315, layout));
-  ctx.restore();
-  ctx.restore();
+  p.textAlign(p.CENTER, p.CENTER);
+  p.fill("#d9ffe9");
+  setFont(p, Math.max(12, sx(12, layout)), FONTS.ui);
+  p.text("Princess is now safe and sound!", layout.width / 2, sy(245, layout));
+  p.fill(255, 255, 255, alpha);
+  setFont(p, Math.max(12, sx(12, layout)), FONTS.ui);
+  p.text("Press R to restart", layout.width / 2, sy(315, layout));
+
+  p.pop();
 }
 
 export function handleWinScreenKey(key) {

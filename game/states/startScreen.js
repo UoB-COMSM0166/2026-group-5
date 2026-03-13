@@ -2,57 +2,62 @@ import { setGameState } from "../game.js";
 import { setFont, FONTS } from "../utils/fonts.js";
 import { getLayout, sx, sy } from "../utils/screenLayout.js";
 import { resetIntroScreen } from "./introScreen.js";
-const bg = new Image();
-bg.src = "../assets/images/original/drawings/start_bg.png";
 
-const dragon = new Image();
-dragon.src = "../assets/images/original/npcs/dragon/dragon.png";
-
-const titleImg = new Image();
-titleImg.src = "../assets/images/original/drawings/title_logo.png";
-
+let bg;
+let dragon;
+let titleImg;
 
 const menu = {
     selectedIndex: 0,
     options: ["START GAME", "LOAD GAME", "TUTORIAL"]
 };
 
-export function drawStartScreen(ctx, canvas) {
-  const t = performance.now() * 0.001;
+export async function preloadStartScreen(p) {
+  const bgUrl = new URL("../assets/images/original/drawings/start_bg.png", import.meta.url).href;
+  const dragonUrl = new URL("../assets/images/original/npcs/dragon/dragon.png", import.meta.url).href;
+  const titleImgUrl = new URL("../assets/images/original/drawings/title_logo.png", import.meta.url).href;
+
+  bg = await p.loadImage(bgUrl);
+  dragon = await p.loadImage(dragonUrl);
+  titleImg = await p.loadImage(titleImgUrl);
+}
+
+export function drawStartScreen(p) {
+  const t = p.millis() * 0.001;
+  const layout = getLayout(p);
 
   // Background always fills full canvas
-  if (bg.complete && bg.naturalWidth > 0) {
-    ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+  if (bg && bg.width > 0)  {
+    p.image(bg, 0, 0, p.width, p.height);
   } else {
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, "#f09a2c");
-    grad.addColorStop(1, "#f5c443");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < p.height; y++) {
+      const inter = p.map(y, 0, p.height, 0, 1);
+      const c = p.lerpColor(p.color("#f09a2c"), p.color("#f5c443"), inter);
+      p.stroke(c);
+      p.line(0, y, p.width, y);
+    }
   }
 
-  const layout = getLayout(canvas);
+  p.push();
+  p.translate(layout.offsetX, layout.offsetY);
 
-  ctx.save();
-  ctx.translate(layout.offsetX, layout.offsetY);
+  drawDragon(p, t, layout);
+  drawTitle(p, t, layout);
+  drawFloatingShapes(p, t, layout);
+  drawMenuButtons(p, layout);
 
-  drawDragon(ctx, t, layout);
-  drawTitle(ctx, canvas, t, layout);
-  drawFloatingShapes(ctx, t, layout);
-  drawMenuButtons(ctx, layout);
-
-  ctx.restore();
+  p.pop();
 }
 
 
-function drawDragon(ctx, t, layout) {
-  if (!dragon.complete || dragon.naturalWidth === 0) return;
+function drawDragon(p, t, layout) {
+  if (!dragon || dragon.width <= 0) return;
 
   const floatY = Math.sin(t * 2) * sy(2, layout);
   const w = sx(600, layout);
   const h = sy(600, layout);
 
-  ctx.drawImage(
+  p.image(
     dragon,
     sx(-50, layout),
     layout.height - h + sy(140, layout) + floatY,
@@ -61,8 +66,7 @@ function drawDragon(ctx, t, layout) {
   );
 }
 
-function drawTitle(ctx, canvas, t, layout) {
-  const floatY = Math.sin(t * 2) * sy(6, layout);
+function drawTitle(p, t, layout) {
   const pulse = 1 + Math.sin(t * 1.6) * 0.005;
 
   const x = sx(330, layout);
@@ -70,83 +74,75 @@ function drawTitle(ctx, canvas, t, layout) {
   const w = sx(550, layout);
   const h = sy(210, layout);
 
-  if (titleImg.complete && titleImg.naturalWidth > 0) {
-    ctx.save();
-    ctx.translate(x + w / 2, y + h / 2);
-    ctx.scale(pulse, pulse);
-    ctx.drawImage(titleImg, -w / 2, -h / 2, w, h);
-    ctx.restore();
+  if (titleImg && titleImg.width > 0) {
+    p.push();
+    p.translate(x + w / 2, y + h / 2);
+    p.scale(pulse, pulse);
+    p.imageMode(p.CENTER);
+    p.image(titleImg, 0, 0, w, h);
+    p.imageMode(p.CORNER);
+    p.pop();
   } else {
-    drawPixelTitle(ctx, t, layout);
+    drawPixelTitle(p, t, layout);
   }
 }
 
-function drawFloatingShapes(ctx, t, layout) {
-  ctx.save();
-  ctx.strokeStyle = "#ff4f8d";
-  ctx.lineWidth = Math.max(2, sx(4, layout));
+function drawFloatingShapes(p, t, layout) {
+  p.push();
+  p.noFill();
+  p.stroke("#ff4f8d");
+  p.strokeWeight(Math.max(2, sx(4, layout)));
 
-  ctx.beginPath();
-  ctx.arc(
+  p.circle(
     sx(70, layout),
     sy(60, layout) + Math.sin(t * 1.7) * sy(8, layout),
-    sx(24, layout),
-    0,
-    Math.PI * 2
+    sx(48, layout)
   );
-  ctx.stroke();
 
   const ty = sy(150, layout) + Math.sin(t * 1.3) * sy(10, layout);
-  ctx.beginPath();
-  ctx.moveTo(sx(110, layout), ty);
-  ctx.lineTo(sx(105, layout), ty + sy(40, layout));
-  ctx.lineTo(sx(70, layout), ty + sy(20, layout));
-  ctx.closePath();
-  ctx.stroke();
+  p.beginShape();
+  p.vertex(sx(110, layout), ty);
+  p.vertex(sx(105, layout), ty + sy(40, layout));
+  p.vertex(sx(70, layout), ty + sy(20, layout));
+  p.endShape(p.CLOSE);
 
-  ctx.save();
-  ctx.translate(
+  p.push();
+  p.translate(
     sx(860, layout),
     sy(200, layout) + Math.sin(t * 1.1) * sy(8, layout)
   );
+  p.rotate(0.4 + Math.sin(t) * 0.08);
+  p.rectMode(p.CENTER);
+  p.rect(0, 0, sx(40, layout), sy(40, layout));
+  p.rectMode(p.CORNER);
+  p.pop();
 
-  ctx.rotate(0.4 + Math.sin(t) * 0.08);
-  ctx.strokeRect(
-    -sx(20, layout),
-    -sy(20, layout),
-    sx(40, layout),
-    sy(40, layout)
-  );
-
-  ctx.restore();
-  ctx.stroke();
-  ctx.restore();
+  p.pop();
 }
 
-function drawPixelTitle(ctx, t, layout) {
-  ctx.save();
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+function drawPixelTitle(p, t, layout) {
+  p.push();
+  p.textAlign(p.CENTER, p.CENTER);
 
   const centerX = layout.width / 2;
   const y = sy(110, layout) + Math.sin(t * 2) * sy(4, layout);
 
-  setFont(ctx, Math.max(16, sx(34, layout)), FONTS.title, "bold");
-  ctx.fillStyle = "#ff4f8d";
-  ctx.fillText("ESCAPE:", centerX + sx(4, layout), y + sy(4, layout));
-  ctx.fillStyle = "#24327c";
-  ctx.fillText("ESCAPE:", centerX, y);
+  setFont(p, Math.max(16, sx(34, layout)), FONTS.title, "bold");
+  p.fill("#ff4f8d");
+  p.text("ESCAPE:", centerX + sx(4, layout), y + sy(4, layout));
+  p.fill("#24327c");
+  p.text("ESCAPE:", centerX, y);
 
-  setFont(ctx, Math.max(28, sx(64, layout)), FONTS.title, "bold");
-  ctx.fillStyle = "#ff4f8d";
-  ctx.fillText("OH DEAR", centerX + sx(5, layout), y + sy(83, layout));
-  ctx.fillStyle = "#24327c";
-  ctx.fillText("OH DEAR", centerX, y + sy(78, layout));
+  setFont(p, Math.max(28, sx(64, layout)), FONTS.title, "bold");
+  p.fill("#ff4f8d");
+  p.text("OH DEAR", centerX + sx(5, layout), y + sy(83, layout));
+  p.fill("#24327c");
+  p.text("OH DEAR", centerX, y + sy(78, layout));
 
-  ctx.restore();
+  p.pop();
 }
 
-function drawMenuButtons(ctx, layout) {
+function drawMenuButtons(p, layout) {
   const startX = sx(560, layout);
   const startY = sy(330, layout);
   const w = sx(250, layout);
@@ -156,64 +152,33 @@ function drawMenuButtons(ctx, layout) {
   for (let i = 0; i < menu.options.length; i++) {
     const y = startY + i * (h + gap);
     const selected = i === menu.selectedIndex;
-    drawButton(ctx, startX, y, w, h, menu.options[i], selected, layout);
+    drawButton(p, startX, y, w, h, menu.options[i], selected, layout);
   }
 }
 
-function drawButton(ctx, x, y, w, h, text, selected, layout) {
-  ctx.save();
+function drawButton(p, x, y, w, h, text, selected, layout) {
+  p.push();
+  p.noStroke();
+  p.fill("#24152a");
+  p.rect(x + sx(6, layout), y + sy(6, layout), w, h, sx(18, layout));
 
-  roundRectFill(ctx, x + sx(6, layout), y + sy(6, layout), w, h, sx(18, layout), "#24152a");
+  p.fill(selected ? "#e73b6e" : "#c92d59");
+  p.rect(x, y, w, h, sx(18, layout));
 
-  roundRectFill(
-    ctx,
-    x,
-    y,
-    w,
-    h,
-    sx(18, layout),
-    selected ? "#e73b6e" : "#c92d59"
-  );
+  p.fill(255, 255, 255, 35);
+  p.rect(x + sx(4, layout), y + sy(4, layout), w - sx(8, layout), h * 0.35, sx(12, layout));
 
-  roundRectFill(
-    ctx,
-    x + sx(4, layout),
-    y + sy(4, layout),
-    w - sx(8, layout),
-    h * 0.35,
-    sx(12, layout),
-    "rgba(255,255,255,0.14)"
-  );
+  p.noFill();
+  p.stroke(selected ? "#fff4d6" : "#2a1730");
+  p.strokeWeight(selected ? sx(5, layout) : sx(4, layout));
+  p.rect(x, y, w, h, sx(18, layout));
 
-  ctx.lineWidth = selected ? sx(5, layout) : sx(4, layout);
-  ctx.strokeStyle = selected ? "#fff4d6" : "#2a1730";
-  roundRect(ctx, x, y, w, h, sx(18, layout));
-  ctx.stroke();
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  setFont(ctx, Math.max(12, sx(18, layout)), FONTS.ui, "bold");
-  ctx.fillStyle = "#ffd85a";
-  ctx.fillText(text, x + w / 2, y + h / 2 + sy(1, layout));
-
-  ctx.restore();
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  const radius = Math.max(0, Math.min(r, w / 2, h / 2));
-  ctx.beginPath();
-  ctx.moveTo(x + radius, y);
-  ctx.arcTo(x + w, y, x + w, y + h, radius);
-  ctx.arcTo(x + w, y + h, x, y + h, radius);
-  ctx.arcTo(x, y + h, x, y, radius);
-  ctx.arcTo(x, y, x + w, y, radius);
-  ctx.closePath();
-}
-
-function roundRectFill(ctx, x, y, w, h, r, fillStyle) {
-  ctx.fillStyle = fillStyle;
-  roundRect(ctx, x, y, w, h, r);
-  ctx.fill();
+  p.noStroke();
+  p.fill("#ffd85a");
+  p.textAlign(p.CENTER, p.CENTER);
+  setFont(p, Math.max(12, sx(18, layout)), FONTS.ui, "bold");
+  p.text(text, x + w / 2, y + h / 2 + sy(1, layout));
+  p.pop();
 }
 
 export function handleStartScreenKey(key) {

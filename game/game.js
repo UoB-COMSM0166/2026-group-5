@@ -4,6 +4,54 @@ import { handleStartScreenKey } from './states/startScreen.js';
 import { handleIntroScreenKey } from './states/introScreen.js';
 import { handleWinScreenKey } from './states/winScreen.js';
 import { handleLoseScreenKey } from './states/loseScreen.js';
+import { preloadStartScreen } from './states/startScreen.js';
+import { preloadLoseScreen } from './states/loseScreen.js';
+
+// [Jinni][NEW] P5 setup
+let overlayP5 = null;
+
+function createOverlayP5() {
+  const mapCanvas = document.getElementById("mapCanvas");
+  if (!mapCanvas) return;
+
+  const parent = mapCanvas.parentElement;
+  if (!parent) return;
+
+  const existingHost = document.getElementById("p5-overlay-host");
+  if (existingHost) existingHost.remove();
+
+  parent.style.position = "relative";
+
+  const host = document.createElement("div");
+  host.id = "p5-overlay-host";
+  host.style.position = "absolute";
+  host.style.left = "0";
+  host.style.top = "0";
+  host.style.width = "100%";
+  host.style.height = "100%";
+  host.style.pointerEvents = "none";
+  host.style.zIndex = "20";
+
+  parent.appendChild(host);
+
+  overlayP5 = new window.p5((p) => {
+    p.setup = async function () {
+      p.createCanvas(
+        mapCanvas.clientWidth || mapCanvas.width,
+        mapCanvas.clientHeight || mapCanvas.height
+      );
+      p.canvas.style.background = "transparent";
+      
+      await preloadStartScreen(p);
+      await preloadLoseScreen(p);
+
+      p.clear();
+      screenOverlaySystem.init(p);
+    };
+
+    p.draw = function () {};
+  }, host);
+}
 
 // [Jinni][NEW] Added state-based audio management imports
 import { unlockAudio, syncStateAudio, toggleMute } from "./utils/audioManager.js";
@@ -629,6 +677,15 @@ function afterRender() {
   hudInfo();
   drawUI();
 
+  if (overlayP5 && mapRenderer?.canvas) {
+    const w = mapRenderer.canvas.clientWidth || mapRenderer.canvas.width;
+    const h = mapRenderer.canvas.clientHeight || mapRenderer.canvas.height;
+
+    if (overlayP5.width !== w || overlayP5.height !== h) {
+      overlayP5.resizeCanvas(w, h);
+    }
+  }
+
   // [Jinni][NEW] Render overlay screens after the main game world so menus/screens appear on top
   screenOverlaySystem.afterRender();
 }
@@ -663,8 +720,8 @@ async function init() {
   try {
     mapRenderer = new window.TiledMapRenderer('mapCanvas', 'basic test');
     // [Jinni][NEW] Initialize overlay screen system on top of the map renderer
-    screenOverlaySystem.init(mapRenderer);
     await mapRenderer.init();
+    createOverlayP5();
     findSpawn();
 
     document.getElementById('loading').style.display = 'none';

@@ -26,7 +26,7 @@ const introLines = [
 
 
 
-export function drawIntroScreen(ctx, canvas) {
+export function drawIntroScreen(p) {
     
   if (getStateTime() < 50) {
     skipRequested = false;
@@ -35,23 +35,22 @@ export function drawIntroScreen(ctx, canvas) {
   const rawElapsed = getStateTime();
   const elapsed = skipRequested ? 999999 : rawElapsed;
   const t = elapsed * 0.0025;
-  const layout = getLayout(canvas);
+  const layout = getLayout(p);
 
-  ctx.fillStyle = "rgba(5, 5, 15, 0.94)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  p.push();
+  p.noStroke();
+  p.fill(5, 5, 15, 240);
+  p.rect(0, 0, p.width, p.height);
 
-  ctx.save();
-  ctx.translate(layout.offsetX, layout.offsetY);
+  p.translate(layout.offsetX, layout.offsetY);
+  p.textAlign(p.CENTER, p.CENTER);
 
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
+  p.fill("#9be7ff");
+  setFont(p, Math.max(16, sx(20, layout)), FONTS.title);
+  p.text("Introduction", layout.width / 2, sy(10, layout));
 
-  ctx.fillStyle = "#9be7ff";
-  setFont(ctx, Math.max(16, sx(20, layout)), FONTS.title);
-  ctx.fillText("Introduction", layout.width / 2, sy(10, layout));
-
-  ctx.fillStyle = "#ffffff";
-  setFont(ctx, Math.max(14, sx(20, layout)), FONTS.body);
+  p.fill("#ffffff");
+  setFont(p, Math.max(14, sx(20, layout)), FONTS.body || FONTS.ui);
 
   const startY = sy(70, layout);
   const lineSpacing = sy(42, layout);
@@ -62,7 +61,7 @@ export function drawIntroScreen(ctx, canvas) {
     const item = introLines[i];
     const line = revealText(item.text, elapsed, item.delay);
 
-    ctx.fillText(line, layout.width / 2, y);
+    p.text(line, layout.width / 2, y);
 
     y += lineSpacing;
 
@@ -81,15 +80,12 @@ export function drawIntroScreen(ctx, canvas) {
     );
 
   if (allVisible) {
-    const alpha = 0.45 + Math.sin(t * 3) * 0.55;
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = "#ffffff";
-    setFont(ctx, Math.max(12, sx(12, layout)), FONTS.ui);
-    ctx.fillText("Press ENTER to continue", layout.width / 2, sy(550, layout));
-    ctx.restore();
+    const alpha = (0.45 + Math.sin(t * 3) * 0.55) * 255;
+    p.fill(255, 255, 255, alpha);
+    setFont(p, Math.max(12, sx(12, layout)), FONTS.ui);
+    p.text("Press ENTER to continue", layout.width / 2, sy(550, layout));
   }
-  ctx.restore();
+  p.pop();
 }
 
 function revealText(text, elapsed, delay) {
