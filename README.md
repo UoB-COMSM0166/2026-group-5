@@ -92,6 +92,51 @@ Changes made:
 
 ## Quantitative 
 
+We employed the System Usability Scale (SUS), a quick and reliable standardized questionnaire developed by John Brooke in 1986 for measuring the perceived usability of a system through 10 Likert-scale items, as a quantitative method. Upon completion, we exchanged reflections with the participants to ensure the effectiveness of the data analysis.
+
+Tools:
+- Raw & processed data, https://docs.google.com/forms/d/1GqH0NWsb81bZ2JY0xRhIRTU0-smSZ5enyeTCZHE76fw/edit
+- Charts, https://jupyter.org/try-jupyter/lab/
+
+Procedure：
+- Group A, 5 people, P1–P5: L1→L2
+- Group B, 5 people, P6–P10: L2→L1
+- Each user plays one difficulty level and then fills out the SUS form.
+- Tips: Give each participant a sticky note with their ID in case they forget.
+
+<div align="center"><strong>Table x - Data Overview  </strong></div>
+
+<div align="center">
+
+| **Participant** | **SUS L1** | **SUS L2** | **Difference** |
+| --------------- | ---------- | ---------- | -------------- |
+| P1              | 62.5       | 65         | 2.5            |
+| P2              | 80         | 82.5       | 2.5            |
+| P3              | 55         | 67.5       | 12.5           |
+| P4              | 77.5       | 80         | 2.5            |
+| P5              | 62.5       | 65         | 2.5            |
+| P6              | 80         | 65         | -15            |
+| P7              | 62.5       | 57.5       | -5             |
+| P8              | 82.5       | 80         | -2.5           |
+| P9              | 70         | 57.5       | -12.5          |
+| P10             | 90         | 87.5       | -2.5           |
+| Average         | 72.25      | 70.75      | -1.5           |
+
+</div>
+
+**Graphical Representation**
+
+![](/docs/images/bar.jpg)
+
+
+![](/docs/images/line.jpg)
+
+
+**Interpretation**
+
+The results indicated a slight difference in usability perception between Level 1 and Level 2. On average, the SUS score for Level 1 was 72.25, while Level 2 had a marginally lower average of 70.75. This minimal difference (Δ = 1.5) was contrary to the expectation that a more advanced level might yield higher usability ratings through accumulated familiarity. A contributing factor may be the insufficient difficulty differentiation between the two levels — if players did not perceive a meaningful contrast in gameplay challenge, the interface demands across both conditions would remain largely equivalent, naturally producing similar usability ratings. The consistent UI layout and interaction patterns maintained across levels further reinforced this effect, allowing knowledge transfer with minimal friction but also limiting opportunities to observe usability variance.
+
+Overall, both levels scored above the general SUS benchmark of 68, confirming that users found the interface reasonably accessible regardless of level. However, neither condition reached the "Excellent" threshold (SUS ≥ 85), indicating room for improvement in interface responsiveness and feedback clarity. The lack of perceived difficulty distinction between levels also suggests that future design iterations should establish more pronounced gameplay differentiation, ensuring that usability evaluations reflect genuinely varied interaction demands rather than near-identical experiences across conditions.
 
 
 # 7. Process 
