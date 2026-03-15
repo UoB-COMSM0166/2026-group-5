@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Map Manager Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a2e; color: #eee; }
+        .test-section { margin: 20px 0; padding: 15px; background: #2a2a3e; border-radius: 8px; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        pre { background: #1f1f2e; padding: 10px; border-radius: 4px; overflow-x: auto; }
+        button { 
+            padding: 8px 16px; 
+            margin: 5px; 
+            background: #4a4a6a; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #6a6a8a; }
+        button:disabled { background: #2a2a3e; cursor: not-allowed; }
+        .level-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 15px 0; }
+        .level-card { background: #1f1f2e; padding: 15px; border-radius: 8px; border: 1px solid #4a4a6a; }
+    </style>
+</head>
+<body>
+    <h1>Map Manager Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Basic Function Test</h2>
+        <div id="basic-test"></div>
+        <button onclick="testBasicFunctions()">Run Basic Test</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Map Switching Test</h2>
+        <div id="switch-test"></div>
+        <button onclick="testMapSwitching()">Test Map Switching</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Level Info Display</h2>
+        <div id="levels-info"></div>
+        <button onclick="showLevelsInfo()">Show Level Info</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Dynamic Switching Controls</h2>
+        <div id="dynamic-controls"></div>
+    </div>
+
+    <!-- Load configuration files. -->
+    <script src="map1.js"></script>
+    <script src="map2.js"></script>
+    <script src="mapManager.js"></script>
+    
+    <script>
+        // Test result containers.
+        const basicTest = document.getElementById('basic-test');
+        const switchTest = document.getElementById('switch-test');
+        const levelsInfo = document.getElementById('levels-info');
+        const dynamicControls = document.getElementById('dynamic-controls');
+        
+        // 1. Basic function test.
+        function testBasicFunctions() {
+            let html = '';
+            
+            if (typeof mapManager !== 'undefined') {
+                html += '<p class="success">✓ Map manager loaded</p>';
+                
+                // Test auto-registration.
+                if (typeof autoRegisterMaps === 'function') {
+                    autoRegisterMaps();
+                    html += '<p class="success">✓ Auto-registration works</p>';
+                } else {
+                    html += '<p class="error">✗ Auto-registration is missing</p>';
+                }
+                
+                // Show available levels.
+                const availableLevels = mapManager.getAvailableLevels();
+                html += '<p class="info">Available levels: ' + availableLevels.join(', ') + '</p>';
+                
+                // Show the current level.
+                const currentLevel = mapManager.getCurrentLevel();
+                html += '<p class="info">Current level: ' + currentLevel + '</p>';
+                
+            } else {
+                html += '<p class="error">✗ Map manager not found</p>';
+            }
+            
+            basicTest.innerHTML = html;
+        }
+        
+        // 2. Map switching test.
+        function testMapSwitching() {
+            let html = '';
+            
+            if (typeof mapManager !== 'undefined') {
+                const availableLevels = mapManager.getAvailableLevels();
+                
+                html += '<h3>Switch test results:</h3>';
+                
+                availableLevels.forEach(level => {
+                    try {
+                        const config = mapManager.switchToLevel(level);
+                        const currentLevel = mapManager.getCurrentLevel();
+                        const currentConfig = mapManager.getCurrentConfig();
+                        
+                        html += `<div class="level-card">`;
+                        html += `<h4>Level ${level}</h4>`;
+                        html += `<p class="success">✓ Switched successfully</p>`;
+                        html += `<p class="info">Current level: ${currentLevel}</p>`;
+                        html += `<p class="info">NPC count: ${currentConfig.npcs?.length || 0}</p>`;
+                        html += `<p class="info">Collision matrix: ${currentConfig.collisionMatrix ? 'Loaded' : 'Not loaded'}</p>`;
+                        html += `<p class="info">Default spawn: ${JSON.stringify(currentConfig.defaultSpawn)}</p>`;
+                        html += `</div>`;
+                        
+                    } catch (error) {
+                        html += `<div class="level-card">`;
+                        html += `<h4>Level ${level}</h4>`;
+                        html += `<p class="error">✗ Switch failed: ${error.message}</p>`;
+                        html += `</div>`;
+                    }
+                });
+                
+            } else {
+                html += '<p class="error">Map manager not found</p>';
+            }
+            
+            switchTest.innerHTML = html;
+        }
+        
+        // 3. Show level metadata.
+        function showLevelsInfo() {
+            let html = '';
+            
+            if (typeof mapManager !== 'undefined') {
+                const levelsInfo = mapManager.getAllLevelsInfo();
+                
+                html += '<h3>All level details:</h3>';
+                html += '<div class="level-info">';
+                
+                levelsInfo.forEach(info => {
+                    html += `<div class="level-card">`;
+                    html += `<h4>Level ${info.level}</h4>`;
+                    html += `<p><strong>Map size:</strong> ${info.mapSize}</p>`;
+                    html += `<p><strong>NPC count:</strong> ${info.npcCount}</p>`;
+                    html += `<p><strong>Door count:</strong> ${info.doorCount}</p>`;
+                    html += `<p><strong>Chest count:</strong> ${info.chestCount}</p>`;
+                    html += `<p><strong>Collision matrix:</strong> ${info.hasCollisionMatrix ? '✓' : '✗'}</p>`;
+                    html += `<p><strong>Default spawn:</strong> ${info.hasDefaultSpawn ? '✓' : '✗'}</p>`;
+                    html += `</div>`;
+                });
+                
+                html += '</div>';
+                
+            } else {
+                html += '<p class="error">Map manager not found</p>';
+            }
+            
+            levelsInfo.innerHTML = html;
+        }
+        
+        // 4. Dynamic switching controls.
+        function setupDynamicControls() {
+            let html = '';
+            
+            if (typeof mapManager !== 'undefined') {
+                const availableLevels = mapManager.getAvailableLevels();
+                
+                html += '<h3>Dynamic switch controls:</h3>';
+                html += '<div>';
+                
+                availableLevels.forEach(level => {
+                    html += `<button onclick="switchToLevel(${level})">Switch to Level ${level}</button>`;
+                });
+                
+                html += '</div>';
+                html += '<div id="current-status" style="margin-top: 15px;"></div>';
+                
+            } else {
+                html += '<p class="error">Map manager not found</p>';
+            }
+            
+            dynamicControls.innerHTML = html;
+        }
+        
+        // Dynamic switch handler.
+        function switchToLevel(level) {
+            if (typeof mapManager !== 'undefined') {
+                try {
+                    const config = mapManager.switchToLevel(level);
+                    const status = document.getElementById('current-status');
+                    
+                    status.innerHTML = `
+                        <p class="success">✓ Switched to level ${level}</p>
+                        <p class="info">Current config includes:</p>
+                        <ul>
+                            <li>NPCs: ${config.npcs?.length || 0}</li>
+                            <li>Doors: ${config.entities?.doors?.length || 0}</li>
+                            <li>Chests: ${config.entities?.chests?.length || 0}</li>
+                            <li>Collision matrix: ${config.collisionMatrix ? 'Loaded' : 'Not loaded'}</li>
+                        </ul>
+                    `;
+                    
+                } catch (error) {
+                    const status = document.getElementById('current-status');
+                    status.innerHTML = `<p class="error">✗ Switch failed: ${error.message}</p>`;
+                }
+            }
+        }
+        
+        // Initialize once the page has loaded.
+        window.addEventListener('load', () => {
+            testBasicFunctions();
+            showLevelsInfo();
+            setupDynamicControls();
+        });
+    </script>
+</body>
+</html>
