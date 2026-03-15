@@ -15,6 +15,8 @@
   let rows = 0;
   let cols = 0;
   let baseTile = 16;
+  let currentLevel = 1;
+  let roomLightCamera = null;
   const keys = Object.create(null);
   let lastT = 0;
   let message = '';
@@ -68,6 +70,17 @@
       y: c.y,
       opened: false
     }));
+
+    roomLightCamera = typeof RoomLightCamera !== 'undefined'
+      ? RoomLightCamera.createSystem({
+          level: currentLevel,
+          collisionMatrix: collision,
+          doors,
+          npcs,
+          baseTile,
+          setMessage
+        })
+      : null;
   }
 
   const state = {
@@ -75,6 +88,7 @@
     nearestDoor: null,
     nearestChest: null,
     prompt: '',
+    nearestLightButton: null,
     playerDetected: false,
     staminaRecoverCooldown: 0,
     footsteps: [],
@@ -87,6 +101,12 @@
   };
 
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  function getNpcVisionRange(npc) {
+    const baseRange = mapSettings.visionRange || 112;
+    if (!roomLightCamera) return baseRange;
+    return roomLightCamera.getNpcVisionRange(npc, baseRange);
+  }
 
   function hudInfo() {
     const tx = Math.floor((player.x + player.w / 2) / baseTile);
@@ -325,6 +345,7 @@
   function updateInteractionTargets() {
     state.nearestDoor = null;
     state.nearestChest = null;
+    state.nearestLightButton = null;
     state.prompt = '';
 
     const pc = playerCenter();
@@ -359,6 +380,10 @@
       state.prompt = 'Press E to open chest';
     } else if (state.nearestDoor) {
       state.prompt = state.nearestDoor.open ? 'Press E to close door' : 'Press E to open door';
+    }
+
+    if (roomLightCamera) {
+      roomLightCamera.updateInteractionState(state, player);
     }
   }
 
@@ -402,8 +427,12 @@
       openChest(state.nearestChest);
       return;
     }
+    if (roomLightCamera && roomLightCamera.tryInteract(player, state)) {
+      return;
+    }
     if (state.nearestDoor) {
       toggleDoor(state.nearestDoor);
+      return;
     }
   }
 
@@ -462,7 +491,7 @@ function isVisionBlocker(tx, ty) {
 // Get the visible area polygon for an NPC
 function getVisibleArea(npc) {
   const nc = npcCenter(npc);
-  const range = mapSettings.visionRange || 112; // Read vision range from config
+  const range = getNpcVisionRange(npc); // Read vision range from config
   const stepSize = 2; // Smaller steps produce a smoother result
   
   // Select the vision arc from the NPC facing direction
@@ -515,7 +544,7 @@ function getVisibleArea(npc) {
 // Get visible pixels for an NPC at higher sampling density
 function getVisiblePixels(npc) {
   const nc = npcCenter(npc);
-  const range = mapSettings.visionRange || 112; // Read vision range from config
+  const range = getNpcVisionRange(npc); // Read vision range from config
   const stepSize = 4; // Smaller values are more precise
   
   const visiblePixels = [];
@@ -587,7 +616,7 @@ function getVisibleTiles(npc) {
   const nc = npcCenter(npc);
   const npcTileX = Math.floor(nc.x / baseTile);
   const npcTileY = Math.floor(nc.y / baseTile);
-  const range = Math.floor((mapSettings.visionRange || 112) / baseTile); // Convert vision range to tile count
+  const range = Math.floor(getNpcVisionRange(npc) / baseTile); // Convert vision range to tile count
   
   const visibleTiles = [];
   
@@ -676,7 +705,7 @@ function isPointVisibleToNPC(npc, px, py) {
   const dx = px - nc.x;
   const dy = py - nc.y;
   const dist = Math.hypot(dx, dy);
-  if (dist > (mapSettings.visionRange || 112)) return false;
+  if (dist > getNpcVisionRange(npc)) return false;
 
   const angle = Math.atan2(dy, dx);
   let minAngle, maxAngle;
@@ -777,6 +806,7 @@ function updateNPC(npc, dt) {
   if (sees && npc.state !== 'CHASE') {
     // Switch to chase immediately after spotting the player
     npc.state = 'CHASE';
+    if (roomLightCamera) roomLightCamera.onNpcChase(npc);
   } else if (!sees && npc.state === 'CHASE') {
     // Enter search after losing sight during a chase
     npc.state = 'SEARCH';
@@ -794,6 +824,9 @@ function updateNPC(npc, dt) {
       timestamp: Date.now()
     };
   } else if (npc.state === 'SEARCH') {
+    if (roomLightCamera && roomLightCamera.updateNpcLightTask(npc, seek, dt)) {
+      return;
+    }
     // Wander near the search center while searching
     npc.searchTimer -= dt;
     npc.searchWanderTimer += dt;
@@ -818,10 +851,12 @@ function updateNPC(npc, dt) {
     if (npc.searchTimer <= 0) {
       npc.state = 'PATROL';
       npc.searchMarker = null; // Clear the search marker
+      if (roomLightCamera) roomLightCamera.onNpcPatrolReset(npc);
     }
   } else if (npc.state === 'PATROL') {
     // Clear the search marker while patrolling
     npc.searchMarker = null;
+    if (roomLightCamera) roomLightCamera.onNpcPatrolReset(npc);
   }
 
   if (npc.state === 'PATROL') {
@@ -1008,7 +1043,7 @@ function drawEntities(ctx, scale) {
 function drawUI() {
   const info = document.getElementById('info');
   if (!info) return;
-  let promptLine = state.prompt ? `<p>${state.prompt}</p>` : '<p>Press E near a door or chest to interact.</p>';
+  let promptLine = state.prompt ? `<p>${state.prompt}</p>` : '<p>Press E near a door, chest, or light button to interact.</p>';
   let msgLine = message ? `<p>${message}</p>` : '';
   let danger = state.playerDetected ? '<p style="color:#ff8080;">Alert: you have been spotted</p>' : '<p style="color:#9fd4ff;">Status: hidden</p>';
   const staminaRatio = clamp(player.stamina / player.staminaMax, 0, 1);
@@ -1068,6 +1103,7 @@ function afterRender() {
   if (!mapRenderer || !mapRenderer.ctx) return;
   drawCollision(mapRenderer.ctx, mapRenderer.scale);
   drawEntities(mapRenderer.ctx, mapRenderer.scale);
+  if (roomLightCamera) roomLightCamera.draw(mapRenderer.ctx, mapRenderer.scale, state);
   drawFootsteps(mapRenderer.ctx, mapRenderer.scale);
   drawNPCs(mapRenderer.ctx, mapRenderer.scale);
   drawPlayer(mapRenderer.ctx, mapRenderer.scale);
@@ -1099,6 +1135,7 @@ function frame(ts) {
 
 async function initGame(level = 1) {
   try {
+    currentLevel = level;
     // Use the map manager to switch levels
     if (typeof mapManager !== 'undefined') {
       const config = mapManager.switchToLevel(level);
