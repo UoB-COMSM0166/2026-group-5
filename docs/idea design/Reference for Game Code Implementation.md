@@ -24,25 +24,25 @@
 
 ## 1. GameLoop
 
-- Input reading + event dispatch.[^1]
+- Input reading + event dispatch.
 
 - Difficulties:  
   1. Per‑frame order: **Input → Update → Rules → Render**.  
   2. The exact order of reading and updating map, NPC, and player state each frame needs to be discussed with people working on other parts, and decided based on the concrete execution logic.
 
 - Time control interfaces:  
-  - Pause (Pause: updates stop but the UI is still displayed).[^3][^1]  
-  - Time‑scale (adjustable time scale for slow motion / debugging).[^1]
+  - Pause (Pause: updates stop but the UI is still displayed).
+  - Time‑scale (adjustable time scale for slow motion / debugging)
 
 ---
 
 ## 2. Player
 
-- Movement: **See video1 for example.** Use WASD to walk and hold Shift to sprint. Walking and sprinting speeds are configurable (each walk step is 8 pixels, sprint is 16 pixels). While sprinting, the 3×3 tiles around the player are the footstep sound range, shown with a yellow light overlay as feedback. Each triggered tile should remain highlighted for at least 1 second. This sound area can pass through walls/doors and ignores all obstacles. If it overlaps an NPC’s alert area, treat it as an anomaly and mark that tile with a red question‑mark tile.
+- Movement: Use WASD to walk and hold Shift to sprint. Walking and sprinting speeds are configurable (each walk step is 8 pixels, sprint is 16 pixels). While sprinting, the 3×3 tiles around the player are the footstep sound range, shown with a yellow light overlay as feedback. Each triggered tile should remain highlighted for at least 1 second. This sound area can pass through walls/doors and ignores all obstacles. If it overlaps an NPC’s alert area, treat it as an anomaly and mark that tile with a red question‑mark tile.
 
-- Interaction: Within interaction range, press E to interact with objects (doors, lights, exit, etc.), used for opening/closing doors, switching lights on/off, and triggering exit victory. (If we later add items, keys 1/2/3/4 on the keyboard can be used to switch active items; whether to add items depends on the demo scope.)[^2][^1]
+- Interaction: Within interaction range, press E to interact with objects (doors, lights, exit, etc.), used for opening/closing doors, switching lights on/off, and triggering exit victory. (If we later add items, keys 1/2/3/4 on the keyboard can be used to switch active items; whether to add items depends on the demo scope.)
 
-- Camera control: *Difficult part.* **See video2 for example.** The default camera view size is fixed and does not affect player movement. It is used to observe vision and plan routes. An extra camera mode is used to view the global map.
+- Camera control: *Difficult part.* The default camera view size is fixed and does not affect player movement. It is used to observe vision and plan routes. An extra camera mode is used to view the global map.
 
 - Example: If the overall demo map is 40×24 tiles, with 4–5 rooms, each room is on average about 10×6 tiles.
 
@@ -61,13 +61,13 @@
 ## 3. NPC (Guards)
 
 - Patrol path system: Default state.  
-  - Guards patrol along predefined waypoints; a simple random‑walk variant can be added as an option.[^3][^1]
+  - Guards patrol along predefined waypoints; a simple random‑walk variant can be added as an option.
 
 - Can open doors and turn on the light:  
-  - Guards can open doors to pass through, but slower than the player; door‑opening time is controlled by a parameter (roughly 3× the player’s door‑opening time).[^3][^1]  
+  - Guards can open doors to pass through, but slower than the player; door‑opening time is controlled by a parameter (roughly 3× the player’s door‑opening time).  
   - When the light in the room where an NPC is located is turned off, the NPC immediately goes to the light switch to turn the light back on.
 
-- AI FSM states (at least include these) *Difficult part.* **See video3 for example.**[^2][^1][^3]  
+- AI FSM states (at least include these) *Difficult part.* 
   - NPC alert progress bar logic: When the player is inside the alert range, the bar increases over time; when the player leaves the range, the alert value gradually decreases. Max value is 100.
 
   - Patrol:  
@@ -92,10 +92,10 @@
     - Trigger condition: When alert value > 50 and the player is still within the alert area, immediately switch from any other state into Chase (highest priority).  
     - Behavior: Code behavior is “follow player,” moving to actively chase the player at a higher speed (20 pixels per step). During this time, if new anomalies occur, the map only records light‑off anomalies.  
     - Alert area: If the light in the room is off, alert area shrinks to level 0. If the light is on, alert area is level 2.  
-    - Notes: If the player escapes beyond the alert area and the alert value drops below 50 and stays below for 1 second, switch to Search.[^2][^1]
+    - Notes: If the player escapes beyond the alert area and the alert value drops below 50 and stays below for 1 second, switch to Search.
 
 - Capture detection:  
-  - When in Chase state, if the NPC collides/contacts with the player, trigger failure (Lose).[^1][^2]
+  - When in Chase state, if the NPC collides/contacts with the player, trigger failure (Lose).
 
 ---
 
@@ -103,35 +103,35 @@
 
 - Level layout:  
   - Coordinate with UI/UX owner Yawen, and build the designed map layout in code. Implement logic for win/lose, map transitions, and UI operation screens.  
-  - Provide at least one handcrafted level to complete the MVP; keep interfaces for supporting map/level generation later.[^3][^1]
+  - Provide at least one handcrafted level to complete the MVP; keep interfaces for supporting map/level generation later.
 
 - Collision system:  
-  - Tile‑based collision. Player and guards cannot pass through walls or non‑walkable tiles.[^3][^1]
+  - Tile‑based collision. Player and guards cannot pass through walls or non‑walkable tiles.
 
 - Interactive objects:  
   - Doors: Three states — open, closed, locked — affecting passability and line‑of‑sight blocking.  
   - Lights and switches (affect NPC alert area size, room brightness, and can trigger Investigate).  
-  - Exit (press E to trigger victory).[^2][^1][^3]
+  - Exit (press E to trigger victory).
 
 - Items and golds:  
-  - Items and gold can be placed on the map as optional extensions (e.g., lures/invisibility items), or neutral NPCs can be added as shops, but these are not required for the core stealth loop.[^1][^3]
+  - Items and gold can be placed on the map as optional extensions (e.g., lures/invisibility items), or neutral NPCs can be added as shops, but these are not required for the core stealth loop.
 
 ---
 
 ## 5. Stealth System
 
 - Vision / visibility:  
-  - Guards have an alert range. The vision can be a cone (sector) or a rectangular region in front of the NPC, depending on implementation difficulty, and changes with their alert state.[^2][^3][^1]
+  - Guards have an alert range. The vision can be a cone (sector) or a rectangular region in front of the NPC, depending on implementation difficulty, and changes with their alert state.
 
-- Line‑of‑sight occlusion **(see video4 for example):**  
-  - Walls/obstacles block vision. When the player is behind such cover, the guard cannot keep increasing alert value through that occluder.[^3][^1][^2]
+- Line‑of‑sight occlusion 
+  - Walls/obstacles block vision. When the player is behind such cover, the guard cannot keep increasing alert value through that occluder.
 
 - Detection / alert:  
-  - Each guard has a local alert value (e.g., 0–100). When the player is inside vision and not occluded, alert increases over time. After losing sight, alert can decrease or transition to Search.[^1][^2][^3]  
-  - Optional: a global alert level (0–5, etc.) aggregating the states of multiple guards. At high global alert, guards become more sensitive / search longer.[^2][^3][^1]
+  - Each guard has a local alert value (e.g., 0–100). When the player is inside vision and not occluded, alert increases over time. After losing sight, alert can decrease or transition to Search.
+  - Optional: a global alert level (0–5, etc.) aggregating the states of multiple guards. At high global alert, guards become more sensitive / search longer.
 
 - Environmental anomaly handling:  
-  - Door and light state changes within a certain range can trigger guards to enter Investigate and move toward the anomaly position.[^3][^1]  
-  - Sprinting and similar actions can be simulated as numerical “noise radius,” increasing nearby guards’ alert values without needing a realistic audio system.[^1]
+  - Door and light state changes within a certain range can trigger guards to enter Investigate and move toward the anomaly position.
+  - Sprinting and similar actions can be simulated as numerical “noise radius,” increasing nearby guards’ alert values without needing a realistic audio system.
 
 
