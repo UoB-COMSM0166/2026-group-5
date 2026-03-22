@@ -7,7 +7,7 @@
 - White-box testing
   - Cover a few internal logic areas such as state transitions, audio switching, and layout helper functions.
 - Compatibility checks
-- Test the game in Live Server and GitHub Pages, and note any limitations when opening files directly.
+  - Test the game in Live Server and GitHub Pages, and note any limitations when opening files directly.
 
 ## Equivalence partitioning
 
