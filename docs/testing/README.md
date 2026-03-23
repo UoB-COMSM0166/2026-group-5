@@ -1,60 +1,48 @@
-## Testing approach
+# Testing
 
-- Black-box testing
-  - Validate what the player sees and experiences, such as screen flow, controls, rendering, audio, and deployment behaviour.
-- Boundary-value testing
-  - Check edge cases such as first key presses, small and large window sizes, rapid input, and initial asset loading.
-- White-box testing
-  - Cover a few internal logic areas such as state transitions, audio switching, and layout helper functions.
-- Compatibility checks
-  - Test the game in Live Server and GitHub Pages, and note any limitations when opening files directly.
+This folder contains the main testing documentation for the project.
 
-## Equivalence partitioning
+## Files
 
-Equivalence partitioning: group similar inputs, states, window sizes, and execution contexts into representative classes so that one or two tests can stand in for a wider set of similar cases.
+### `general_test_table.xlsx`
+Main table used to record practical testing progress.
 
-Typical partitions for this game include:
-- Game states: start, intro, playing, win, lose
-- Input categories: valid movement key, Enter, invalid key, rapid repeated input
-- Window sizes: small, medium, large
-- Execution contexts: Live Server, GitHub Pages
+It includes:
+- black-box test cases for core game features
+- boundary value test cases for edge cases
+- selected white-box test cases
+- test status and notes
+- bug tracking references
 
-This follows the course material on black-box testing and equivalence partitioning: identify the interface, define value categories or partitions, and then select representative test cases from each partition, with extra attention to boundary cases.
+### `game_testing_plan&template.md`
+Main structured testing document.
 
-## Test environment
+It includes:
+- testing approach
+- test environment
+- general test case structure
+- bug log structure
+- a separate section for equivalence partitioning
 
-- **Main browser:** Google Chrome
-- **Other browsers:** Microsoft Edge, Firefox
-- **Execution context:** Live Server & GitHub Pages
-- **Date tested:**
+## Structure
 
-## Test case table
-- Simple test, https://docs.google.com/spreadsheets/d/1-XyQk9ekZnqXr-pRJOucOpcXLY9wKz76WdjDOFbkJ_E/edit?gid=0#gid=0
-- 
+The testing documentation is organised in two layers:
 
-## Bug log template
+- **General feature testing**: used to check that the main features of the current build work as expected.
+- **Equivalence partitioning (EP)**: documented separately for one selected feature, using the more formal method discussed in class.
 
-One row per defect and keep the reproduction steps specific.
+This structure keeps the general testing clear and practical, while also supporting the more detailed academic analysis required for the module.
 
-| Bug ID | Description | Steps to reproduce | Severity | Status | Fix / owner |
-|---|---|---|---|---|---|
-| B01 |  |  | High / Medium / Low |  |  |
-| B02 |  |  | High / Medium / Low |  |  |
-| B03 |  |  | High / Medium / Low |  |  |
-| B04 |  |  | High / Medium / Low |  |  |
+## Current Status
 
-## Final testing summary
+At this stage, the main focus is on:
+- validating the core gameplay flow
+- recording bugs and failed cases
+- completing the remaining general test cases
+- preparing the EP section for a more detailed analysis later
 
-- **Total test cases executed:**
-- **Passed:**
-- **Failed:**
-- **Blocked / not tested:**
-- **Main issues found:**
-- **Main fixes applied:**
-- **Remaining limitations:**
+## Notes
 
-## Report
-
-Our testing approach combined mainly black-box testing with a small amount of white-box testing. Black-box testing was used to validate visible behavior such as screen transitions, gameplay rendering, controls, audio behavior, and deployment compatibility. Equivalence partitioning was used to group similar inputs and execution conditions into representative classes, reducing redundant tests while keeping broad coverage. White-box testing was applied to selected internal logic such as state transitions and helper functions. We also considered boundary cases, since edge cases are a common source of faults.
-
-[…]
+- The Excel file is used for practical test execution and progress tracking.
+- The Word file is used as the main testing template.
+- Weekly project reports document testing progress separately.
