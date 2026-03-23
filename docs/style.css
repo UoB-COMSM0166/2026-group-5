@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+:root {
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: #0f1220;
+  color: #f8fafc;
+  font-family: 'VT323', monospace;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #111827;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.topbar h1 {
+  margin: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 16px;
+}
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  padding: 8px 10px;
+  background: #c92d59;
+  color: #fff4d6;
+  border: 2px solid #2a1730;
+  border-radius: 10px;
+  cursor: pointer;
+}
+button:hover { filter: brightness(1.08); }
+
+.game-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  padding: 16px;
+}
+
+#game-root {
+  min-height: 640px;
+  background: #0b1020;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+#game-root canvas { display: block; }
+
+.hud-panel {
+  background: #111827;
+  border-radius: 14px;
+  padding: 14px;
+  line-height: 1.5;
+  border: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .game-layout { grid-template-columns: 1fr; }
+  #game-root { min-height: 520px; }
+}
