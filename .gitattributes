@@ -1,0 +1,25 @@
+# Unify line endings of all text files to LF (fix the previous line ending issue)
+* text=auto eol=lf
+
+# Declare common binary file types, Git will skip line count statistics
+# Image types
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# Audio/Video types
+*.mp3 binary
+*.wav binary
+*.mp4 binary
+*.avi binary
+
+# Other common binary files
+*.zip binary
+*.rar binary
+*.exe binary
+*.dll binary
+*.woff2 binary  # Font files
+*.ttf binary
