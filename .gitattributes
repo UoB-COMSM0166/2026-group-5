@@ -1,8 +1,8 @@
-# Unify line endings of all text files to LF (fix the previous line ending issue)
+# Unify line endings for all text files to LF (resolve Windows CRLF conversion)
 * text=auto eol=lf
 
-# Declare common binary file types, Git will skip line count statistics
-# Image types
+# Mark binary files to skip line count statistics
+# Image formats
 *.png binary
 *.jpg binary
 *.jpeg binary
@@ -10,16 +10,16 @@
 *.webp binary
 *.ico binary
 
-# Audio/Video types
+# Audio/Video formats
 *.mp3 binary
 *.wav binary
 *.mp4 binary
 *.avi binary
 
-# Other common binary files
+# Archives/Executables/Fonts
 *.zip binary
 *.rar binary
 *.exe binary
 *.dll binary
-*.woff2 binary  # Font files
+*.woff2 binary
 *.ttf binary
