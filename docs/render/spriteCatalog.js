@@ -1,4 +1,4 @@
-
+// Sprite catalog: asset paths, character pack definitions, directional resolution.
 export const SPRITE_PATHS = {
   player: './assets/images/sprites/player.png',
   playerSheet: './assets/images/sprites/player_sheet.png',

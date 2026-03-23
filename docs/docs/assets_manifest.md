@@ -1,6 +1,6 @@
 # Assets Manifest
 
-This package now includes self-contained placeholder assets so the fusion build runs without missing file errors.
+This package now includes self-contained placeholder assets so the game-v7 build runs without missing file errors.
 
 - `tilesets/`: placeholder tileset sheets matching current paths in `tilesetCatalog.js`
 - `assets/images/sprites/`: placeholder sprites for player, NPCs, doors, chests, and room buttons

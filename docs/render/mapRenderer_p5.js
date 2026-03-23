@@ -1,3 +1,4 @@
+// Map renderer: draws tiled layers from tileset images with fallback color blocks.
 import { getImage } from '../core/assetLoader.js';
 import { getTilesetConfig, GID_REMAP, GID_COLORS } from './tilesetCatalog.js';
 import { getVisibleTileBounds } from '../systems/cameraSystem.js';
@@ -122,10 +123,10 @@ export function renderMap(p, state) {
   if (!level) return;
   const camera = state.camera || { x: 0, y: 0, width: p.width, height: p.height };
 
-  if (level.id === 'map3' || !level.mapData?.layers) {
-    drawFallbackCollision(p, level, camera);
-    return;
-  }
+  if (!level.mapData?.layers) {
+  drawFallbackCollision(p, level, camera);
+  return;
+}
 
   p.background('#0d1220');
   for (const layer of level.mapData.layers) {

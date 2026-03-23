@@ -1,3 +1,4 @@
+// Entry point: creates p5.js canvas, boots game core, wires DOM buttons and keyboard.
 import { createGameCore } from './core/gameCore.js';
 
 const game = createGameCore({ initialLevel: 'map1' });

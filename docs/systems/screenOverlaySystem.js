@@ -1,3 +1,4 @@
+// Screen overlay: dispatches start/intro/win/lose draws, vignette, flash effects.
 import { SCREEN_STATES } from '../core/gameState.js';
 import { drawStartScreen } from '../states/startScreen.js';
 import { drawIntroScreen } from '../states/introScreen.js';

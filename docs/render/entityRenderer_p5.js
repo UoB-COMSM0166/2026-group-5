@@ -1,8 +1,7 @@
-
+// Entity renderer: draws doors, chests, buttons, NPCs, player, footsteps.
 import { getImage } from '../core/assetLoader.js';
 import { SPRITE_PATHS, resolveCharacterSprite } from './spriteCatalog.js';
 import { isRectVisible } from '../systems/cameraSystem.js';
-import { castVisionRay } from '../systems/collisionSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 
 
@@ -18,18 +17,6 @@ function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH =
   p.image(img, drawX, drawY, drawW, drawH);
   p.pop();
   return true;
-}
-
-function drawSpriteOrRect(p, path, x, y, w, h, fillColor, radius = 2) {
-  const img = path ? getImage(path) : null;
-  if (img) {
-    p.image(img, x, y, w, h);
-    return true;
-  }
-  p.noStroke();
-  p.fill(fillColor);
-  p.rect(x, y, w, h, radius);
-  return false;
 }
 
 function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
@@ -88,8 +75,10 @@ function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
 function drawDoubleDoor(p, door, tile) {
   const x = door.x * tile;
   const y = door.y * tile;
-  const leafW = tile;
-  const leafH = tile * 2;
+  const doorW = (door.w || 2) * tile;
+  const doorH = (door.h || 2) * tile;
+  const leafW = doorW / 2;
+  const leafH = doorH;
   const img = getImage(SPRITE_PATHS.door.double);
 
   p.push();
@@ -117,15 +106,15 @@ function drawDoubleDoor(p, door, tile) {
   if (door.anim > 0.05) {
     p.noStroke();
     p.fill(20, 30, 50, 130 * door.anim);
-    p.rect(x + 2, y + 2, tile * 2 - 4, tile * 2 - 4, 2);
+    p.rect(x + 2, y + 2, doorW - 4, doorH - 4, 2);
   }
 }
 
 function drawLineDoor(p, door, tile) {
   const px = door.x * tile;
   const py = door.y * tile;
-  const w = tile;
-  const h = tile * 2;
+  const w = (door.w || 1) * tile;
+  const h = (door.h || 2) * tile;
   const img = getImage(SPRITE_PATHS.door.line);
   p.push();
   p.translate(px + w / 2, py);
@@ -217,143 +206,52 @@ function renderButton(p, level, button) {
 function renderSearchMarker(p, npc) {
   if (!npc.searchTargetX || !npc.searchTargetY) return;
   p.push();
-  p.noFill();
-  p.stroke(251, 191, 36, 110);
-  p.circle(npc.searchTargetX, npc.searchTargetY, 10);
-  p.line(npc.searchTargetX - 4, npc.searchTargetY, npc.searchTargetX + 4, npc.searchTargetY);
-  p.line(npc.searchTargetX, npc.searchTargetY - 4, npc.searchTargetX, npc.searchTargetY + 4);
+  p.noStroke();
+  p.fill(245, 158, 11, 210);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(14);
+  p.text('?', npc.searchTargetX, npc.searchTargetY - 1);
   p.pop();
 }
 
-
-
-function renderLegacyNpcVision(p, npc, level) {
-  const cx = npc.x + npc.w / 2;
-  const cy = npc.y + npc.h / 2;
-  const range = level.roomSystem.getNpcVisionRange(npc, level.settings.visionRange || 112);
-  const facing = (npc.facing || 'right').toLowerCase();
-  const heading = facing === 'left' ? Math.PI : facing === 'up' ? -Math.PI / 2 : facing === 'down' ? Math.PI / 2 : 0;
-  const spread = Math.PI / 3.4;
+function renderNpcAlertBar(p, npc) {
+  const levelValue = Math.max(0, Math.min(1, (npc.alertLevel || 0) / 100));
+  const width = Math.max(18, npc.w + 8);
+  const x = npc.x + npc.w / 2 - width / 2;
+  const y = npc.y - 8;
   p.push();
   p.noStroke();
-  p.fill(255, 0, 0, npc.state === 'CHASE' ? 48 : 28);
-  p.beginShape();
-  p.vertex(cx, cy);
-  const steps = 24;
-  for (let i = 0; i <= steps; i += 1) {
-    const a = heading - spread / 2 + (spread * i) / steps;
-    const hit = castVisionRay(level, cx, cy, a, range, level.settings.baseTile || 16, 4);
-    p.vertex(hit.x, hit.y);
+  p.fill(15, 23, 42, 180);
+  p.rect(x, y, width, 4, 2);
+  if (levelValue > 0.001) {
+    const red = npc.state === 'CHASE' ? 251 : npc.state === 'SEARCH' ? 245 : 248;
+    const green = npc.state === 'CHASE' ? 113 : npc.state === 'SEARCH' ? 158 : 180;
+    const blue = npc.state === 'CHASE' ? 133 : npc.state === 'SEARCH' ? 11 : 80;
+    p.fill(red, green, blue, 230);
+    p.rect(x, y, width * levelValue, 4, 2);
   }
-  p.endShape(p.CLOSE);
   p.pop();
 }
 
-function renderLegacyActor(p, actor, color) {
-  const descriptor = resolveCharacterSprite(actor.characterType === 'npc' ? 'npc' : 'player', 'default', 'idle', actor.facing || 'down');
-  const facing = (actor.facing || 'down').toLowerCase();
-  const directional = descriptor?.directional?.[facing] ? getImage(descriptor.directional[facing]) : null;
-  if (directional) {
-    drawDirectionalWithFixedHeight(p, directional, actor.x, actor.y, actor.w, actor.h, 32, 0);
-    return;
-  }
-  const w = 16;
-  const h = 24;
-  const drawX = actor.x + actor.w / 2 - w / 2;
-  const drawY = actor.y + actor.h - h;
+function renderFootsteps(p, level) {
+  const footsteps = level.player?.footsteps || [];
+  if (!footsteps.length) return;
+  const now = Date.now();
+  const lifetime = level.settings.footstepLifetime || 3000;
   p.push();
   p.noStroke();
-  p.fill(color);
-  p.rect(drawX, drawY, w, h, 3);
-  p.fill(34);
-  if (facing === 'left') p.rect(drawX + 1, drawY + 8, 3, 3, 1);
-  else if (facing === 'right') p.rect(drawX + w - 4, drawY + 8, 3, 3, 1);
-  else if (facing === 'up') p.rect(drawX + 6, drawY + 1, 3, 3, 1);
-  else p.rect(drawX + 6, drawY + h - 4, 3, 3, 1);
+  for (const footstep of footsteps) {
+    const age = now - footstep.timestamp;
+    const t = Math.min(1, age / lifetime);
+    const alpha = (1 - t) * (1 - t) * 140;
+    const size = 3 * (1 - t * 0.2);
+    p.fill(255, 244, 160, alpha);
+    p.circle(footstep.x, footstep.y, size * 2);
+  }
   p.pop();
 }
 
-function renderLegacyMap1Overlays(p, state, level, tile, camera) {
-  const nearestDoor = state.nearestDoor;
-  const nearestChest = state.nearestChest;
-  const nearestLightButton = state.nearestLightButton;
 
-  for (const button of level.roomSystem.buttons || []) {
-    const worldX = button.x * tile;
-    const worldY = button.y * tile;
-    if (!isRectVisible(camera, worldX, worldY, tile, tile, 16)) continue;
-    const lit = level.roomSystem.isLit(button.roomId);
-    p.noStroke();
-    p.fill(lit ? 'rgba(80,220,120,0.45)' : 'rgba(80,160,255,0.55)');
-    p.rect(worldX + 2, worldY + 2, tile - 4, tile - 4, 2);
-    p.noFill();
-    p.stroke(nearestLightButton && nearestLightButton.x === button.x && nearestLightButton.y === button.y ? '#ffffff' : 'rgba(255,255,255,0.55)');
-    p.strokeWeight(nearestLightButton && nearestLightButton.x === button.x && nearestLightButton.y === button.y ? 1.5 : 1);
-    p.rect(worldX + 1, worldY + 1, tile - 2, tile - 2, 2);
-    p.noStroke();
-  }
-
-  for (const door of level.doorSystem.doors) {
-    const worldX = door.x * tile;
-    const worldY = door.y * tile;
-    const width = door.kind === 'line' ? tile : tile * 2;
-    if (!isRectVisible(camera, worldX, worldY, width, tile * 2, 24)) continue;
-    if (!door.open) continue;
-    p.noStroke();
-    p.fill(80, 200, 255, 72);
-    if (door.kind === 'line') {
-      p.rect(worldX, worldY, tile, tile * 2);
-    } else {
-      p.rect(worldX, worldY, tile * 2, tile * 2);
-    }
-    p.stroke(120, 230, 255, 200);
-    p.strokeWeight(1);
-    if (door.kind === 'line') {
-      p.rect(worldX + 1, worldY + 1, tile - 2, tile * 2 - 2);
-    } else {
-      p.rect(worldX + 1, worldY + 1, tile * 2 - 2, tile * 2 - 2);
-    }
-    p.noStroke();
-  }
-
-  for (const chest of level.boxSystem.boxes) {
-    const worldX = chest.x * tile;
-    const worldY = chest.y * tile;
-    if (!isRectVisible(camera, worldX, worldY, tile, tile, 24)) continue;
-    p.strokeWeight(1);
-    if (chest.opened) {
-      p.fill(255, 220, 120, 52);
-      p.stroke(255, 220, 120, 240);
-    } else {
-      p.fill(255, 180, 40, 46);
-      p.stroke(255, 180, 40, 240);
-    }
-    p.rect(worldX, worldY, tile, tile);
-    if (chest.opened) {
-      p.line(worldX + 3, worldY + 8, worldX + 7, worldY + 12);
-      p.line(worldX + 7, worldY + 12, worldX + 13, worldY + 4);
-    }
-    p.noStroke();
-  }
-
-  if (nearestDoor) {
-    p.noFill();
-    p.stroke(255,255,255,242);
-    p.strokeWeight(1);
-    for (const t of nearestDoor.tiles) {
-      p.rect(t.x * tile + 1, t.y * tile + 1, tile - 2, tile - 2);
-    }
-    p.noStroke();
-  }
-
-  if (nearestChest) {
-    p.noFill();
-    p.stroke(255,255,255,242);
-    p.strokeWeight(1);
-    p.rect(nearestChest.x * tile + 1, nearestChest.y * tile + 1, tile - 2, tile - 2);
-    p.noStroke();
-  }
-}
 
 export function renderEntities(p, state) {
   const level = state.level;
@@ -362,43 +260,50 @@ export function renderEntities(p, state) {
 
   const camera = state.camera || { x: 0, y: 0, width: p.width, height: p.height };
 
-  if (level.id === 'map1') {
-    for (const npc of level.npcs) {
-      if (!isRectVisible(camera, npc.x - 16, npc.y - 24, 40, 40, 96)) continue;
-      renderLegacyNpcVision(p, npc, level);
-    }
-    renderLegacyMap1Overlays(p, state, level, tile, camera);
-  } else for (const door of level.doorSystem.doors) {
+  for (const door of level.doorSystem.doors) {
     const worldX = door.x * tile;
     const worldY = door.y * tile;
-    if (!isRectVisible(camera, worldX, worldY, door.kind === 'line' ? tile : tile * 2, tile * 2, 32)) continue;
+    const worldW = (door.w || (door.kind === 'line' ? 1 : 2)) * tile;
+    const worldH = (door.h || 2) * tile;
+    if (!isRectVisible(camera, worldX, worldY, worldW, worldH, 32)) continue;
     if (door.kind === 'line') drawLineDoor(p, door, tile);
     else drawDoubleDoor(p, door, tile);
   }
 
-  if (level.id !== 'map1') for (const chest of level.boxSystem.boxes) {
+  for (const chest of level.boxSystem.boxes) {
     const worldX = chest.x * tile;
     const worldY = chest.y * tile;
     if (!isRectVisible(camera, worldX, worldY, chest.w * tile, chest.h * tile, 24)) continue;
     drawChest(p, chest, tile);
   }
-  if (level.id !== 'map1' && level.missionSystem?.exit) {
+  if (level.missionSystem?.exit) {
     const exit = level.missionSystem.exit;
     if (isRectVisible(camera, exit.x, exit.y, exit.w, exit.h, 64)) drawExitBeacon(p, level.missionSystem, tile);
   }
 
-  if (level.id !== 'map1') for (const button of level.roomSystem.buttons) {
+  for (const button of level.roomSystem.buttons) {
     if (!isRectVisible(camera, button.centerX - 10, button.centerY - 10, 20, 20, 16)) continue;
     renderButton(p, level, button);
   }
 
+  renderFootsteps(p, level);
+
   for (const npc of level.npcs) {
     if (!isRectVisible(camera, npc.x, npc.y, npc.w, npc.h, 64)) continue;
-    if (level.id === 'map1') {
-      renderLegacyActor(p, npc, npc.state === 'CHASE' ? '#a7f35d' : '#a7f35d');
-      if (npc.state === 'SEARCH') renderSearchMarker(p, npc);
-      continue;
+    const vision = npc.vision;
+    if (vision?.points?.length) {
+      const alpha = npc.state === 'CHASE' ? 52 : npc.state === 'SEARCH' ? 36 : 24;
+      const strokeColor = [248, 113, 113, 150];
+      const fillColor = [248, 113, 113, alpha];
+      p.fill(...fillColor);
+      p.stroke(...strokeColor);
+      p.beginShape();
+      p.vertex(vision.origin.x, vision.origin.y);
+      for (const point of vision.points) p.vertex(point.x, point.y);
+      p.endShape(p.CLOSE);
+      p.noStroke();
     }
+    if (npc.state === 'SEARCH') renderSearchMarker(p, npc);
     const descriptor = resolveCharacterSprite('npc', npc.characterVariant || 'patrol', npc.anim?.mode || 'idle', npc.facing || 'down');
     drawResolvedCharacter(
       p,
@@ -408,23 +313,13 @@ export function renderEntities(p, state) {
       npc.y,
       npc.w,
       npc.h,
-      npc.state === 'CHASE' ? '#fb7185' : npc.state === 'SEARCH' ? '#f59e0b' : npc.state === 'RETURN' ? '#60a5fa' : '#ef4444'
+      npc.state === 'CHASE' ? '#fb7185' : npc.state === 'SEARCH' ? '#f59e0b' : '#ef4444'
     );
-    if (state.debug.showVision) {
-      p.noFill();
-      p.stroke('#f87171');
-      const range = level.roomSystem.getNpcVisionRange(npc, level.settings.visionRange || 112);
-      p.circle(npc.x + npc.w / 2, npc.y + npc.h / 2, range * 2);
-      p.noStroke();
-      if (npc.state === 'SEARCH') renderSearchMarker(p, npc);
-    }
+    renderNpcAlertBar(p, npc);
   }
 
   if (isRectVisible(camera, level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
-    if (level.id === 'map1') renderLegacyActor(p, level.player, '#ffd966');
-    else {
-      const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
-      drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
-    }
+    const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
+    drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
   }
 }

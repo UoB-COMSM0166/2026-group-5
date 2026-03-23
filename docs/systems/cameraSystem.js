@@ -1,3 +1,4 @@
+// Camera: dead-zone follow, smooth lerp, world bounds clamping, viewport helpers.
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }

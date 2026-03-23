@@ -1,8 +1,22 @@
+// Tile-based collision: blocked checks, rect movement, line-of-sight, vision ray casting.
 export function isBlocked(collision, tx, ty) {
   if (!collision.length) return false;
   if (ty < 0 || ty >= collision.length) return true;
   if (tx < 0 || tx >= collision[0].length) return true;
   return collision[ty][tx] === 1;
+}
+
+export function getEntityCollisionRect(entity, nextX = entity.x, nextY = entity.y) {
+  const insetX = Math.max(0, entity?.collisionInsetX || 0);
+  const insetY = Math.max(0, entity?.collisionInsetY || 0);
+  const width = Math.max(1, (entity?.w || 1) - insetX * 2);
+  const height = Math.max(1, (entity?.h || 1) - insetY * 2);
+  return {
+    x: nextX + insetX,
+    y: nextY + insetY,
+    w: width,
+    h: height
+  };
 }
 
 export function isBlockedByWorld(levelOrCollision, tx, ty, tileSize = 16) {
@@ -14,10 +28,11 @@ export function isBlockedByWorld(levelOrCollision, tx, ty, tileSize = 16) {
 }
 
 export function canMoveToRect(entity, nextX, nextY, collision, tileSize, level = null) {
-  const left = Math.floor(nextX / tileSize);
-  const right = Math.floor((nextX + entity.w - 1) / tileSize);
-  const top = Math.floor(nextY / tileSize);
-  const bottom = Math.floor((nextY + entity.h - 1) / tileSize);
+  const rect = getEntityCollisionRect(entity, nextX, nextY);
+  const left = Math.floor(rect.x / tileSize);
+  const right = Math.floor((rect.x + rect.w - 1) / tileSize);
+  const top = Math.floor(rect.y / tileSize);
+  const bottom = Math.floor((rect.y + rect.h - 1) / tileSize);
 
   for (let ty = top; ty <= bottom; ty += 1) {
     for (let tx = left; tx <= right; tx += 1) {

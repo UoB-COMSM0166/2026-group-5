@@ -1,3 +1,4 @@
+// Game core: main loop, screen transitions, level loading, input dispatch.
 import { SCREEN_STATES, createGameState } from './gameState.js';
 import { createInputSystem } from './inputSystem.js';
 import { loadAssetsAsync, getAssetState } from './assetLoader.js';
@@ -12,15 +13,6 @@ import { createScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { createCamera, configureCameraBounds, resizeCamera, updateCamera } from '../systems/cameraSystem.js';
 import { handleStartScreenKey, resetStartScreen } from '../states/startScreen.js';
 import { handleIntroScreenKey, resetIntroScreen } from '../states/introScreen.js';
-
-function ensureRoomMatrices() {
-  if (window.RoomMatrices) return;
-  window.RoomMatrices = {
-    map1: window.RoomLightCamera?.ROOM_MATRICES?.[1] || [],
-    map2: window.RoomLightCamera?.ROOM_MATRICES?.[2] || [],
-    map3: window.RoomLightCamera?.ROOM_MATRICES?.[3] || []
-  };
-}
 
 export function createGameCore({ initialLevel = 'map2' } = {}) {
   const state = createGameState();
@@ -135,8 +127,13 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       syncHud();
     },
     setup() {
-      bootstrapLegacyMaps();
-      ensureRoomMatrices();
+      const validationReport = bootstrapLegacyMaps();
+      if (validationReport.length) {
+        const details = validationReport
+          .map((entry) => `${entry.levelId}: ${entry.issues.join(', ')}`)
+          .join(' | ');
+        throw new Error(`Legacy map bootstrap failed: ${details}`);
+      }
       loadLevel(currentLevelId);
       resetStartScreen();
       resetIntroScreen();
@@ -235,7 +232,6 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       if (lower === '3') switchLevel('map3');
       if (lower === 'b') state.debug.showRooms = !state.debug.showRooms;
       if (lower === 'c') state.debug.showCollision = !state.debug.showCollision;
-      if (lower === 'v') state.debug.showVision = !state.debug.showVision;
       if (lower === 'g') state.debug.showCamera = !state.debug.showCamera;
       if (lower === 'p') togglePause();
       if (lower === 'h' && state.level) {

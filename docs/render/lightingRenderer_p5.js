@@ -1,4 +1,4 @@
-import { isRectVisible } from '../systems/cameraSystem.js';
+// Lighting overlay: per-tile darkness, player reveal glow, button glow, room debug.
 import { getTileDarkness } from '../systems/lightingSystem.js';
 
 function drawTileDarkness(p, level) {
@@ -62,29 +62,6 @@ function drawButtonsGlow(p, level) {
 export function renderLightingOverlay(p, state) {
   const level = state.level;
   if (!level) return;
-  const tile = level.settings.baseTile;
-  const matrix = level.roomSystem.matrix || [];
-  if (level.id === 'map1') {
-    p.noStroke();
-    for (let y = 0; y < matrix.length; y += 1) {
-      for (let x = 0; x < matrix[y].length; x += 1) {
-        const roomId = matrix[y][x] || 1;
-        if (roomId <= 1) continue;
-        const room = level.roomSystem.rooms.get(roomId);
-        const alert = room?.alert || 0;
-        if (room?.lightOn) {
-          p.fill(120, 190, 255, 34 + alert * 18);
-        } else {
-          p.fill(5, 10, 22, 150 - alert * 35);
-        }
-        p.rect(x * tile, y * tile, tile, tile);
-      }
-    }
-    drawPlayerReveal(p, level);
-    drawButtonsGlow(p, level);
-    if (state.debug.showRooms) drawRoomDebug(p, level);
-    return;
-  }
   drawTileDarkness(p, level);
   drawPlayerReveal(p, level);
   drawButtonsGlow(p, level);

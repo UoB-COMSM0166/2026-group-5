@@ -1,3 +1,4 @@
+// Keyboard input: tracks pressed keys with timestamps for last-wins axis resolution.
 export function createInputSystem() {
   const pressed = new Map();
   let interactPressed = false;
