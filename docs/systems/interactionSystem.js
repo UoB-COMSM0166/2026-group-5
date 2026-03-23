@@ -1,3 +1,4 @@
+// Interaction detection: finds nearby doors, chests, buttons, exit and dispatches actions.
 export function findNearbyEntity(player, entities, tileSize, maxDistanceTiles = 1.25) {
   const px = player.x + player.w / 2;
   const py = player.y + player.h / 2;

@@ -1,3 +1,6 @@
+// Map registry: stores and retrieves map configs, bootstraps legacy map specs.
+import { loadLegacyMapSpecs, validateLegacyMapSpecs } from './legacyDataAdapter.js';
+
 const registry = new Map();
 
 export function registerMap(id, config) {
@@ -13,7 +16,10 @@ export function getAllMapIds() {
 }
 
 export function bootstrapLegacyMaps() {
-  if (window.Map1Config) registerMap('map1', window.Map1Config);
-  if (window.Map2Config) registerMap('map2', window.Map2Config);
-  if (window.Map3Config) registerMap('map3', window.Map3Config);
+  registry.clear();
+  const specs = loadLegacyMapSpecs();
+  for (const [id, spec] of specs.entries()) {
+    registerMap(id, spec);
+  }
+  return validateLegacyMapSpecs(specs);
 }

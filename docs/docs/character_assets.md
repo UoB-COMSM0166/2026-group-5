@@ -1,7 +1,7 @@
 
 # Character asset naming guide
 
-The fusion renderer now supports a formal character directory structure.
+The game-v7 renderer now supports a formal character directory structure.
 
 ## Root
 `assets/images/characters/{character}/{variant}/`

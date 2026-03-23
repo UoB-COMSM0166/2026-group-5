@@ -1,4 +1,4 @@
-
+// Mission: exit placement, unlock gating (all chests), distance and prompt helpers.
 function isWalkable(collision, x, y) {
   if (!collision || !collision.length) return true;
   if (y < 0 || y >= collision.length || x < 0 || x >= collision[0].length) return false;
@@ -27,8 +27,8 @@ function chooseExitTile(collision, spawnX, spawnY) {
   return { x: best.x, y: best.y };
 }
 
-export function createMissionSystem(collision, baseTile, spawnTile, totalChests = 0, levelId = "") {
-  const fixedExit = levelId === "map1" ? { x: 54, y: 11 } : null;
+export function createMissionSystem(collision, baseTile, spawnTile, totalChests = 0, objective = {}) {
+  const fixedExit = objective?.exitTile || null;
   const exitTile = fixedExit || chooseExitTile(collision, spawnTile.x, spawnTile.y);
   const exit = {
     tileX: exitTile.x,

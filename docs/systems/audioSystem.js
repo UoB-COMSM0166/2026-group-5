@@ -1,3 +1,4 @@
+// Audio: track switching per screen state, mute toggle, user-gesture unlock.
 const TRACK_CONFIG = {
   start: { src: './assets/audio/startScreen.mp3', volume: 0.3, loop: true },
   intro: { src: './assets/audio/startScreen.mp3', volume: 0.25, loop: true },

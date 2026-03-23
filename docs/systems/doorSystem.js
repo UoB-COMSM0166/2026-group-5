@@ -1,9 +1,19 @@
+// Door system: parses door tiles from map data, handles open/close toggle and animation.
 function layerNameMatches(layer, names) {
   return names.has(String(layer.name || '').toLowerCase());
 }
 
 function getCell(layer, width, x, y) {
   return layer.data[y * width + x] || 0;
+}
+
+function resolveSeededDoorKind(source, tiles, width, height) {
+  if (source?.kind === 'lateral' || source?.kind === 'line') return 'line';
+  if (source?.kind === 'double') return 'double';
+  if (width === 2 && height === 2 && tiles.length >= 4) return 'double';
+  if (width === 1 && height >= 1) return 'line';
+  if (height === 1 && width === 1) return 'line';
+  return 'double';
 }
 
 function inferDoorOpen(tiles, collision) {
@@ -30,20 +40,22 @@ export function createDoorSystem(mapData, tileSize = 16, seededDoors = [], colli
     const minY = Math.min(...tiles.map((tile) => tile.y));
     const maxX = Math.max(...tiles.map((tile) => tile.x));
     const maxY = Math.max(...tiles.map((tile) => tile.y));
-    const kind = source.kind === 'lateral' ? 'line' : (source.kind || 'double');
+    const width = (maxX - minX) + 1;
+    const height = (maxY - minY) + 1;
+    const kind = resolveSeededDoorKind(source, tiles, width, height);
     doors.push({
       id: source.id || `door-${doors.length + 1}`,
       kind,
       x: minX,
       y: minY,
-      w: (maxX - minX) + 1,
-      h: (maxY - minY) + 1,
+      w: width,
+      h: height,
       open: inferDoorOpen(tiles, collision),
       anim: inferDoorOpen(tiles, collision) ? 1 : 0,
       angle: 0,
       tiles,
-      centerX: (minX + ((maxX - minX) + 1) / 2) * tileSize,
-      centerY: (minY + ((maxY - minY) + 1) / 2) * tileSize
+      centerX: (minX + width / 2) * tileSize,
+      centerY: (minY + height / 2) * tileSize
     });
   }
 

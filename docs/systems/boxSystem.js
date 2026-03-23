@@ -1,3 +1,4 @@
+// Chest system: parses chest tiles from map data, handles open state and lid animation.
 function getCell(layer, width, x, y) {
   return layer.data[y * width + x] || 0;
 }

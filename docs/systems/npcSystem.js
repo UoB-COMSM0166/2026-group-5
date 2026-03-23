@@ -1,54 +1,54 @@
-import { hasLineOfSight, canMoveToRect } from './collisionSystem.js';
+// NPC per-frame update: vision cone, alert escalation, state transitions, movement dispatch.
+import { hasLineOfSight } from './collisionSystem.js';
+import { castVisionRay } from './collisionSystem.js';
 import { updateHumanoidAnimation } from './animationSystem.js';
+import {
+  NPC_STATES,
+  ensureNpcRuntimeState,
+  setNpcState,
+  updateNpcAlertLevel,
+  beginSearchState,
+  enterPatrolState,
+  shouldEnterChase,
+  shouldExitChaseToSearch,
+  canStateTransition,
+  getNpcStateLabel
+} from './npcStateMachine.js';
+import {
+  ensureNpcTrackerState,
+  clearNpcTrackerState,
+  runNpcTracker,
+  getNpcWorldCenterTarget,
+  applyNpcSeparation
+} from './npcTrackerSystem.js';
 
-
-function tryOpenBlockingDoor(npc, level) {
-  const tileSize = level?.settings?.baseTile || 16;
-  const cx = npc.x + npc.w / 2;
-  const cy = npc.y + npc.h / 2;
-  for (const door of level?.doorSystem?.doors || []) {
-    if (door.open) continue;
-    const near = (door.tiles || []).some((tile) => {
-      const tx = tile.x * tileSize + tileSize / 2;
-      const ty = tile.y * tileSize + tileSize / 2;
-      return Math.hypot(cx - tx, cy - ty) <= tileSize * 1.1;
-    });
-    if (near) {
-      level.doorSystem.toggle(door);
-      return true;
-    }
-  }
-  return false;
+function getWaypointTarget(npc) {
+  const point = npc.waypoints?.[npc.wpIndex];
+  if (!point) return null;
+  return point;
 }
 
-function moveToward(npc, targetX, targetY, speed, deltaTime, level) {
-  const dx = targetX - npc.x;
-  const dy = targetY - npc.y;
-  const dist = Math.hypot(dx, dy);
-  if (dist < 1) {
-    npc.moving = false;
-    return true;
-  }
-  const vx = (dx / dist) * speed * deltaTime;
-  const vy = (dy / dist) * speed * deltaTime;
-  const tileSize = level?.settings?.baseTile || 16;
-  let moved = false;
-  const canMoveX = vx !== 0 && canMoveToRect(npc, npc.x + vx, npc.y, level.collision, tileSize, level);
-  const canMoveY = vy !== 0 && canMoveToRect(npc, npc.x, npc.y + vy, level.collision, tileSize, level);
-  if (!canMoveX || !canMoveY) tryOpenBlockingDoor(npc, level);
-  if (vx !== 0 && canMoveToRect(npc, npc.x + vx, npc.y, level.collision, tileSize, level)) {
-    npc.x += vx;
-    moved = true;
-  }
-  if (vy !== 0 && canMoveToRect(npc, npc.x, npc.y + vy, level.collision, tileSize, level)) {
-    npc.y += vy;
-    moved = true;
-  }
-  npc.moving = moved;
-  if (Math.abs(dx) > Math.abs(dy)) npc.facing = dx >= 0 ? 'right' : 'left';
-  else npc.facing = dy >= 0 ? 'down' : 'up';
-  return dist <= speed * deltaTime;
+function getTileCenterTarget(npc, point, level) {
+  if (!point) return null;
+  const tileSize = level.settings.baseTile || 16;
+  const insetX = Math.max(0, npc.collisionInsetX || 0);
+  const insetY = Math.max(0, npc.collisionInsetY || 0);
+  const safeCenterX = point.x + Math.max(insetX + 1, Math.min(tileSize - insetX - 1, tileSize / 2));
+  const safeCenterY = point.y + Math.max(insetY + 1, Math.min(tileSize - insetY - 1, tileSize / 2));
+  return getNpcWorldCenterTarget(npc, safeCenterX, safeCenterY);
 }
+
+function getPatrolTargets(npc, level) {
+  return (npc.waypoints || [])
+    .map((point) => getTileCenterTarget(npc, point, level))
+    .filter(Boolean);
+}
+
+function getSearchMoveTarget(npc) {
+  if (!Number.isFinite(npc.searchMoveTargetX) || !Number.isFinite(npc.searchMoveTargetY)) return null;
+  return getNpcWorldCenterTarget(npc, npc.searchMoveTargetX, npc.searchMoveTargetY);
+}
+
 
 function getPlayerCenter(player) {
   return { x: player.x + player.w / 2, y: player.y + player.h / 2 };
@@ -56,6 +56,54 @@ function getPlayerCenter(player) {
 
 function getNpcCenter(npc) {
   return { x: npc.x + npc.w / 2, y: npc.y + npc.h / 2 };
+}
+
+function getRandomSearchPoint(npc, level) {
+  const tileSize = level.settings.baseTile || 16;
+  const radius = tileSize * 1.1;
+  const angle = Math.random() * Math.PI * 2;
+  return {
+    x: npc.searchTargetX + Math.cos(angle) * radius,
+    y: npc.searchTargetY + Math.sin(angle) * radius
+  };
+}
+
+function getReachableSearchPoint(npc, level) {
+  const tileSize = level.settings.baseTile || 16;
+  const npcCenter = getNpcCenter(npc);
+  const wanderRadius = level.settings.searchRadius || 48;
+  for (let i = 0; i < 8; i += 1) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * wanderRadius;
+    const candidateX = npc.lastSeenX + Math.cos(angle) * distance;
+    const candidateY = npc.lastSeenY + Math.sin(angle) * distance;
+    if (hasLineOfSight(level.collision, npcCenter.x, npcCenter.y, candidateX, candidateY, tileSize, 4, level)) {
+      return { x: candidateX, y: candidateY };
+    }
+  }
+  return { x: npc.lastSeenX, y: npc.lastSeenY };
+}
+
+function updateGlobalStuckCheck(npc, deltaTime, level) {
+  const tileSize = level.settings.baseTile || 16;
+  npc.stuckSampleTimer = (npc.stuckSampleTimer || 0) + deltaTime;
+  npc.stuckOriginX ??= npc.x;
+  npc.stuckOriginY ??= npc.y;
+  if (npc.stuckSampleTimer < 1) return;
+  const movedDistance = Math.hypot(npc.x - npc.stuckOriginX, npc.y - npc.stuckOriginY);
+  npc.stuckSampleTimer = 0;
+  npc.stuckOriginX = npc.x;
+  npc.stuckOriginY = npc.y;
+  if (movedDistance <= tileSize * 0.5) {
+    clearNpcTrackerState(npc);
+  }
+}
+
+function clearRecoveryMonitor(npc) {
+  npc.idleRecoveryTimer = 0;
+  npc.stuckSampleTimer = 0;
+  npc.stuckOriginX = npc.x;
+  npc.stuckOriginY = npc.y;
 }
 
 function getFacingHeading(facing) {
@@ -72,145 +120,248 @@ function normalizeAngle(a) {
   return a;
 }
 
-function canSeePlayer(npc, level) {
-  const playerCenter = getPlayerCenter(level.player);
+function getNpcVisionSpread() {
+  return Math.PI / 2;
+}
+
+function getNpcVisionRange(npc, level) {
+  return level.roomSystem.getNpcVisionRange(npc, level.settings.visionRange || 112);
+}
+
+export function isPointInsideNpcVision(npc, targetX, targetY, level) {
+  return isPointInsideVisionCone(npc, targetX, targetY, level);
+}
+
+function isPointInsideVisionCone(npc, targetX, targetY, level) {
   const npcCenter = getNpcCenter(npc);
-  const visionRange = level.roomSystem.getNpcVisionRange(npc, level.settings.visionRange || 112);
-  const dx = playerCenter.x - npcCenter.x;
-  const dy = playerCenter.y - npcCenter.y;
+  const dx = targetX - npcCenter.x;
+  const dy = targetY - npcCenter.y;
   const dist = Math.hypot(dx, dy);
+  const visionRange = getNpcVisionRange(npc, level);
   if (dist > visionRange) return false;
 
   const heading = getFacingHeading(npc.facing);
-  const playerAngle = Math.atan2(dy, dx);
-  const spread = Math.PI / 3.4;
-  const delta = Math.abs(normalizeAngle(playerAngle - heading));
-  if (delta > spread / 2) return false;
-
-  return hasLineOfSight(level.collision, npcCenter.x, npcCenter.y, playerCenter.x, playerCenter.y, level.settings.baseTile, 4, level);
+  const targetAngle = Math.atan2(dy, dx);
+  const spread = getNpcVisionSpread();
+  const delta = Math.abs(normalizeAngle(targetAngle - heading));
+  return delta <= spread / 2;
 }
 
-function seedSearchWander(npc, level) {
-  const roomId = level.roomSystem.getActorRoomId(npc);
-  const tiles = level.roomSystem.roomTiles.get(roomId) || [];
-  if (!tiles.length) return;
-  const pick = tiles[(Math.floor(Math.random() * tiles.length)) % tiles.length];
-  npc.searchTargetX = pick.x * level.settings.baseTile + level.settings.baseTile / 2;
-  npc.searchTargetY = pick.y * level.settings.baseTile + level.settings.baseTile / 2;
-  npc.searchWanderTimer = 0.65 + Math.random() * 0.85;
+export function getNpcVisionPolygon(npc, level) {
+  const npcCenter = getNpcCenter(npc);
+  const range = getNpcVisionRange(npc, level);
+  const spread = getNpcVisionSpread();
+  const heading = getFacingHeading(npc.facing);
+  const startAngle = heading - spread / 2;
+  const endAngle = heading + spread / 2;
+  const tileSize = level?.settings?.baseTile || 16;
+  const step = Math.max(2, Math.round(tileSize / 6));
+  const angleStep = 0.01;
+  const points = [];
+
+  for (let angle = startAngle; angle <= endAngle + 0.0001; angle += angleStep) {
+    const hit = castVisionRay(level, npcCenter.x, npcCenter.y, angle, range, tileSize, step);
+    points.push({ x: hit.x, y: hit.y });
+  }
+
+  const finalHit = castVisionRay(level, npcCenter.x, npcCenter.y, endAngle, range, tileSize, step);
+  const lastPoint = points[points.length - 1];
+  if (!lastPoint || Math.hypot(lastPoint.x - finalHit.x, lastPoint.y - finalHit.y) > 0.5) {
+    points.push({ x: finalHit.x, y: finalHit.y });
+  }
+
+  return {
+    origin: npcCenter,
+    range,
+    spread,
+    heading,
+    points
+  };
 }
 
-function updateLightResponse(npc, level, deltaTime) {
+function getDetectionPoint(npc, player, level) {
+  const center = getPlayerCenter(player);
+  if (isPointInsideVisionCone(npc, center.x, center.y, level)) return center;
+  return null;
+}
+
+function findTrackableFootstep(npc, level) {
+  const npcCenter = getNpcCenter(npc);
+  const footsteps = level.player?.footsteps || [];
+  const searchRadius = level.settings.searchRadius || getNpcVisionRange(npc, level);
+  let best = null;
+  let bestDist = Infinity;
+
+  for (let i = footsteps.length - 1; i >= 0; i -= 1) {
+    const footstep = footsteps[i];
+    const dist = Math.hypot(footstep.x - npcCenter.x, footstep.y - npcCenter.y);
+    if (dist > searchRadius) continue;
+    if (!isPointInsideVisionCone(npc, footstep.x, footstep.y, level)) continue;
+    if (!hasLineOfSight(level.collision, npcCenter.x, npcCenter.y, footstep.x, footstep.y, level.settings.baseTile, 4, level)) continue;
+    if (dist < bestDist) {
+      best = footstep;
+      bestDist = dist;
+    }
+  }
+
+  return best;
+}
+
+function consumeLightSearchTrigger(npc, level) {
   const task = npc.roomLightResponse;
   if (!task) return false;
-  if (task.stage === 'GO_TO_BUTTON') {
-    const arrived = moveToward(npc, task.buttonX - npc.w / 2, task.buttonY - npc.h / 2, npc.speedPatrol || 55, deltaTime, level);
-    if (arrived) {
-      const button = level.roomSystem.buttons.find((entry) => entry.roomId === task.roomId);
-      if (button) level.roomSystem.consumeButtonResponse(button, 'npc');
-      task.stage = 'SEARCH_AFTER_BUTTON';
-      npc.searchTimer = Math.max(npc.searchTimer || 0, 1.8);
-      seedSearchWander(npc, level);
-    }
-    return true;
-  }
-  if (task.stage === 'SEARCH_AFTER_BUTTON') {
-    npc.searchTimer -= deltaTime;
-    npc.searchWanderTimer = (npc.searchWanderTimer || 0) - deltaTime;
-    if (npc.searchWanderTimer <= 0) seedSearchWander(npc, level);
-    if (npc.searchTargetX && npc.searchTargetY) {
-      moveToward(npc, npc.searchTargetX - npc.w / 2, npc.searchTargetY - npc.h / 2, npc.speedPatrol || 55, deltaTime, level);
-    }
-    if (npc.searchTimer <= 0) {
-      npc.roomLightResponse = null;
-      npc.state = 'RETURN';
-    }
-    return true;
-  }
-  return false;
+  beginSearchState(npc, task.buttonX, task.buttonY, 'LIGHT', level);
+  clearNpcTrackerState(npc);
+  npc.roomLightResponse = null;
+  return true;
 }
 
-function updateReturnState(npc, level, deltaTime) {
-  const arrived = moveToward(npc, npc.homeX, npc.homeY, npc.speedPatrol || 55, deltaTime, level);
-  if (arrived) {
-    npc.state = 'PATROL';
-    npc.lastSeenX = 0;
-    npc.lastSeenY = 0;
-    npc.searchTargetX = 0;
-    npc.searchTargetY = 0;
+function updateSearchScan(npc, deltaTime, level) {
+  npc.searchScanStepTimer = Math.max(0, (npc.searchScanStepTimer || 0) - deltaTime);
+  const needsNewTarget = !Number.isFinite(npc.searchMoveTargetX)
+    || !Number.isFinite(npc.searchMoveTargetY)
+    || npc.searchScanStepTimer <= 0;
+  if (needsNewTarget) {
+    const target = getReachableSearchPoint(npc, level);
+    npc.searchMoveTargetX = target.x;
+    npc.searchMoveTargetY = target.y;
+    npc.searchScanStepTimer = 0.5;
   }
+  const moveTarget = getSearchMoveTarget(npc);
+  if (!moveTarget) {
+    npc.moving = false;
+    return;
+  }
+  runNpcTracker(npc, {
+    profile: 'patrol_route',
+    targetX: moveTarget.x,
+    targetY: moveTarget.y,
+    speed: npc.speedPatrol || 48,
+    label: 'search',
+    axisBias: 1.35,
+    reachThreshold: 8,
+    waypoints: [moveTarget]
+  }, deltaTime, level);
 }
 
 export function updateNpcs(level, deltaTime) {
   let detectedBy = null;
+  const now = Date.now();
   for (const npc of level.npcs) {
-    npc.state = npc.state || 'PATROL';
-    npc.wpIndex = npc.wpIndex || 0;
-    npc.searchTimer = npc.searchTimer || 0;
-    npc.loseSight = npc.loseSight || 0;
-    npc.searchWanderTimer = npc.searchWanderTimer || 0;
-    npc.moving = false;
+    ensureNpcRuntimeState(npc, now);
+    ensureNpcTrackerState(npc);
 
-    if (canSeePlayer(npc, level)) {
-      npc.state = 'CHASE';
-      npc.loseSight = 0.9;
-      const pc = getPlayerCenter(level.player);
-      npc.lastSeenX = pc.x;
-      npc.lastSeenY = pc.y;
-      npc.roomLightResponse = null;
-    } else if (npc.state === 'CHASE') {
-      npc.loseSight -= deltaTime;
-      if (npc.loseSight <= 0) {
-        npc.state = 'SEARCH';
-        npc.searchTimer = 2.8;
-        npc.searchWanderTimer = 0;
+    const detectionPoint = getDetectionPoint(npc, level.player, level);
+    const seesPlayer = !!detectionPoint && hasLineOfSight(level.collision, getNpcCenter(npc).x, getNpcCenter(npc).y, detectionPoint.x, detectionPoint.y, level.settings.baseTile, 4, level);
+    updateNpcAlertLevel(npc, seesPlayer, deltaTime);
+    if (seesPlayer) {
+      npc.lastSeenX = detectionPoint.x;
+      npc.lastSeenY = detectionPoint.y;
+    }
+
+    if (canStateTransition(npc, now) && shouldExitChaseToSearch(npc, seesPlayer) && npc.lastSeenX && npc.lastSeenY) {
+      beginSearchState(npc, npc.lastSeenX, npc.lastSeenY, 'PLAYER_LAST_SEEN', level);
+      clearNpcTrackerState(npc);
+    }
+
+    if (canStateTransition(npc, now) && npc.state === NPC_STATES.PATROL && consumeLightSearchTrigger(npc, level)) {
+      // light-triggered search applied above
+    } else if (canStateTransition(npc, now) && npc.state === NPC_STATES.PATROL) {
+      const trackableFootstep = findTrackableFootstep(npc, level);
+      if (trackableFootstep) {
+        beginSearchState(npc, trackableFootstep.x, trackableFootstep.y, 'FOOTSTEP', level);
+        clearNpcTrackerState(npc);
       }
     }
 
-    if (npc.state === 'CHASE') {
+    if (canStateTransition(npc, now) && shouldEnterChase(npc, seesPlayer)) {
+      setNpcState(npc, NPC_STATES.CHASE);
+      clearNpcTrackerState(npc);
+      npc.roomLightResponse = null;
+    }
+
+    if (npc.state === NPC_STATES.CHASE) {
       const playerCenter = getPlayerCenter(level.player);
-      moveToward(npc, playerCenter.x - npc.w / 2, playerCenter.y - npc.h / 2, npc.speedChase || 82, deltaTime, level);
+      const chaseTarget = getNpcWorldCenterTarget(npc, playerCenter.x, playerCenter.y);
+      runNpcTracker(npc, {
+        profile: 'steering_chase',
+        targetX: chaseTarget.x,
+        targetY: chaseTarget.y,
+        speed: npc.speedChase || 82,
+        label: 'chase',
+        repathDistanceThreshold: level.settings.baseTile * 2.25,
+        axisBias: 1.5,
+        minimumEdgeFollowSeconds: 0.45,
+        directRange: level.settings.baseTile * 5.5
+      }, deltaTime, level);
       if (Math.hypot(playerCenter.x - (npc.x + npc.w / 2), playerCenter.y - (npc.y + npc.h / 2)) < 12) {
         detectedBy = npc.id;
       }
-    } else if (updateLightResponse(npc, level, deltaTime)) {
-      // handled above
-    } else if (npc.state === 'SEARCH') {
+    } else if (npc.state === NPC_STATES.SEARCH) {
       npc.searchTimer -= deltaTime;
-      npc.searchWanderTimer -= deltaTime;
-      if (npc.lastSeenX && npc.lastSeenY && npc.searchTimer > 1.2) {
-        moveToward(npc, npc.lastSeenX - npc.w / 2, npc.lastSeenY - npc.h / 2, npc.speedPatrol || 55, deltaTime, level);
+      if (npc.searchTimer <= 0 && canStateTransition(npc, now)) {
+        enterPatrolState(npc);
+        clearNpcTrackerState(npc);
+        clearRecoveryMonitor(npc);
       } else {
-        if (npc.searchWanderTimer <= 0 || !npc.searchTargetX || !npc.searchTargetY) seedSearchWander(npc, level);
-        moveToward(npc, npc.searchTargetX - npc.w / 2, npc.searchTargetY - npc.h / 2, npc.speedPatrol || 55, deltaTime, level);
+        updateSearchScan(npc, deltaTime, level);
       }
-      if (npc.searchTimer <= 0) {
-        npc.state = 'RETURN';
-      }
-    } else if (npc.state === 'RETURN') {
-      updateReturnState(npc, level, deltaTime);
     } else {
-      const point = npc.waypoints?.[npc.wpIndex];
+      const patrolTargets = getPatrolTargets(npc, level);
+      const point = patrolTargets[npc.wpIndex] || patrolTargets[0] || null;
       if (point) {
-        const arrived = moveToward(npc, point.x, point.y, npc.speedPatrol || 55, deltaTime, level);
-        if (arrived) npc.wpIndex = (npc.wpIndex + 1) % npc.waypoints.length;
+        if (!npc.patrolRouteJoined) {
+          const rejoined = runNpcTracker(npc, {
+            profile: 'path_smooth',
+            targetX: point.x,
+            targetY: point.y,
+            speed: npc.speedPatrol || 55,
+            label: 'patrol_rejoin',
+            axisBias: 1.35,
+            preferDirectSight: true,
+            reachThreshold: 6,
+            repathDistanceThreshold: level.settings.baseTile * 0.75
+          }, deltaTime, level);
+          if (rejoined) {
+            npc.patrolRouteJoined = true;
+            clearRecoveryMonitor(npc);
+            clearNpcTrackerState(npc);
+          }
+        } else {
+          runNpcTracker(npc, {
+            profile: 'patrol_route',
+            targetX: point.x,
+            targetY: point.y,
+            speed: npc.speedPatrol || 55,
+            label: 'patrol',
+            axisBias: 1.35,
+            reachThreshold: 6,
+            waypoints: patrolTargets
+          }, deltaTime, level);
+          if (npc.moving) clearRecoveryMonitor(npc);
+        }
       }
     }
 
+    updateGlobalStuckCheck(npc, deltaTime, level);
+    applyNpcSeparation(npc, level);
+
     npc.characterType = 'npc';
-    npc.characterVariant = npc.state === 'CHASE' ? 'chase' : npc.state === 'SEARCH' ? 'search' : 'patrol';
+    npc.stateLabel = getNpcStateLabel(npc);
+    npc.characterVariant = npc.state === NPC_STATES.CHASE ? 'chase' : npc.state === NPC_STATES.SEARCH ? 'search' : 'patrol';
+    npc.vision = getNpcVisionPolygon(npc, level);
     updateHumanoidAnimation(npc, deltaTime, !!npc.moving, npc.facing || 'down', {
       frameCount: 4,
-      walkFrameDuration: npc.state === 'CHASE' ? 0.08 : 0.12,
+      walkFrameDuration: npc.state === NPC_STATES.CHASE ? 0.08 : 0.12,
       idleFrameDuration: 0.38,
       interactFrameDuration: 0.085,
-      alertFrameDuration: npc.state === 'CHASE' ? 0.075 : 0.095,
-      bobAmount: npc.state === 'CHASE' ? 2.0 : 1.2,
+      alertFrameDuration: npc.state === NPC_STATES.CHASE ? 0.075 : 0.095,
+      bobAmount: npc.state === NPC_STATES.CHASE ? 2.0 : 1.2,
       walkFrames: [0, 1, 2, 1],
       idleFrames: [0, 0, 3, 0],
       interactFrames: [0, 1, 2, 3],
       alertFrames: [3, 2, 3, 1],
-      modeOverride: npc.state === 'CHASE' || npc.state === 'SEARCH' ? 'alert' : npc.state === 'RETURN' ? 'walk' : undefined,
+      modeOverride: npc.state === NPC_STATES.CHASE || npc.state === NPC_STATES.SEARCH ? 'alert' : undefined,
       variant: npc.characterVariant
     });
   }

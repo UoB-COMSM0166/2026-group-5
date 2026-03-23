@@ -1,3 +1,4 @@
+// Top-level render: composes map, lighting, entities, HUD, and screen overlays.
 import { getAssetState } from '../core/assetLoader.js';
 import { renderMap } from './mapRenderer_p5.js';
 import { renderEntities } from './entityRenderer_p5.js';
@@ -10,8 +11,8 @@ export function renderScene(p, state, overlaySystem) {
     p.push();
     if (state.camera) p.translate(-state.camera.x, -state.camera.y);
     renderMap(p, state);
-    renderEntities(p, state);
     renderLightingOverlay(p, state);
+    renderEntities(p, state);
     p.pop();
   } else {
     p.background('#0d1220');
@@ -50,6 +51,27 @@ function renderHud(p, state) {
     p.text(line, panelX + 12, panelY + 10 + idx * 18);
   });
 
+  const npcs = state.level?.npcs || [];
+  if (npcs.length) {
+    const panelW = 188;
+    const lineH = 16;
+    const maxRows = Math.min(8, npcs.length);
+    const statePanelH = 28 + maxRows * lineH;
+    const statePanelX = p.width - panelW - 12;
+    const statePanelY = p.height - statePanelH - 12;
+    p.fill(8, 15, 28, 175);
+    p.rect(statePanelX, statePanelY, panelW, statePanelH, 10);
+    p.fill('#cbd5e1');
+    p.textAlign(p.LEFT, p.TOP);
+    p.text('NPC States', statePanelX + 10, statePanelY + 8);
+    npcs.slice(0, maxRows).forEach((npc, index) => {
+      const y = statePanelY + 28 + index * lineH;
+      const color = npc.state === 'CHASE' ? '#fb7185' : npc.state === 'SEARCH' ? '#f59e0b' : '#86efac';
+      p.fill(color);
+      p.text(`${npc.id || `npc${index + 1}`}: ${npc.stateLabel || npc.state || 'PATROL'}`, statePanelX + 10, y);
+    });
+  }
+
   if (state.ui.message) {
     const msgW = Math.min(420, p.width - 32);
     const msgX = (p.width - msgW) / 2;
@@ -69,14 +91,14 @@ function renderHud(p, state) {
     p.text(`Detected by: ${state.meta.detectedBy}`, p.width - warnW / 2 - 12, 18);
   }
 
-  if (state.debug.showCamera || state.debug.showCollision || state.debug.showRooms || state.debug.showVision) {
+  if (state.debug.showCamera || state.debug.showCollision || state.debug.showRooms) {
     const assets = getAssetState();
     const debugLines = [
       `Time: ${(state.meta.elapsedMs / 1000).toFixed(1)}s`,
       `Assets: ${assets.imageCount}/${assets.requestedCount}${assets.failedCount ? ` fb ${assets.failedCount}` : ''}`,
       `Track: ${state.audio.currentTrack || '-'}${state.audio.muted ? ' (muted)' : ''}`,
       `Camera: ${Math.round(state.camera?.x || 0)}, ${Math.round(state.camera?.y || 0)}`,
-      'R restart | 1 2 map | B/C/V/G debug | P/Esc pause | M mute'
+      'R restart | 1 2 map | B/C/G debug | P/Esc pause | M mute'
     ];
     const dbgW = Math.min(440, p.width - 24);
     const dbgH = 104;

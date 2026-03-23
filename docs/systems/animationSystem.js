@@ -1,4 +1,4 @@
-
+// Character animation: frame cycling, one-shot triggers, sprite sheet rect lookup.
 const DIRECTIONS = ['down', 'left', 'right', 'up'];
 
 function clampFrame(frame, max) {

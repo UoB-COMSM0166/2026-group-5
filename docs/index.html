@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fusion Game v38</title>
+  <title>Game v7</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <h1>Fusion Game v38</h1>
+      <h1>Game v7</h1>
       <div class="actions">
         <button data-level="map1">Map 1</button>
         <button data-level="map2">Map 2</button>
-        <button data-level="map3" disabled title="Map 3 currently uses collision-only logic">Map 3 (logic)</button>
+        <button data-level="map3">Map 3</button>
         <button id="restartBtn">Restart</button>
       </div>
     </header>
@@ -31,14 +31,13 @@
     </main>
   </div>
 
-  <script src="./legacy/p5.js"></script>
-  <script src="./legacy/basic_test2.js"></script>
-  <script src="./legacy/collision.js"></script>
-  <script src="./legacy/entities.js"></script>
-  <script src="./legacy/room-light-camera.js"></script>
-  <script src="./legacy/map1.js"></script>
-  <script src="./legacy/map2.js"></script>
-  <script src="./legacy/map3.js"></script>
+  <script src="./p5.js"></script>
+  <script src="./maps/map1_tiled.js"></script>
+  <script src="./maps/map2_tiled.js"></script>
+  <script src="./maps/map3_tiled.js"></script>
+  <script src="./maps/map1.js"></script>
+  <script src="./maps/map2.js"></script>
+  <script src="./maps/map3.js"></script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

@@ -1,3 +1,4 @@
+// Screen state enum and initial game state factory.
 export const SCREEN_STATES = Object.freeze({
   START: 'start',
   INTRO: 'intro',
@@ -38,7 +39,6 @@ export function createGameState() {
     debug: {
       showCollision: false,
       showRooms: false,
-      showVision: false,
       showLayers: false,
       showCamera: false
     },

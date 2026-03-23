@@ -1,3 +1,4 @@
+// Async image loader: collects all tileset and sprite paths, loads via p5 or DOM.
 import { collectTilesetPaths } from '../render/tilesetCatalog.js';
 import { SPRITE_PATHS, collectCharacterPaths } from '../render/spriteCatalog.js';
 
@@ -19,6 +20,8 @@ function collectPaths() {
   Object.values(SPRITE_PATHS.door).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.chest).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.button).forEach((v) => paths.add(v));
+  // v19 intentionally stops probing every potential character variant path.
+  // Only concrete fallback assets are requested here, so missing-file noise stays low.
   return Array.from(paths).filter(Boolean);
 }
 

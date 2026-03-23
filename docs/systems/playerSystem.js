@@ -1,8 +1,93 @@
+// Player movement, stamina, footstep trail, and animation driver.
 import { canMoveToRect } from './collisionSystem.js';
+import { isPointInsideNpcVision } from './npcSystem.js';
 import { updateHumanoidAnimation, triggerOneShotAnimation } from './animationSystem.js';
 
 export function triggerPlayerAction(player, mode = 'interact', duration = 0.26) {
   triggerOneShotAnimation(player, mode, duration, { facing: player.facing || 'down' });
+}
+
+function ensureFootstepState(player) {
+  player.footsteps ||= [];
+  if (player.footstepTrailX == null) player.footstepTrailX = null;
+  if (player.footstepTrailY == null) player.footstepTrailY = null;
+  if (player.lastFootstepAt == null) player.lastFootstepAt = 0;
+  if (player.footstepSide == null) player.footstepSide = 1;
+}
+
+function addFootstep(player, x, y, dirX, dirY, level) {
+  const now = Date.now();
+  let fx = 0;
+  let fy = 1;
+
+  if (Math.abs(dirX) > Math.abs(dirY)) {
+    fx = dirX >= 0 ? 1 : -1;
+    fy = 0;
+  } else {
+    fy = dirY >= 0 ? 1 : -1;
+  }
+
+  const nx = -fy;
+  const ny = fx;
+  const sideOffset = 3;
+  const backOffset = 6;
+  const offsetX = nx * sideOffset * player.footstepSide;
+  const offsetY = ny * sideOffset * player.footstepSide;
+  player.footsteps.push({
+    x: x + offsetX - fx * backOffset,
+    y: y + offsetY - fy * backOffset,
+    timestamp: now
+  });
+  player.lastFootstepAt = now;
+  player.footstepSide *= -1;
+
+  const maxFootsteps = level.settings.maxFootsteps || 50;
+  if (player.footsteps.length > maxFootsteps) player.footsteps.shift();
+}
+
+function addFootstepsAlongPath(player, startX, startY, endX, endY, dirX, dirY, level) {
+  const stride = level.settings.footstepStride || 7;
+
+  if (player.footstepTrailX == null || player.footstepTrailY == null) {
+    player.footstepTrailX = startX;
+    player.footstepTrailY = startY;
+    addFootstep(player, startX, startY, dirX, dirY, level);
+  }
+
+  let dx = endX - player.footstepTrailX;
+  let dy = endY - player.footstepTrailY;
+  let dist = Math.hypot(dx, dy);
+
+  while (dist >= stride) {
+    const ux = dx / dist;
+    const uy = dy / dist;
+    player.footstepTrailX += ux * stride;
+    player.footstepTrailY += uy * stride;
+    addFootstep(player, player.footstepTrailX, player.footstepTrailY, dirX, dirY, level);
+    dx = endX - player.footstepTrailX;
+    dy = endY - player.footstepTrailY;
+    dist = Math.hypot(dx, dy);
+  }
+}
+
+function updateFootsteps(player, level) {
+  const now = Date.now();
+  const lifetime = level.settings.footstepLifetime || 3000;
+  player.footsteps = (player.footsteps || []).filter((footstep) => now - footstep.timestamp < lifetime);
+  if (player.footsteps.length === 0) {
+    player.footstepTrailX = null;
+    player.footstepTrailY = null;
+    player.footstepSide = 1;
+  }
+}
+
+function isPlayerInsideAnyNpcWarningRange(player, level) {
+  const targetX = player.x + player.w / 2;
+  const targetY = player.y + player.h / 2;
+  for (const npc of level.npcs || []) {
+    if (isPointInsideNpcVision(npc, targetX, targetY, level)) return true;
+  }
+  return false;
 }
 
 function moveActor(player, dx, dy, level) {
@@ -24,6 +109,7 @@ function moveActor(player, dx, dy, level) {
 }
 
 export function updatePlayer(player, input, level, deltaTime) {
+  ensureFootstepState(player);
   let ix = input.x;
   let iy = input.y;
   const len = Math.hypot(ix, iy) || 1;
@@ -37,8 +123,12 @@ export function updatePlayer(player, input, level, deltaTime) {
 
   const oldX = player.x;
   const oldY = player.y;
+  const oldCenterX = oldX + player.w / 2;
+  const oldCenterY = oldY + player.h / 2;
   moveActor(player, ix * speed * deltaTime, iy * speed * deltaTime, level);
   const moved = Math.abs(player.x - oldX) > 0.05 || Math.abs(player.y - oldY) > 0.05;
+  const newCenterX = player.x + player.w / 2;
+  const newCenterY = player.y + player.h / 2;
 
   player.recoverCooldown = player.recoverCooldown || 0;
   if (sprinting) {
@@ -60,6 +150,15 @@ export function updatePlayer(player, input, level, deltaTime) {
       player.facing = iy > 0 ? 'down' : 'up';
     }
   }
+
+  const shouldShowFootsteps = sprinting || isPlayerInsideAnyNpcWarningRange(player, level);
+  if (moved && shouldShowFootsteps) {
+    addFootstepsAlongPath(player, oldCenterX, oldCenterY, newCenterX, newCenterY, ix, iy, level);
+  } else if (!shouldShowFootsteps) {
+    player.footstepTrailX = null;
+    player.footstepTrailY = null;
+  }
+  updateFootsteps(player, level);
 
   player.moving = moved;
   player.moveX = ix;

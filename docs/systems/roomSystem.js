@@ -1,3 +1,4 @@
+// Room system: room lighting, button placement, NPC light-change notification.
 function getRoomIdAt(matrix, x, y) {
   if (!Array.isArray(matrix) || y < 0 || y >= matrix.length) return 1;
   if (x < 0 || x >= (matrix[y]?.length || 0)) return 1;
@@ -143,13 +144,9 @@ export function createRoomSystem(roomMatrix, options = {}) {
         const npcRoomId = this.getActorRoomId(npc);
         if (npcRoomId !== roomId) continue;
         if (npc.state === 'CHASE') continue;
-        npc.state = 'SEARCH';
-        npc.searchTimer = options.searchDuration || 3.5;
-        npc.searchWanderTimer = 0;
         npc.roomLightResponse = {
           roomId,
           source,
-          stage: 'GO_TO_BUTTON',
           buttonTile: { x: button.x, y: button.y },
           buttonX: button.centerX,
           buttonY: button.centerY

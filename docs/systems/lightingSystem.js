@@ -1,3 +1,4 @@
+// Per-tile darkness value based on room light state.
 export function getTileDarkness(level, tx, ty) {
   const roomId = level.roomSystem.getRoomId(tx, ty);
   if (roomId <= 1) return 0;
