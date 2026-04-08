@@ -1,0 +1,25 @@
+# Unify line endings for all text files to LF (resolve Windows CRLF conversion)
+* text=auto eol=lf
+
+# Mark binary files to skip line count statistics
+# Image formats
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# Audio/Video formats
+*.mp3 binary
+*.wav binary
+*.mp4 binary
+*.avi binary
+
+# Archives/Executables/Fonts
+*.zip binary
+*.rar binary
+*.exe binary
+*.dll binary
+*.woff2 binary
+*.ttf binary
