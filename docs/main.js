@@ -41,7 +41,7 @@ new window.p5((p) => {
 
   p.keyPressed = (event) => {
     if (event) event.preventDefault?.();
-    game.onKeyPressed?.(p.key, event?.code || p.keyCode);
+    game.onKeyPressed?.(p.key, p.keyCode);
     return false;
   };
 
@@ -56,12 +56,23 @@ new window.p5((p) => {
     p.resizeCanvas(width, height);
     game.onResize?.(width, height);
   };
+
+  p.mouseWheel = (event) => {
+    game.onMouseWheel?.(event.delta, p.mouseX, p.mouseY);
+    return false;
+  };
+
+  p.mousePressed = () => {
+    game.onMousePressed?.(p.mouseX, p.mouseY, p.mouseButton, p);
+    return false;
+  };
 }, document.getElementById('game-root'));
 
 document.querySelectorAll('[data-level]').forEach((button) => {
-  button.addEventListener('click', () => game.switchLevel?.(button.dataset.level));
+  if (button.dataset.level !== 'restart') {
+    button.addEventListener('click', () => game.switchLevel?.(button.dataset.level));
+  }
 });
-document.getElementById('restartBtn')?.addEventListener('click', () => game.restartLevel?.());
 
 window.addEventListener('blur', () => game.onWindowBlur?.());
 document.addEventListener('visibilitychange', () => { if (document.hidden) game.onWindowBlur?.(); });

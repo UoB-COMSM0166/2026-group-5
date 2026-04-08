@@ -1,7 +1,10 @@
 // Screen state enum and initial game state factory.
+import { createInventory } from '../systems/lootTable.js';
+
 export const SCREEN_STATES = Object.freeze({
   START: 'start',
   INTRO: 'intro',
+  TUTORIAL: 'tutorial',
   PLAYING: 'playing',
   PAUSE: 'pause',
   WIN: 'win',
@@ -22,14 +25,21 @@ export function createGameState() {
       detectedBy: null,
       elapsedMs: 0,
       objective: 'Collect all chests',
-      exitDistanceText: '-'
+      exitDistanceText: '-',
+      levelSession: 0
     },
     ui: {
       message: '',
       messageTimer: 0,
       overlayAlpha: 0,
       flashAlpha: 0,
-      vignette: 0.18
+      vignette: 0.18,
+      tutorial: {
+        pageIndex: 0,
+        turnDir: 0,
+        turnT: 0,
+        turning: false
+      }
     },
     audio: {
       muted: false,
@@ -40,8 +50,10 @@ export function createGameState() {
       showCollision: false,
       showRooms: false,
       showLayers: false,
-      showCamera: false
+      showCamera: false,
+      showExploration: false
     },
+    inventory: createInventory(),
     camera: null,
     loading: {
       ready: false,

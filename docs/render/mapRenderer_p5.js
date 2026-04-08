@@ -1,4 +1,3 @@
-// Map renderer: draws tiled layers from tileset images with fallback color blocks.
 import { getImage } from '../core/assetLoader.js';
 import { getTilesetConfig, GID_REMAP, GID_COLORS } from './tilesetCatalog.js';
 import { getVisibleTileBounds } from '../systems/cameraSystem.js';

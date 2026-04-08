@@ -96,14 +96,18 @@ export function getPointTilePosition(x, y, tileSize) {
   };
 }
 
-export function isTileWalkableForActor(level, actor, tx, ty, tileSize = level?.settings?.baseTile || 16) {
+export function isTileWalkableForActor(level, actor, tx, ty, tileSize = level?.settings?.baseTile || 16, options = {}) {
   const collision = level?.collision || [];
   if (!collision.length) return false;
   const maxY = collision.length;
   const maxX = collision[0]?.length || 0;
   if (tx < 0 || ty < 0 || tx >= maxX || ty >= maxY) return false;
+  const allowDoors = options.allowDoors && level?.doorSystem?.isDoorTile;
   for (const tile of getActorTiles(actor, tx, ty, tileSize)) {
-    if (isBlockedByWorld(level, tile.x, tile.y, tileSize)) return false;
+    if (isBlockedByWorld(level, tile.x, tile.y, tileSize)) {
+      if (allowDoors && level.doorSystem.isDoorTile(tile.x, tile.y)) continue;
+      return false;
+    }
   }
   return true;
 }
@@ -114,8 +118,21 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
   const start = { tx: startTile.tx, ty: startTile.ty };
   const goal = { tx: goalTile.tx, ty: goalTile.ty };
 
+  const allowDoors = !!options.allowDoors;
+  const walkOpts = allowDoors ? { allowDoors: true } : {};
+
+  const isChaseNpc = actor?.state === 'CHASE';
+  if (isChaseNpc) {
+    const startWalkable = isTileWalkableForActor(level, actor, start.tx, start.ty, tileSize, walkOpts);
+    const goalWalkable = isTileWalkableForActor(level, actor, goal.tx, goal.ty, tileSize, walkOpts);
+    console.log(`[DEBUG findPath] NPC=${actor.id} start=(${start.tx},${start.ty},walk=${startWalkable}) goal=(${goal.tx},${goal.ty},walk=${goalWalkable}) actorPos=(${actor.x?.toFixed(2)},${actor.y?.toFixed(2)}) w=${actor.w} h=${actor.h} insetX=${actor.collisionInsetX} insetY=${actor.collisionInsetY}`);
+  }
+
   if (start.tx === goal.tx && start.ty === goal.ty) return [start];
-  if (!isTileWalkableForActor(level, actor, goal.tx, goal.ty, tileSize)) return [];
+  if (!isTileWalkableForActor(level, actor, goal.tx, goal.ty, tileSize, walkOpts)) {
+    if (isChaseNpc) console.log(`[DEBUG findPath] GOAL NOT WALKABLE NPC=${actor.id} goal=(${goal.tx},${goal.ty})`);
+    return [];
+  }
 
   const open = new MinHeap((a, b) => a.f - b.f || a.g - b.g);
   open.push({ tx: start.tx, ty: start.ty, g: 0, f: manhattan(start.tx, start.ty, goal.tx, goal.ty) });
@@ -147,6 +164,9 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
         walkKey = toKey(prev.tx, prev.ty);
       }
       path.reverse();
+      if (isChaseNpc) {
+        console.log(`[DEBUG findPath] FOUND NPC=${actor.id} pathLen=${path.length} iterations=${iterations} path=[${path.map(n=>`(${n.tx},${n.ty})`).join('→')}]`);
+      }
       return path;
     }
 
@@ -155,7 +175,7 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
       const nextTy = current.ty + dir.y;
       const nextKey = toKey(nextTx, nextTy);
       if (closed.has(nextKey)) continue;
-      if (!isTileWalkableForActor(level, actor, nextTx, nextTy, tileSize)) continue;
+      if (!isTileWalkableForActor(level, actor, nextTx, nextTy, tileSize, walkOpts)) continue;
 
       const tentativeG = current.g + 1;
       const knownG = gScore.get(nextKey);
@@ -172,6 +192,9 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
     }
   }
 
+  if (isChaseNpc) {
+    console.log(`[DEBUG findPath] NO PATH FOUND NPC=${actor.id} iterations=${iterations} closedNodes=${closed.size}`);
+  }
   return [];
 }
 

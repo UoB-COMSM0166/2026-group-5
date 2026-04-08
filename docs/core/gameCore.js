@@ -10,9 +10,11 @@ import { updateNpcs } from '../systems/npcSystem.js';
 import { renderScene } from '../render/renderSystem.js';
 import { createAudioSystem } from '../systems/audioSystem.js';
 import { createScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
-import { createCamera, configureCameraBounds, resizeCamera, updateCamera } from '../systems/cameraSystem.js';
+import { createCamera, configureCameraBounds, resizeCamera, updateCamera, changeCameraZoom, setCameraZoom } from '../systems/cameraSystem.js';
 import { handleStartScreenKey, resetStartScreen } from '../states/startScreen.js';
 import { handleIntroScreenKey, resetIntroScreen } from '../states/introScreen.js';
+import { createInventory, collectLoot, formatInventory } from '../systems/lootTable.js';
+import { handleTutorialScreenKey, handleTutorialScreenMouse, resetTutorialScreen } from '../states/tutorialScreen.js';
 
 export function createGameCore({ initialLevel = 'map2' } = {}) {
   const state = createGameState();
@@ -28,6 +30,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     document.getElementById('promptText')?.replaceChildren(document.createTextNode(state.prompt || '-'));
     const assetState = getAssetState();
     document.getElementById('assetState')?.replaceChildren(document.createTextNode(`${assetState.imageCount}/${assetState.requestedCount}${assetState.failedCount ? ` fallback ${assetState.failedCount}` : ''}`));
+    document.getElementById('inventoryText')?.replaceChildren(document.createTextNode(formatInventory(state.inventory)));
   }
 
   function setMessage(text, seconds = 1.5) {
@@ -47,14 +50,18 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     configureCameraBounds(camera, state.level.mapWidth, state.level.mapHeight, state.level.settings.baseTile);
     camera.x = 0;
     camera.y = 0;
+    const initialZoom = state.level.settings.initialZoom ?? 1.0;
+    setCameraZoom(camera, initialZoom);
     state.camera = camera;
     state.meta.collected = state.level.boxSystem.boxes.filter((box) => box.opened).length;
     state.meta.target = state.level.boxSystem.boxes.length;
     state.meta.detectedBy = null;
     state.meta.elapsedMs = 0;
     state.meta.startedAt = 0;
+    state.meta.levelSession += 1;
     state.meta.objective = state.level.missionSystem.getObjectiveText(state.meta.collected, state.meta.target);
     state.meta.exitDistanceText = state.level.missionSystem.isUnlocked() ? `${state.level.missionSystem.getDistanceToExit(state.level.player).toFixed(0)} px` : 'locked';
+    state.inventory = createInventory();
     state.prompt = 'Arrow Up / Down to choose, Enter to confirm';
     syncHud();
   }
@@ -69,6 +76,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     if (screen === SCREEN_STATES.INTRO) state.prompt = 'Press Enter to skip';
     if (screen === SCREEN_STATES.PLAYING) state.prompt = 'Find the chests';
     if (screen === SCREEN_STATES.PAUSE) state.prompt = 'Paused';
+    if (screen === SCREEN_STATES.TUTORIAL) state.prompt = 'Click arrows or press ← → to turn pages';
     audio.sync(screen);
     const audioState = audio.getState();
     state.audio.currentTrack = audioState.currentKey;
@@ -81,6 +89,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     state.nearestLightButton = null;
     resetStartScreen();
     resetIntroScreen();
+    resetTutorialScreen(state);
     setScreen(SCREEN_STATES.START);
     overlay.flash(state, 0.3);
   }
@@ -90,6 +99,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     loadLevel(levelId);
     resetStartScreen();
     resetIntroScreen();
+    resetTutorialScreen(state);
     setScreen(SCREEN_STATES.START);
     overlay.flash(state, 0.3);
   }
@@ -110,6 +120,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
         return true;
       }
     }
+    if (state.screen === SCREEN_STATES.TUTORIAL) return handleTutorialScreenKey(key, state, api);
     return false;
   }
 
@@ -137,6 +148,7 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       loadLevel(currentLevelId);
       resetStartScreen();
       resetIntroScreen();
+      resetTutorialScreen(state);
       setScreen(SCREEN_STATES.START);
       setMessage('Ready.', 1.2);
     },
@@ -156,7 +168,12 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       state.meta.elapsedMs = Math.max(0, performance.now() - state.meta.startedAt);
       updatePlayer(state.level.player, input.getMovement(), state.level, deltaTime);
       if (state.camera) updateCamera(state.camera, state.level.player, deltaTime);
-      state.level.doorSystem.update(deltaTime);
+      
+      const roomSystem = state.level.roomSystem;
+      const playerRoomId = roomSystem.getActorRoomId(state.level.player);
+      if (playerRoomId > 1 && roomSystem.explorePlayerRoom(state.level.player)) {}
+      
+      state.level.doorSystem.update(deltaTime, [state.level.player, ...(state.level.npcs || [])]);
       state.level.boxSystem.update(deltaTime);
       state.level.roomSystem.update(deltaTime);
       state.level.missionSystem.update(deltaTime);
@@ -179,11 +196,13 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       state.nearestLightButton = prompt?.type === 'light' ? prompt.entity : null;
       state.prompt = prompt?.text || (state.level.missionSystem.isUnlocked() ? 'Head to extraction' : 'Find the chests');
       if (input.consumeInteract()) {
-        const result = tryInteract(state.level);
+        const result = tryInteract(state.level, state.inventory);
         if (result.success) {
           triggerPlayerAction(state.level.player, result.kind === 'light' ? 'alert' : 'interact', result.kind === 'light' ? 0.22 : 0.28);
           setMessage(result.text, 1.2);
           overlay.flash(state, result.kind === 'light' ? 0.12 : 0.18);
+        } else if (result.text) {
+          setMessage(result.text, 1);
         }
         if (result.success && result.kind === 'exit') {
           setScreen(SCREEN_STATES.WIN);
@@ -196,8 +215,10 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
           const roomId = result.entity?.roomId;
           if (roomId) setMessage(state.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3);
         }
-        if (result.success && result.kind === 'door') setMessage(result.entity.open ? 'Door opened' : 'Door closed', 1);
+        if (result.success && result.kind === 'door') setMessage(result.text, 1);
         if (result.success && result.kind === 'box') {
+          const loot = collectLoot(state.inventory, result.entity.id, state.levelId);
+          if (loot) setMessage(`Found: ${loot.label}`, 1.5);
           state.meta.collected = state.level.boxSystem.boxes.filter((box) => box.opened).length;
           if (state.meta.collected >= state.meta.target && state.meta.target > 0 && !state.level.missionSystem.isUnlocked()) {
             state.level.missionSystem.unlock();
@@ -225,14 +246,14 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
       }
       input.onKeyPressed(key, keyCode);
       const lower = String(key).toLowerCase();
-      if (keyCode === 27) togglePause();
-      if (lower === 'r') restartLevel();
+      if (keyCode === 27) restartLevel();
       if (lower === '1') switchLevel('map1');
       if (lower === '2') switchLevel('map2');
       if (lower === '3') switchLevel('map3');
       if (lower === 'b') state.debug.showRooms = !state.debug.showRooms;
       if (lower === 'c') state.debug.showCollision = !state.debug.showCollision;
       if (lower === 'g') state.debug.showCamera = !state.debug.showCamera;
+      if (lower === 'v') state.debug.showExploration = !state.debug.showExploration;
       if (lower === 'p') togglePause();
       if (lower === 'h' && state.level) {
         const next = state.level.player.characterVariant === 'default' ? 'stealth' : 'default';
@@ -262,6 +283,34 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     },
     onDomKeyUp(key, code) {
       input.onDomKeyUp?.(key, code);
+    },
+
+    onMouseWheel(delta, mouseX, mouseY) {
+      if (state.screen !== SCREEN_STATES.PLAYING || !state.camera) return;
+      
+      // Calculate zoom delta (negative delta means zoom in, positive means zoom out)
+      const zoomDelta = delta > 0 ? -0.1 : 0.1;
+      
+      // Use player center as zoom center if mouse is not on canvas, otherwise use mouse position
+      const player = state.level.player;
+      const playerScreenX = (player.x + player.w / 2 - state.camera.x) * state.camera.zoom;
+      const playerScreenY = (player.y + player.h / 2 - state.camera.y) * state.camera.zoom;
+      
+      // Determine zoom center (mouse position or player center)
+      const centerX = (mouseX >= 0 && mouseX <= state.camera.width) ? mouseX : playerScreenX;
+      const centerY = (mouseY >= 0 && mouseY <= state.camera.height) ? mouseY : playerScreenY;
+      
+      changeCameraZoom(state.camera, zoomDelta, centerX, centerY);
+    },
+
+    onMousePressed(mouseX, mouseY, mouseButton, p) {
+      if (state.screen === SCREEN_STATES.TUTORIAL) {
+        const handled = handleTutorialScreenMouse(mouseX, mouseY, p, state, api);
+        if (handled) {
+          syncHud();
+          return;
+        }
+      }
     },
 
     syncInputSnapshot(snapshot) {

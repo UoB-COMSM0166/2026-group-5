@@ -4,6 +4,7 @@ import { drawStartScreen } from '../states/startScreen.js';
 import { drawIntroScreen } from '../states/introScreen.js';
 import { drawWinScreen } from '../states/winScreen.js';
 import { drawLoseScreen } from '../states/loseScreen.js';
+import { drawTutorialScreen, updateTutorialScreen } from '../states/tutorialScreen.js';
 
 export function createScreenOverlaySystem() {
   return {
@@ -15,6 +16,9 @@ export function createScreenOverlaySystem() {
         if (state.ui.messageTimer === 0) state.ui.message = '';
       }
       state.ui.flashAlpha = Math.max(0, state.ui.flashAlpha - deltaTime * 1.8);
+      if (state.screen === SCREEN_STATES.TUTORIAL) {
+        updateTutorialScreen(state, deltaTime);
+      }
     },
     flash(state, alpha = 0.35) {
       state.ui.flashAlpha = Math.max(state.ui.flashAlpha, alpha);
@@ -36,6 +40,10 @@ export function createScreenOverlaySystem() {
         drawLoseScreen(p, state);
         return;
       }
+      if (state.screen === SCREEN_STATES.TUTORIAL) {
+        drawTutorialScreen(p, state);
+        return;
+      }
       if (state.ui.vignette > 0) {
         p.noStroke();
         p.fill(0, 0, 0, 60);
@@ -52,6 +60,7 @@ export function createScreenOverlaySystem() {
         p.fill(255, 255, 255, 255 * state.ui.flashAlpha);
         p.rect(0, 0, p.width, p.height);
       }
+
     }
   };
 }

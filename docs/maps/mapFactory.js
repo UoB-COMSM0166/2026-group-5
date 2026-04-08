@@ -72,7 +72,8 @@ export function createRuntimeLevel(levelId, spec) {
     normalVisionMultiplier: settings.normalVisionMultiplier,
     darkVisionMultiplier: settings.darkVisionMultiplier,
     chaseVisionMultiplier: settings.chaseVisionMultiplier,
-    doors: [...doorSystem.doors]
+    doors: [...doorSystem.doors],
+    manualButtons: spec?.manualLightButtons || []
   });
   roomSystem.attachNpcs(npcs);
 

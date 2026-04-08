@@ -3,6 +3,7 @@ import { getImage } from '../core/assetLoader.js';
 import { SPRITE_PATHS, resolveCharacterSprite } from './spriteCatalog.js';
 import { isRectVisible } from '../systems/cameraSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
+import { getInteractionPrompt } from '../systems/interactionSystem.js';
 
 
 function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH = 32, bob = 0) {
@@ -72,93 +73,91 @@ function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
   return false;
 }
 
+// Single panel: the whole door image slides in slideDir.
+// Clipped to original bounding box so the door disappears under adjacent walls.
+function drawSingleDoor(p, door, tile) {
+  const x = door.x * tile;
+  const y = door.y * tile;
+  const doorW = (door.w || 1) * tile;
+  const doorH = (door.h || 2) * tile;
+  const ox = door.slideOffsetX || 0;
+  const oy = door.slideOffsetY || 0;
+  const img = getImage(SPRITE_PATHS.door.slide);
+  if (!img) return;
+
+  const ctx = p.drawingContext;
+  ctx.save();
+  ctx.beginPath();
+  // Clip to original bounding box so the door disappears under adjacent walls when sliding
+  ctx.rect(x, y, doorW, doorH);
+  ctx.clip();
+  p.image(img, x + ox, y + oy, doorW, doorH);
+  ctx.restore();
+}
+
+// Double panel: always split left / right. Each half clipped to its side.
 function drawDoubleDoor(p, door, tile) {
   const x = door.x * tile;
   const y = door.y * tile;
   const doorW = (door.w || 2) * tile;
   const doorH = (door.h || 2) * tile;
-  const leafW = doorW / 2;
-  const leafH = doorH;
-  const img = getImage(SPRITE_PATHS.door.double);
+  const halfW = doorW / 2;
+  const imgA = getImage(SPRITE_PATHS.door.doubleA) || getImage(SPRITE_PATHS.door.slide);
+  const imgB = getImage(SPRITE_PATHS.door.doubleB) || getImage(SPRITE_PATHS.door.slide);
+  if (!imgA && !imgB) return;
+  const pA = door.panelA || { ox: 0, oy: 0 };
+  const pB = door.panelB || { ox: 0, oy: 0 };
+  const ctx = p.drawingContext;
 
-  p.push();
-  p.translate(x + leafW, y);
-  p.rotate(-0.95 * door.anim);
-  if (img) p.image(img, -leafW, 0, leafW, leafH, 0, 0, img.width / 2, img.height);
-  else {
-    p.noStroke();
-    p.fill('#8b7355');
-    p.rect(-leafW + 1, 1, leafW - 2, leafH - 2, 2);
+  // Panel A (left half) — clips to left side of bounding box
+  if (imgA) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, halfW, doorH);
+    ctx.clip();
+    p.image(imgA, x + pA.ox, y, halfW, doorH, 0, 0, imgA.width / 2, imgA.height);
+    ctx.restore();
   }
-  p.pop();
-
-  p.push();
-  p.translate(x + leafW, y);
-  p.rotate(0.95 * door.anim);
-  if (img) p.image(img, 0, 0, leafW, leafH, img.width / 2, 0, img.width / 2, img.height);
-  else {
-    p.noStroke();
-    p.fill('#8b7355');
-    p.rect(1, 1, leafW - 2, leafH - 2, 2);
+  // Panel B (right half) — clips to right side of bounding box
+  if (imgB) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + halfW, y, halfW, doorH);
+    ctx.clip();
+    p.image(imgB, x + halfW + pB.ox, y, halfW, doorH, imgB.width / 2, 0, imgB.width / 2, imgB.height);
+    ctx.restore();
   }
-  p.pop();
-
-  if (door.anim > 0.05) {
-    p.noStroke();
-    p.fill(20, 30, 50, 130 * door.anim);
-    p.rect(x + 2, y + 2, doorW - 4, doorH - 4, 2);
-  }
-}
-
-function drawLineDoor(p, door, tile) {
-  const px = door.x * tile;
-  const py = door.y * tile;
-  const w = (door.w || 1) * tile;
-  const h = (door.h || 2) * tile;
-  const img = getImage(SPRITE_PATHS.door.line);
-  p.push();
-  p.translate(px + w / 2, py);
-  p.rotate(door.angle || 0);
-  if (img) p.image(img, -w / 2, 0, w, h);
-  else {
-    p.fill('#a16207');
-    p.rect(-w / 2, 0, w, h, 2);
-    p.stroke('#111827');
-    p.line(0, 2, 0, h - 2);
-    p.noStroke();
-  }
-  p.pop();
 }
 
 function drawChest(p, chest, tile) {
-  const px = chest.x * tile;
-  const py = chest.y * tile;
-  const w = chest.w * tile;
-  const h = chest.h * tile;
+  const rw = (chest.renderW || chest.w) * tile;
+  const rh = (chest.renderH || chest.h) * tile;
+  const px = chest.x * tile + (chest.renderOffsetX || 0) * tile;
+  const py = chest.y * tile + (chest.renderOffsetY || 0) * tile;
   const baseImg = getImage(SPRITE_PATHS.chest.base);
   const lidImg = getImage(SPRITE_PATHS.chest.lid);
-  if (baseImg) p.image(baseImg, px + 1, py + h / 2, w - 2, h / 2 - 1);
+  if (baseImg) p.image(baseImg, px + 1, py + rh / 2, rw - 2, rh / 2 - 1);
   else {
     p.noStroke();
     p.fill('#7a4b1f');
-    p.rect(px + 1, py + h / 2, w - 2, h / 2 - 1, 3);
+    p.rect(px + 1, py + rh / 2, rw - 2, rh / 2 - 1, 3);
   }
 
-  const hingeX = px + w / 2;
-  const hingeY = py + h / 2;
+  const hingeX = px + rw / 2;
+  const hingeY = py + rh / 2;
   p.push();
   p.translate(hingeX, hingeY);
   p.rotate(chest.angle || 0);
-  if (lidImg) p.image(lidImg, -w / 2 + 1, -h / 2 + 1, w - 2, h / 2 - 2);
+  if (lidImg) p.image(lidImg, -rw / 2 + 1, -rh / 2 + 1, rw - 2, rh / 2 - 2);
   else {
     p.fill(chest.opened ? '#d4b14d' : '#8b5a2b');
-    p.rect(-w / 2 + 1, -h / 2 + 1, w - 2, h / 2 - 2, 3);
+    p.rect(-rw / 2 + 1, -rh / 2 + 1, rw - 2, rh / 2 - 2, 3);
   }
   p.pop();
 
   if (chest.opened) {
     p.fill(254, 243, 199, 70 + 110 * chest.lootPulse);
-    p.rect(px + 4, py + h / 2 + 2, w - 8, 5, 2);
+    p.rect(px + 4, py + rh / 2 + 2, rw - 8, 5, 2);
   }
 }
 
@@ -192,6 +191,7 @@ function drawExitBeacon(p, missionSystem, tile) {
 function renderButton(p, level, button) {
   const lit = level.roomSystem.isLit(button.roomId);
   const glow = button.responseGlow || 0;
+
   const path = lit ? SPRITE_PATHS.button.on : SPRITE_PATHS.button.off;
   const img = getImage(path);
   if (img) {
@@ -251,6 +251,55 @@ function renderFootsteps(p, level) {
   p.pop();
 }
 
+// Render E-key interaction hints at doors when player is nearby
+function renderDoorInteractionPrompts(p, level) {
+  const prompt = getInteractionPrompt(level);
+  if (!prompt || prompt.type !== 'door') return;
+  
+  const door = prompt.entity;
+  const tile = level.settings.baseTile;
+  
+  // Don't show prompt if doorway is blocked
+  const blockedByPlayer = isActorOnDoorTiles(level.player, door, tile);
+  const blockedByNpc = (level.npcs || []).some((npc) => isActorOnDoorTiles(npc, door, tile));
+  if (blockedByPlayer || blockedByNpc) return;
+  
+  const x = door.x * tile;
+  const y = door.y * tile;
+  const w = (door.w || 2) * tile;
+  const h = (door.h || 2) * tile;
+  const centerX = x + w / 2;
+  const topY = y - 8; // Slightly above the door
+  
+  p.push();
+  // Draw key background
+  p.noStroke();
+  p.fill(15, 23, 42, 200);
+  p.rect(centerX - 12, topY - 14, 24, 20, 4);
+  // Draw 'E' text
+  p.fill(255, 255, 255, 240);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(12);
+  p.textStyle(p.BOLD);
+  p.text('E', centerX, topY - 4);
+  // Optional: draw action text below
+  p.textStyle(p.NORMAL);
+  p.textSize(8);
+  p.fill(255, 255, 255, 180);
+  const actionText = door.state === 'OPEN' ? 'Close' : door.state === 'LOCKED' ? 'Unlock' : 'Open';
+  p.text(actionText, centerX, topY + 10);
+  p.pop();
+}
+
+// Helper: Check if actor is on door tiles
+function isActorOnDoorTiles(actor, door, tileSize) {
+  const left = Math.floor(actor.x / tileSize);
+  const right = Math.floor((actor.x + actor.w - 1) / tileSize);
+  const top = Math.floor(actor.y / tileSize);
+  const bottom = Math.floor((actor.y + actor.h - 1) / tileSize);
+  return door.tiles.some(t => t.x >= left && t.x <= right && t.y >= top && t.y <= bottom);
+}
+
 
 
 export function renderEntities(p, state) {
@@ -263,19 +312,13 @@ export function renderEntities(p, state) {
   for (const door of level.doorSystem.doors) {
     const worldX = door.x * tile;
     const worldY = door.y * tile;
-    const worldW = (door.w || (door.kind === 'line' ? 1 : 2)) * tile;
+    const worldW = (door.w || 2) * tile;
     const worldH = (door.h || 2) * tile;
-    if (!isRectVisible(camera, worldX, worldY, worldW, worldH, 32)) continue;
-    if (door.kind === 'line') drawLineDoor(p, door, tile);
-    else drawDoubleDoor(p, door, tile);
+    if (!isRectVisible(camera, worldX, worldY, worldW, worldH, 48)) continue;
+    if (door.panels === 'double') drawDoubleDoor(p, door, tile);
+    else drawSingleDoor(p, door, tile);
   }
 
-  for (const chest of level.boxSystem.boxes) {
-    const worldX = chest.x * tile;
-    const worldY = chest.y * tile;
-    if (!isRectVisible(camera, worldX, worldY, chest.w * tile, chest.h * tile, 24)) continue;
-    drawChest(p, chest, tile);
-  }
   if (level.missionSystem?.exit) {
     const exit = level.missionSystem.exit;
     if (isRectVisible(camera, exit.x, exit.y, exit.w, exit.h, 64)) drawExitBeacon(p, level.missionSystem, tile);
@@ -322,4 +365,16 @@ export function renderEntities(p, state) {
     const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
     drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
   }
+
+  for (const chest of level.boxSystem.boxes) {
+    const rw = (chest.renderW || chest.w) * tile;
+    const rh = (chest.renderH || chest.h) * tile;
+    const rx = chest.x * tile + (chest.renderOffsetX || 0) * tile;
+    const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
+    if (!isRectVisible(camera, rx, ry, rw, rh, 24)) continue;
+    drawChest(p, chest, tile);
+  }
+
+  // Draw E-key hints above doors when player can interact
+  renderDoorInteractionPrompts(p, level);
 }

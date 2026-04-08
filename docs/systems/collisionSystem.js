@@ -27,6 +27,9 @@ export function isBlockedByWorld(levelOrCollision, tx, ty, tileSize = 16) {
   return false;
 }
 
+// DEBUG: detailed collision detection log switch (controlled by npcTrackerSystem for main output)
+let _canMoveToRect_debugCounter = 0;
+
 export function canMoveToRect(entity, nextX, nextY, collision, tileSize, level = null) {
   const rect = getEntityCollisionRect(entity, nextX, nextY);
   const left = Math.floor(rect.x / tileSize);

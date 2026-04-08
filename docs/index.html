@@ -3,30 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Game v7</title>
+  <title>Game v8</title>
   <link rel="icon" href="data:," />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <h1>Game v7</h1>
+      <h1>Game v8</h1>
       <div class="actions">
         <button data-level="map1">Map 1</button>
         <button data-level="map2">Map 2</button>
         <button data-level="map3">Map 3</button>
-        <button id="restartBtn">Restart</button>
       </div>
     </header>
 
     <main class="game-layout">
       <div id="game-root"></div>
       <aside class="hud-panel">
-        <div><strong>Screen:</strong> <span id="screenState">-</span></div>
-        <div><strong>Level:</strong> <span id="levelName">-</span></div>
-        <div><strong>Prompt:</strong> <span id="promptText">-</span></div>
-        <div><strong>Assets:</strong> <span id="assetState">-</span></div>
-        <div><strong>Hint:</strong> Start menu uses Arrow Up / Down + Enter. Intro uses Enter to skip / continue. Playing uses E interact, Shift sprint, P or Esc pause, M mute.</div>
+        <div class="guide-title"><strong>Controls</strong></div>
+        <div class="guide-item"><strong>Move:</strong> 
+          W<span class="arrow">↑</span> 
+          S<span class="arrow">↓</span> 
+          A<span class="arrow">←</span> 
+          D<span class="arrow">→</span></div>
+        <div class="guide-item"><strong>Interact:</strong> E 
+          (Open box, Open/Close door, Turn on/off light)</div>
+        <div class="guide-item"><strong>Restart:</strong> ESC</div>
+        <div class="guide-item"><strong>Map Zoom-+:</strong> Mouse Wheel</div>
+        <img src="./assets/images/ui/hud_bottom.png" alt="HUD Bottom" class="hud-bottom-img">
       </aside>
     </main>
   </div>

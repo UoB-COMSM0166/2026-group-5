@@ -19,8 +19,11 @@ import {
   clearNpcTrackerState,
   runNpcTracker,
   getNpcWorldCenterTarget,
-  applyNpcSeparation
+  applyNpcSeparation,
+  findNearbyOpenDoor,
+  debugTickNpcTracker
 } from './npcTrackerSystem.js';
+import { DOOR_STATES, DOOR_TIMING } from './doorSystem.js';
 
 function getWaypointTarget(npc) {
   const point = npc.waypoints?.[npc.wpIndex];
@@ -72,31 +75,36 @@ function getReachableSearchPoint(npc, level) {
   const tileSize = level.settings.baseTile || 16;
   const npcCenter = getNpcCenter(npc);
   const wanderRadius = level.settings.searchRadius || 48;
+  // Use searchBase as search origin (different from question mark position during light search)
+  const baseX = npc.searchBaseX || npc.lastSeenX;
+  const baseY = npc.searchBaseY || npc.lastSeenY;
   for (let i = 0; i < 8; i += 1) {
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.random() * wanderRadius;
-    const candidateX = npc.lastSeenX + Math.cos(angle) * distance;
-    const candidateY = npc.lastSeenY + Math.sin(angle) * distance;
+    const candidateX = baseX + Math.cos(angle) * distance;
+    const candidateY = baseY + Math.sin(angle) * distance;
     if (hasLineOfSight(level.collision, npcCenter.x, npcCenter.y, candidateX, candidateY, tileSize, 4, level)) {
       return { x: candidateX, y: candidateY };
     }
   }
-  return { x: npc.lastSeenX, y: npc.lastSeenY };
+  return { x: baseX, y: baseY };
 }
 
 function updateGlobalStuckCheck(npc, deltaTime, level) {
-  const tileSize = level.settings.baseTile || 16;
+  // Stuck recovery is now handled inside the tracker layer (updateStuckDetection +
+  // performStuckRecovery in npcTrackerSystem.js) with progressive tiers:
+  //   Tier 1: force path replan after 0.8s stuck
+  //   Tier 2: perpendicular nudge after 1.8s stuck
+  //   Tier 3: edge follow as last resort
+  // This global check only maintains the sampling counters for external monitoring;
+  // it no longer destroys tracker state, which was a root cause of path-wipe loops.
   npc.stuckSampleTimer = (npc.stuckSampleTimer || 0) + deltaTime;
   npc.stuckOriginX ??= npc.x;
   npc.stuckOriginY ??= npc.y;
   if (npc.stuckSampleTimer < 1) return;
-  const movedDistance = Math.hypot(npc.x - npc.stuckOriginX, npc.y - npc.stuckOriginY);
   npc.stuckSampleTimer = 0;
   npc.stuckOriginX = npc.x;
   npc.stuckOriginY = npc.y;
-  if (movedDistance <= tileSize * 0.5) {
-    clearNpcTrackerState(npc);
-  }
 }
 
 function clearRecoveryMonitor(npc) {
@@ -210,7 +218,10 @@ function findTrackableFootstep(npc, level) {
 function consumeLightSearchTrigger(npc, level) {
   const task = npc.roomLightResponse;
   if (!task) return false;
-  beginSearchState(npc, task.buttonX, task.buttonY, 'LIGHT', level);
+  const tileSize = level.settings.baseTile || 16;
+  const searchBaseX = task.buttonX;
+  const searchBaseY = task.buttonY + tileSize * 2;
+  beginSearchState(npc, task.buttonX, task.buttonY, 'LIGHT', level, { searchBaseX, searchBaseY });
   clearNpcTrackerState(npc);
   npc.roomLightResponse = null;
   return true;
@@ -245,6 +256,7 @@ function updateSearchScan(npc, deltaTime, level) {
 }
 
 export function updateNpcs(level, deltaTime) {
+  debugTickNpcTracker(deltaTime);
   let detectedBy = null;
   const now = Date.now();
   for (const npc of level.npcs) {
@@ -260,6 +272,7 @@ export function updateNpcs(level, deltaTime) {
     }
 
     if (canStateTransition(npc, now) && shouldExitChaseToSearch(npc, seesPlayer) && npc.lastSeenX && npc.lastSeenY) {
+      console.log(`%c[DEBUG STATE] NPC=${npc.id} CHASE→SEARCH (lost sight) pos=(${npc.x.toFixed(1)},${npc.y.toFixed(1)}) lastSeen=(${npc.lastSeenX.toFixed(1)},${npc.lastSeenY.toFixed(1)})`, 'color: #e91e63; font-weight: bold');
       beginSearchState(npc, npc.lastSeenX, npc.lastSeenY, 'PLAYER_LAST_SEEN', level);
       clearNpcTrackerState(npc);
     }
@@ -267,6 +280,22 @@ export function updateNpcs(level, deltaTime) {
     if (canStateTransition(npc, now) && npc.state === NPC_STATES.PATROL && consumeLightSearchTrigger(npc, level)) {
       // light-triggered search applied above
     } else if (canStateTransition(npc, now) && npc.state === NPC_STATES.PATROL) {
+      // Check if in dark room, go turn on light if so
+      const roomId = level.roomSystem.getActorRoomId(npc);
+      if (!level.roomSystem.isLit(roomId)) {
+        const button = level.roomSystem.buttons.find(b => b.roomId === roomId);
+        if (button) {
+          const tileSize = level.settings.baseTile || 16;
+          // Question mark at button position, but actual search point is 2 rows below button
+          const searchBaseX = button.centerX;
+          const searchBaseY = button.centerY + tileSize * 2;
+          beginSearchState(npc, button.centerX, button.centerY, 'LIGHT', level, { searchBaseX, searchBaseY });
+          clearNpcTrackerState(npc);
+        }
+      }
+    }
+
+    if (canStateTransition(npc, now) && npc.state === NPC_STATES.PATROL) {
       const trackableFootstep = findTrackableFootstep(npc, level);
       if (trackableFootstep) {
         beginSearchState(npc, trackableFootstep.x, trackableFootstep.y, 'FOOTSTEP', level);
@@ -275,14 +304,22 @@ export function updateNpcs(level, deltaTime) {
     }
 
     if (canStateTransition(npc, now) && shouldEnterChase(npc, seesPlayer)) {
-      setNpcState(npc, NPC_STATES.CHASE);
-      clearNpcTrackerState(npc);
-      npc.roomLightResponse = null;
+      if (npc.state !== NPC_STATES.CHASE) {
+        console.log(`%c[DEBUG STATE] NPC=${npc.id} ${npc.state}→CHASE seesPlayer=${seesPlayer} pos=(${npc.x.toFixed(1)},${npc.y.toFixed(1)})`, 'color: #f44336; font-weight: bold');
+        setNpcState(npc, NPC_STATES.CHASE);
+        clearNpcTrackerState(npc);
+        npc.roomLightResponse = null;
+      }
     }
 
     if (npc.state === NPC_STATES.CHASE) {
       const playerCenter = getPlayerCenter(level.player);
       const chaseTarget = getNpcWorldCenterTarget(npc, playerCenter.x, playerCenter.y);
+      if (!npc._dbgChaseFrame) npc._dbgChaseFrame = 0;
+      npc._dbgChaseFrame++;
+      if (npc._dbgChaseFrame % 3 === 0) {
+        console.log(`[DEBUG CHASE TARGET] NPC=${npc.id} playerCenter=(${playerCenter.x.toFixed(2)},${playerCenter.y.toFixed(2)}) chaseTarget=(${chaseTarget.x.toFixed(2)},${chaseTarget.y.toFixed(2)}) playerPos=(${level.player.x.toFixed(2)},${level.player.y.toFixed(2)}) npcPos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) npcW=${npc.w} npcH=${npc.h} insetX=${npc.collisionInsetX} insetY=${npc.collisionInsetY}`);
+      }
       runNpcTracker(npc, {
         profile: 'steering_chase',
         targetX: chaseTarget.x,
@@ -298,8 +335,26 @@ export function updateNpcs(level, deltaTime) {
         detectedBy = npc.id;
       }
     } else if (npc.state === NPC_STATES.SEARCH) {
-      npc.searchTimer -= deltaTime;
-      if (npc.searchTimer <= 0 && canStateTransition(npc, now)) {
+      // Light search: start countdown only when near actual search point
+      if (npc.searchReason === 'LIGHT' && npc.searchTimer === -1) {
+        const distToSearchBase = Math.hypot(npc.x + npc.w / 2 - npc.searchBaseX, npc.y + npc.h / 2 - npc.searchBaseY);
+        if (distToSearchBase < level.settings.baseTile * 2) {
+          npc.searchTimer = 2; // start 2 second random search
+        }
+      }
+      if (npc.searchTimer > 0) {
+        npc.searchTimer -= deltaTime;
+      }
+      if (npc.searchTimer <= 0 && npc.searchTimer > -1 && canStateTransition(npc, now)) {
+        // If light search, turn on light or keep it on when done
+        if (npc.searchReason === 'LIGHT') {
+          const button = level.roomSystem.buttons.find(b => Math.hypot(b.centerX - npc.searchTargetX, b.centerY - npc.searchTargetY) < 1);
+          if (button) level.roomSystem.consumeButtonResponse(button, 'npc');
+        }
+        if (npc.doorCloseTarget && npc.doorCloseTarget.state === DOOR_STATES.OPEN) {
+          level.doorSystem.close(npc.doorCloseTarget);
+        }
+        npc.doorCloseTarget = null;
         enterPatrolState(npc);
         clearNpcTrackerState(npc);
         clearRecoveryMonitor(npc);
@@ -307,6 +362,16 @@ export function updateNpcs(level, deltaTime) {
         updateSearchScan(npc, deltaTime, level);
       }
     } else {
+      // Patrol: detect nearby open doors → search near door, then close
+      if (canStateTransition(npc, now) && !npc.doorPhase) {
+        const openDoor = findNearbyOpenDoor(npc, level);
+        if (openDoor) {
+          beginSearchState(npc, openDoor.centerX, openDoor.centerY, 'OPEN_DOOR', level);
+          clearNpcTrackerState(npc);
+          npc.doorCloseTarget = openDoor;
+        }
+      }
+
       const patrolTargets = getPatrolTargets(npc, level);
       const point = patrolTargets[npc.wpIndex] || patrolTargets[0] || null;
       if (point) {

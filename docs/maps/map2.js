@@ -30,10 +30,12 @@ const MAP2_ROOM_MATRIX = [
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 5, 5, 5, 5, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 5, 5, 5, 5, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 5, 5, 5, 5, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 7, 7, 7, 7, 7, 7, 7, 1],
+  [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 5, 5, 5, 5, 1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
+  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 1],
@@ -101,15 +103,28 @@ const Map2Config = {
   // Entity definitions
   entities: {
     doors: [
-      // TEMPORARILY DISABLED - uncomment to restore door interactions
-      // { id: 'door-2-1', kind: 'door', tiles: [{x: 22, y: 12}, {x: 22, y: 13}] },
-      // { id: 'door-2-2', kind: 'door', tiles: [{x: 35, y: 20}] }
+      // Bidirectional doors (2x2)
+      { id: 'door_D', tiles: [{ x: 39, y: 11 }, { x: 39, y: 12 }, { x: 40, y: 11 }, { x: 40, y: 12 }], slideDir: 'left', locked: false, state: 'CLOSED' },
+      { id: 'door_G', tiles: [{ x: 46, y: 27 }, { x: 46, y: 28 }, { x: 47, y: 27 }, { x: 47, y: 28 }], slideDir: 'left', locked: false, state: 'CLOSED' },
+      // Unidirectional doors (1x2)
+      { id: 'door_A', tiles: [{ x: 18, y: 8 }, { x: 18, y: 9 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_B', tiles: [{ x: 18, y: 27 }, { x: 18, y: 28 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_C', tiles: [{ x: 25, y: 18 }, { x: 25, y: 19 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_H', tiles: [{ x: 25, y: 35 }, { x: 25, y: 36 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_I', tiles: [{ x: 30, y: 19 }, { x: 30, y: 20 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_J', tiles: [{ x: 39, y: 33 }, { x: 39, y: 34 }], slideDir: 'up', locked: false, state: 'CLOSED' }
     ],
     chests: [
-      // TEMPORARILY DISABLED - uncomment to restore chest interactions
-      // { id: 'chest-2-1', x: 12, y: 18 },
-      // { id: 'chest-2-2', x: 38, y: 8 },
-      // { id: 'chest-2-3', x: 28, y: 32 }
+      { id: 'chest-2-1',  x: 41, y: 7,  w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-2',  x: 16, y: 11, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-3',  x: 2,  y: 18, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-4',  x: 16, y: 18, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-5',  x: 57, y: 21, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-6',  x: 49, y: 26, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-7',  x: 26, y: 29, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-8',  x: 37, y: 29, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-9',  x: 19, y: 37, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+      { id: 'chest-2-10', x: 40, y: 37, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 }
     ]
   },
 
@@ -121,10 +136,24 @@ const Map2Config = {
     searchRadius: 55,  // Search radius in pixels
     footstepStride: 6,  // Footstep spacing
     footstepLifetime: 3500,  // Footstep lifetime in ms
-    maxFootsteps: 60  // Maximum footsteps
+    maxFootsteps: 60,  // Maximum footsteps
+    unexploredOpacity: 250,
+    unexploredFadeDuration: 1000,
+    initialZoom: 1.7
   },
 
   roomMatrix: MAP2_ROOM_MATRIX,
+
+  // Manual light button positions: (roomId, col, row) - button can be outside the room it controls
+  manualLightButtons: [
+    { roomId: 2, col: 6, row: 0 },
+    { roomId: 4, col: 33, row: 5 },
+    { roomId: 3, col: 4, row: 12 },
+    { roomId: 8, col: 33, row: 27 },
+    { roomId: 5, col: 26, row: 11 },
+    { roomId: 7, col: 51, row: 27 },
+    { roomId: 6, col: 34, row: 11 }
+  ],
 
   // Collision matrix for the level layout
   // 60 rows x 40 columns, keeping 0 and converting non-zero values to 1

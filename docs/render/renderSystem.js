@@ -2,17 +2,24 @@
 import { getAssetState } from '../core/assetLoader.js';
 import { renderMap } from './mapRenderer_p5.js';
 import { renderEntities } from './entityRenderer_p5.js';
-import { renderLightingOverlay } from './lightingRenderer_p5.js';
+import { renderLightingOverlay, renderUnexploredOverlay } from './lightingRenderer_p5.js';
 import { renderPauseScreen } from '../states/pauseScreen.js';
 
 export function renderScene(p, state, overlaySystem) {
   const showWorld = state.screen === 'playing' || state.screen === 'pause';
   if (showWorld) {
     p.push();
-    if (state.camera) p.translate(-state.camera.x, -state.camera.y);
+    if (state.camera) {
+      // Apply zoom from camera center
+      const zoom = state.camera.zoom || 1;
+      p.translate(0, 0);
+      p.scale(zoom);
+      p.translate(-state.camera.x, -state.camera.y);
+    }
     renderMap(p, state);
     renderLightingOverlay(p, state);
     renderEntities(p, state);
+    renderUnexploredOverlay(p, state);
     p.pop();
   } else {
     p.background('#0d1220');
@@ -39,14 +46,15 @@ function renderHud(p, state) {
     `Extract: ${state.meta.exitDistanceText || '-'}`
   ];
 
-  const panelX = 12;
-  const panelY = p.height - 104;
-  const panelW = Math.min(420, p.width - 24);
+  const panelW = 240;
+  const panelX = p.width - panelW - 8;  
+  const panelY = 12;  
   const panelH = 88;
   p.fill(8, 15, 28, 165);
   p.rect(panelX, panelY, panelW, panelH, 10);
-
+ 
   p.fill('#ffffff');
+
   compactLines.forEach((line, idx) => {
     p.text(line, panelX + 12, panelY + 10 + idx * 18);
   });
@@ -97,8 +105,8 @@ function renderHud(p, state) {
       `Time: ${(state.meta.elapsedMs / 1000).toFixed(1)}s`,
       `Assets: ${assets.imageCount}/${assets.requestedCount}${assets.failedCount ? ` fb ${assets.failedCount}` : ''}`,
       `Track: ${state.audio.currentTrack || '-'}${state.audio.muted ? ' (muted)' : ''}`,
-      `Camera: ${Math.round(state.camera?.x || 0)}, ${Math.round(state.camera?.y || 0)}`,
-      'R restart | 1 2 map | B/C/G debug | P/Esc pause | M mute'
+      `Camera: ${Math.round(state.camera?.x || 0)}, ${Math.round(state.camera?.y || 0)} Z:${state.camera?.zoom?.toFixed(2) || '1.00'}`,
+      'R restart | 1 2 3 map | B/C/G debug | P/Esc pause | M mute | Wheel zoom'
     ];
     const dbgW = Math.min(440, p.width - 24);
     const dbgH = 104;
@@ -121,7 +129,19 @@ function renderCameraDebug(p, state) {
   p.noFill();
   p.stroke(96, 165, 250);
   p.rect(1, 1, p.width - 2, p.height - 2);
+  
+  // Show dead zone with zoom consideration
+  const effectiveDeadZoneX = camera.deadZoneX / camera.zoom;
+  const effectiveDeadZoneY = camera.deadZoneY / camera.zoom;
+  const effectiveWidth = camera.width / camera.zoom;
+  const effectiveHeight = camera.height / camera.zoom;
   p.stroke(248, 113, 113, 160);
-  p.rect(camera.deadZoneX, camera.deadZoneY, p.width - camera.deadZoneX * 2, p.height - camera.deadZoneY * 2);
+  p.rect(effectiveDeadZoneX, effectiveDeadZoneY, effectiveWidth - effectiveDeadZoneX * 2, effectiveHeight - effectiveDeadZoneY * 2);
+  
+  // Show zoom level
+  p.fill(96, 165, 250);
+  p.noStroke();
+  p.textAlign(p.LEFT, p.TOP);
+  p.text(`Zoom: ${camera.zoom.toFixed(2)}x`, 10, p.height - 25);
   p.pop();
 }

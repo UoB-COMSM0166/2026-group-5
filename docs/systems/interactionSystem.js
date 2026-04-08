@@ -1,4 +1,7 @@
 // Interaction detection: finds nearby doors, chests, buttons, exit and dispatches actions.
+import { DOOR_STATES } from './doorSystem.js';
+import { hasKey, consumeKey } from './lootTable.js';
+
 export function findNearbyEntity(player, entities, tileSize, maxDistanceTiles = 1.25) {
   const px = player.x + player.w / 2;
   const py = player.y + player.h / 2;
@@ -52,11 +55,15 @@ function findNearbyDoor(player, doors, tileSize, maxTileGap = 1) {
 
 export function getInteractionPrompt(level) {
   const tileSize = level.settings.baseTile;
-  const chest = findNearbyEntity(level.player, level.boxSystem.boxes, tileSize, 1.1);
+  const chest = findNearbyEntity(level.player, level.boxSystem.boxes, tileSize, 1.8);
   if (chest && !chest.opened) return { type: 'box', entity: chest, text: 'Press E to open chest' };
 
   const door = findNearbyDoor(level.player, level.doorSystem.doors, tileSize, 1);
-  if (door) return { type: 'door', entity: door, text: door.open ? 'Press E to close door' : 'Press E to open door' };
+  if (door && door.cooldown <= 0) {
+    if (door.state === DOOR_STATES.LOCKED) return { type: 'door', entity: door, text: 'Press E to unlock (key)' };
+    if (door.state === DOOR_STATES.OPEN) return { type: 'door', entity: door, text: 'Press E to close door' };
+    return { type: 'door', entity: door, text: 'Press E to open door' };
+  }
 
   const button = level.roomSystem.getNearestButtonForPlayer(level.player, tileSize * 1.35);
   if (button) return { type: 'light', entity: button, text: level.roomSystem.isLit(button.roomId) ? 'Press E to turn lights off' : 'Press E to restore lights' };
@@ -68,7 +75,7 @@ export function getInteractionPrompt(level) {
   return null;
 }
 
-export function tryInteract(level) {
+export function tryInteract(level, inventory) {
   const prompt = getInteractionPrompt(level);
   if (!prompt) return { success: false, text: '' };
 
@@ -77,16 +84,31 @@ export function tryInteract(level) {
     return { success: changed, text: changed ? 'Chest opened' : '', kind: 'box', entity: prompt.entity };
   }
   if (prompt.type === 'door') {
+    const door = prompt.entity;
     const tileSize = level.settings.baseTile;
-    if (prompt.entity.open) {
-      const blockedByPlayer = actorOverlapsDoor(level.player, prompt.entity, tileSize);
-      const blockedByNpc = (level.npcs || []).some((npc) => actorOverlapsDoor(npc, prompt.entity, tileSize));
-      if (blockedByPlayer || blockedByNpc) {
-        return { success: false, text: 'Doorway blocked', kind: 'door', entity: prompt.entity };
+
+    if (door.state === DOOR_STATES.LOCKED) {
+      if (inventory && hasKey(inventory, door.keyId)) {
+        consumeKey(inventory, door.keyId);
+        level.doorSystem.unlock(door, door.keyId);
+        return { success: true, text: 'Door unlocked', kind: 'door', entity: door };
       }
+      return { success: false, text: 'Need a key', kind: 'door', entity: door };
     }
-    const changed = level.doorSystem.toggle(prompt.entity);
-    return { success: changed, text: prompt.entity.open ? 'Door opened' : 'Door closed', kind: 'door', entity: prompt.entity };
+
+    if (door.state === DOOR_STATES.OPEN) {
+      const blockedByPlayer = actorOverlapsDoor(level.player, door, tileSize);
+      const blockedByNpc = (level.npcs || []).some((npc) => actorOverlapsDoor(npc, door, tileSize));
+      if (blockedByPlayer || blockedByNpc) {
+        return { success: false, text: 'Doorway blocked', kind: 'door', entity: door };
+      }
+      const closed = level.doorSystem.close(door);
+      return { success: closed, text: 'Door closed', kind: 'door', entity: door };
+    }
+
+    // CLOSED → OPEN
+    const opened = level.doorSystem.open(door);
+    return { success: opened, text: 'Door opened', kind: 'door', entity: door };
   }
   if (prompt.type === 'light') {
     const roomId = prompt.entity.roomId;

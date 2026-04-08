@@ -125,6 +125,7 @@ function normalizeMapConfig(levelId, config, globals) {
     entities,
     settings,
     objective,
+    manualLightButtons: config?.manualLightButtons || [],
     source: clone(config || {})
   };
 }

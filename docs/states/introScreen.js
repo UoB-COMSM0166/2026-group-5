@@ -85,8 +85,7 @@ export function handleIntroScreenKey(key, state, api) {
     return true;
   }
   skipRequested = false;
-  api?.setScreen?.(SCREEN_STATES.PLAYING);
-  api?.markMissionStart?.();
-  api?.setMessage?.('Mission started', 1.2);
+  api?.setScreen?.(SCREEN_STATES.TUTORIAL);
+  api?.setMessage?.('Opening tutorial…', 1.0);
   return true;
 }

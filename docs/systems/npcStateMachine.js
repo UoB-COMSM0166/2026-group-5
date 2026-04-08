@@ -49,19 +49,24 @@ export function bumpNpcAlert(npc, amount) {
   return npc.alertLevel;
 }
 
-export function beginSearchState(npc, targetX, targetY, reason, level) {
+export function beginSearchState(npc, targetX, targetY, reason, level, options = {}) {
   setNpcState(npc, NPC_STATES.SEARCH);
-  npc.searchTimer = 2;
+  // Light search: wait until near button to start countdown; others start immediately
+  npc.searchTimer = reason === 'LIGHT' ? -1 : 2;
+  // searchTargetX/Y for rendering question mark (button position)
   npc.searchTargetX = targetX;
   npc.searchTargetY = targetY;
+  // searchBaseX/Y for actual search origin (may differ from question mark position)
+  npc.searchBaseX = options.searchBaseX ?? targetX;
+  npc.searchBaseY = options.searchBaseY ?? targetY;
   npc.searchReason = reason;
-  npc.lastSeenX = targetX;
-  npc.lastSeenY = targetY;
+  npc.lastSeenX = npc.searchBaseX;
+  npc.lastSeenY = npc.searchBaseY;
   npc.roomLightResponse = null;
   npc.searchScanIndex = 0;
   npc.searchScanStepTimer = 0;
-  npc.searchMoveTargetX = targetX;
-  npc.searchMoveTargetY = targetY;
+  npc.searchMoveTargetX = npc.searchBaseX;
+  npc.searchMoveTargetY = npc.searchBaseY;
   bumpNpcAlert(npc, SEARCH_ALERT_BONUS);
 }
 
@@ -70,6 +75,8 @@ export function enterPatrolState(npc) {
   npc.searchTimer = 0;
   npc.searchTargetX = 0;
   npc.searchTargetY = 0;
+  npc.searchBaseX = 0;
+  npc.searchBaseY = 0;
   npc.searchReason = '';
   npc.searchMoveTargetX = 0;
   npc.searchMoveTargetY = 0;

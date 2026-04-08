@@ -14,8 +14,9 @@ export const SPRITE_PATHS = {
     RETURN: './assets/images/sprites/npc_patrol_sheet.png'
   },
   door: {
-    double: './assets/images/sprites/door_double.png',
-    line: './assets/images/sprites/door_line.png'
+    slide: './assets/images/sprites/door_slides.png',
+    doubleA: './assets/images/sprites/door_double_a.png',
+    doubleB: './assets/images/sprites/door_double_b.png'
   },
   chest: {
     base: './assets/images/sprites/chest_base.png',

@@ -20,6 +20,18 @@ function collectPaths() {
   Object.values(SPRITE_PATHS.door).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.chest).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.button).forEach((v) => paths.add(v));
+  paths.add('./assets/images/original/drawings/start_bg.png');
+  paths.add('./assets/images/original/npcs/dragon/dragon.png');
+  paths.add('./assets/images/original/drawings/title_logo.png');
+  paths.add('./assets/images/original/drawings/captured.png');
+  paths.add('./assets/images/gif/ASDW.gif');
+  paths.add('./assets/images/gif/b.gif');
+  paths.add('./assets/images/gif/c.gif');
+  paths.add('./assets/images/gif/d.gif');
+  paths.add('./assets/images/gif/e.gif');
+  paths.add('./assets/images/gif/f.gif');
+  paths.add('./assets/images/gif/g.gif');
+
   // v19 intentionally stops probing every potential character variant path.
   // Only concrete fallback assets are requested here, so missing-file noise stays low.
   return Array.from(paths).filter(Boolean);

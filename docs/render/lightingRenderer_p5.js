@@ -15,6 +15,66 @@ function drawTileDarkness(p, level) {
   }
 }
 
+// Unexplored room overlay (drawn on top of everything)
+export function renderUnexploredOverlay(p, state) {
+  const level = state.level;
+  if (!level) return;
+
+  const tile = level.settings.baseTile;
+  const matrix = level.roomSystem.matrix || [];
+  const roomSystem = level.roomSystem;
+  const now = performance.now();
+  const fadeDuration = level.settings.unexploredFadeDuration ?? 1500;
+
+  p.noStroke();
+  for (let y = 0; y < matrix.length; y += 1) {
+    for (let x = 0; x < matrix[y].length; x += 1) {
+      const roomId = matrix[y][x];
+      if (roomId <= 1) continue;
+
+      const room = roomSystem.rooms.get(roomId);
+      if (!room) continue;
+
+      if (room.explored) {
+        if (!room.exploredAt) continue;
+        const elapsed = now - room.exploredAt;
+        if (elapsed >= fadeDuration) continue;
+
+        const progress = elapsed / fadeDuration;
+        const baseOpacity = level.settings.unexploredOpacity ?? 255;
+        const opacity = Math.floor(baseOpacity * (1 - progress));
+        if (opacity <= 0) continue;
+
+        p.fill(0, 0, 0, opacity);
+      } else {
+        const opacity = level.settings.unexploredOpacity ?? 255;
+        p.fill(0, 0, 0, opacity);
+      }
+
+      const px = Math.floor(x * tile);
+      const py = Math.floor(y * tile);
+      p.rect(px, py, tile + 1, tile + 1);
+    }
+  }
+  
+  if (state.debug.showExploration) {
+    p.noFill();
+    p.stroke(255, 0, 255, 120);
+    p.strokeWeight(2);
+    for (let y = 0; y < matrix.length; y += 1) {
+      for (let x = 0; x < matrix[y].length; x += 1) {
+        const roomId = matrix[y][x];
+        if (roomId <= 1) continue;
+        const explored = roomSystem.isExplored(roomId);
+        if (!explored) {
+          p.rect(x * tile, y * tile, tile, tile);
+        }
+      }
+    }
+    p.strokeWeight(1);
+  }
+}
+
 function drawPlayerReveal(p, level) {
   const roomId = level.roomSystem.getActorRoomId(level.player);
   if (level.roomSystem.isLit(roomId)) return;
