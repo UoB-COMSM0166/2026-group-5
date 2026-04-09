@@ -17,25 +17,30 @@
         <button data-level="map3">Map 3</button>
       </div>
     </header>
-
-<main class="game-layout">
-  <div id="game-root"></div>
-  <aside class="hud-panel">
-    <div class="guide-title"><strong>Controls</strong></div>
-    <div class="guide-item"><strong>Move:</strong> 
-      W<span class="arrow">↑</span> 
-      S<span class="arrow">↓</span> 
-      A<span class="arrow">←</span> 
-      D<span class="arrow">→</span></div>
-    <div class="guide-item"><strong>Sprint:</strong> Hold Shift</div>
-    <div class="guide-item"><strong>Interact:</strong> E 
-      (Open box, Open/Close door, Turn on/off light)</div>
-    <div class="guide-item"><strong>Restart:</strong> R </div>
-    <div class="guide-item"><strong>Map Zoom-+:</strong> Mouse Wheel</div>
-    <img src="./assets/images/ui/hud_bottom.png" alt="HUD Bottom" class="hud-bottom-img">
-  </aside>
-</main>
-
+    <main class="game-layout">
+      <div id="game-root"></div>
+      <aside class="hud-panel">
+        <img src="./assets/images/ui/hud_bottom.png" alt="HUD Bottom" class="hud-bottom-img">
+        <div class="guide-title">CONTROLS</div>
+        <div class="guide-item">
+          <strong>MOVE</strong> WASD
+        </div>
+        <div class="guide-item">
+          <strong>SPRINT</strong> Hold Shift
+        </div>
+        <div class="guide-item">
+          <strong>INTERACT</strong>
+          <span>E &mdash; Open box<br>Toggle door<br>Toggle light</span>
+        </div>
+        <div class="guide-item">
+          <strong>RESTART</strong> R
+        </div>
+        <div class="guide-item">
+          <strong>MAP ZOOM</strong> Mouse Wheel
+        </div>
+      </aside>
+    </main>
+  </div>
   <script src="./p5.js"></script>
   <script src="./maps/map1_tiled.js"></script>
   <script src="./maps/map2_tiled.js"></script>
