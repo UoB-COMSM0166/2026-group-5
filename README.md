@@ -1,10 +1,14 @@
-# 2026-group-5
+<div align="center">
 
-🎮 [Click this link to play our game.](https://uob-comsm0166.github.io/2026-group-5/index.html)   
-🎬 [Click this link to watch our game video.]()   
-📋 [This is the link to our Kanban board.]()
+# Escape: Oh Dear Dragon!
 
----
+[![Play](https://img.shields.io/badge/🕹️_Play_the_Game-4CAF50?style=for-the-badge)](https://uob-comsm0166.github.io/2026-group-5/index.html)
+[![Video](https://img.shields.io/badge/🎥_Watch_Video-E91E63?style=for-the-badge)]()
+[![Kanban](https://img.shields.io/badge/📌_Kanban_Board-7C4DFF?style=for-the-badge)]()
+[![Updates](https://img.shields.io/badge/📅_Weekly_Updates-FF6F00?style=for-the-badge)]()
+
+</div>
+
 
 # Table of Contents
 
@@ -18,7 +22,6 @@
 8. [Conclusion](#8-conclusion)
 9. [Contribution Statement](#9-contribution-statement)
 
----
 
 # 1. Introduction
 
@@ -33,16 +36,16 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 # 2. Development Team
 
-<img src="docs/images/group_pic.jpeg" alt="Group pic" width="900" height="800">
+<img src="devlog/images/group_pic.jpeg" alt="Group pic" width="900" height="800">
 
-| Person        | Email                    | GitHub                    | Roles                                     |
-| ------------- | ------------------------ | ------------------------- | ----------------------------------------- | 
-| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture & Integration                | 
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                     | 
-| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design & Gameplay Vision | 
-| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation & Scrum Master              |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Github & Research             |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | UI/UX, Testing                            | 
+| Person        | Email                    | GitHub                    | Roles                                        |
+| ------------- | ------------------------ | ------------------------- | -------------------------------------------- | 
+| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture and Integration                 | 
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                        | 
+| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design and Gameplay Vision  | 
+| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation and Scrum Master               |
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Code Review and Github Workflow  |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | UI/UX and Testing                            | 
 
 
 
@@ -56,7 +59,7 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
-<img src="docs/images/onion_model.jpg" alt="Onion Model" width="600" height="600">
+<img src="devlog/images/onion_model.jpg" alt="Onion Model" width="600" height="600">
 
 - Core Development Team
   - Design, implementation, testing, evaluation and documentation
@@ -85,7 +88,7 @@ The following figure shows our Stakeholder Onion Model, with layers indicated in
 
 ## Qualitative
 
-<img src="docs/images/think_aloud.jpg" alt="think aloud mindmap" width="900" height="800">
+<img src="devlog/images/think_aloud.jpg" alt="think aloud mindmap" width="900" height="800">
 
 Changes made:
 
@@ -126,10 +129,10 @@ Procedure：
 
 **Graphical Representation**
 
-![](/docs/images/bar.jpg)
+![](/devlog/images/bar.jpg)
 
 
-![](/docs/images/line.jpg)
+![](/devlog/images/line.jpg)
 
 
 **Interpretation**
