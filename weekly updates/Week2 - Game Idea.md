@@ -1,6 +1,6 @@
 # Game Idea: Invisible Inc.
 
-![invisble_inc](../docs/images/invisible_inc.jpg)
+![invisble_inc](../devlog/images/invisible_inc.jpg)
 
 **Author:** Tracy Cui
 
@@ -36,7 +36,7 @@
 
 # Game Idea: Portal Bomber
 
-![Bomberman Gameplay](../docs/images/bomberman.png)
+![Bomberman Gameplay](../devlog/images/bomberman.png)
 
 **Author:** Haris Kovac
 
