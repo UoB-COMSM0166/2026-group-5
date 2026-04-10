@@ -15,6 +15,108 @@ function drawTileDarkness(p, level) {
   }
 }
 
+// Draw gradient outline around room masks (0.5 tile width, inner=mask color to outer=transparent)
+function drawRoomGradientOutline(p, level, matrix, roomSystem) {
+  const tile = level.settings.baseTile;
+  const outlineWidth = tile * 0.5;
+  const baseOpacity = (level.settings.unexploredOpacity ?? 255) / 255;
+
+  // Collect all room edge tiles
+  const roomEdges = new Map(); // roomId -> Set of edge tile keys
+
+  for (let y = 0; y < matrix.length; y += 1) {
+    for (let x = 0; x < matrix[y].length; x += 1) {
+      const roomId = matrix[y][x];
+      if (roomId <= 1) continue;
+
+      const room = roomSystem.rooms.get(roomId);
+      if (!room || room.explored) continue;
+
+      // Check if this tile is on the edge (adjacent to different room or empty)
+      const isEdge = (
+        (y === 0 || matrix[y - 1][x] !== roomId) ||
+        (y === matrix.length - 1 || matrix[y + 1][x] !== roomId) ||
+        (x === 0 || matrix[y][x - 1] !== roomId) ||
+        (x === matrix[y].length - 1 || matrix[y][x + 1] !== roomId)
+      );
+
+      if (isEdge) {
+        if (!roomEdges.has(roomId)) roomEdges.set(roomId, new Set());
+        roomEdges.get(roomId).add(`${x},${y}`);
+      }
+    }
+  }
+
+  // Draw gradient outline for each room
+  p.noStroke();
+  const steps = 8; // Number of gradient steps
+
+  for (const [roomId, edgeTiles] of roomEdges) {
+    for (const tileKey of edgeTiles) {
+      const [tx, ty] = tileKey.split(',').map(Number);
+      const px = tx * tile;
+      const py = ty * tile;
+
+      // Draw gradient layers from inside out (inner=touching mask, outer=transparent)
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps; // 0.0 = inner (touching mask, full opacity), 1.0 = outer (transparent)
+        const alpha = baseOpacity * (1 - t) * 255; // Fade from inner to transparent
+        const offset = outlineWidth * t; // Expand outward from mask edge
+
+        p.fill(0, 0, 0, alpha);
+
+        // Check which edges need outline and draw only those sides
+        const top = ty === 0 || matrix[ty - 1][tx] !== roomId;
+        const bottom = ty === matrix.length - 1 || matrix[ty + 1][tx] !== roomId;
+        const left = tx === 0 || matrix[ty][tx - 1] !== roomId;
+        const right = tx === matrix[ty].length - 1 || matrix[ty][tx + 1] !== roomId;
+
+        // Draw outline rectangles for each exposed edge (all touching the mask at inner layer)
+        if (top) {
+          p.rect(px, py - offset - outlineWidth / steps, tile, outlineWidth / steps + 1);
+        }
+        if (bottom) {
+          p.rect(px, py + tile + offset, tile, outlineWidth / steps + 1);
+        }
+        if (left) {
+          p.rect(px - offset - outlineWidth / steps, py, outlineWidth / steps + 1, tile);
+        }
+        if (right) {
+          p.rect(px + tile + offset, py, outlineWidth / steps + 1, tile);
+        }
+      }
+
+      // Draw corner gradients for exposed corners (inside out)
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const alpha = baseOpacity * (1 - t) * 255;
+        const offset = outlineWidth * t;
+
+        p.fill(0, 0, 0, alpha);
+
+        const top = ty === 0 || matrix[ty - 1][tx] !== roomId;
+        const bottom = ty === matrix.length - 1 || matrix[ty + 1][tx] !== roomId;
+        const left = tx === 0 || matrix[ty][tx - 1] !== roomId;
+        const right = tx === matrix[ty].length - 1 || matrix[ty][tx + 1] !== roomId;
+
+        // Corner fills (all touching the mask at inner layer)
+        if (top && left) {
+          p.rect(px - offset - outlineWidth / steps, py - offset - outlineWidth / steps, outlineWidth / steps + 1, outlineWidth / steps + 1);
+        }
+        if (top && right) {
+          p.rect(px + tile + offset, py - offset - outlineWidth / steps, outlineWidth / steps + 1, outlineWidth / steps + 1);
+        }
+        if (bottom && left) {
+          p.rect(px - offset - outlineWidth / steps, py + tile + offset, outlineWidth / steps + 1, outlineWidth / steps + 1);
+        }
+        if (bottom && right) {
+          p.rect(px + tile + offset, py + tile + offset, outlineWidth / steps + 1, outlineWidth / steps + 1);
+        }
+      }
+    }
+  }
+}
+
 // Unexplored room overlay (drawn on top of everything)
 export function renderUnexploredOverlay(p, state) {
   const level = state.level;
@@ -25,6 +127,9 @@ export function renderUnexploredOverlay(p, state) {
   const roomSystem = level.roomSystem;
   const now = performance.now();
   const fadeDuration = level.settings.unexploredFadeDuration ?? 1500;
+
+  // Draw gradient outline first (behind the mask)
+  drawRoomGradientOutline(p, level, matrix, roomSystem);
 
   p.noStroke();
   for (let y = 0; y < matrix.length; y += 1) {
@@ -56,7 +161,7 @@ export function renderUnexploredOverlay(p, state) {
       p.rect(px, py, tile + 1, tile + 1);
     }
   }
-  
+
   if (state.debug.showExploration) {
     p.noFill();
     p.stroke(255, 0, 255, 120);

@@ -2,7 +2,7 @@
 import { getAssetState, getImage } from '../core/assetLoader.js';
 import { SPRITE_PATHS } from './spriteCatalog.js';
 import { renderMap } from './mapRenderer_p5.js';
-import { renderEntities } from './entityRenderer_p5.js';
+import { renderEntities, renderDoorInteractionPrompts, renderButtonInteractionPrompts } from './entityRenderer_p5.js';
 import { renderLightingOverlay, renderUnexploredOverlay } from './lightingRenderer_p5.js';
 import { renderPauseScreen } from '../states/pauseScreen.js';
 
@@ -21,48 +21,35 @@ export function renderScene(p, state, overlaySystem) {
     renderLightingOverlay(p, state);
     renderEntities(p, state);
     renderUnexploredOverlay(p, state);
+    // Draw world-space UI on top of black mask (E-key prompts)
+    renderWorldUi(p, state);
     p.pop();
   } else {
     p.background('#0d1220');
   }
 
   if (showWorld) {
-    renderHud(p, state);
+    renderScreenUi(p, state);
   }
   if (state.screen === 'pause') renderPauseScreen(p, state);
   if (state.debug.showCamera && state.camera) renderCameraDebug(p, state);
   overlaySystem?.render(p, state);
 }
 
-function renderHud(p, state) {
+function renderWorldUi(p, state) {
+  // Draw world-space UI on top of black mask (E-key prompts for doors and buttons)
+  renderDoorInteractionPrompts(p, state.level);
+  renderButtonInteractionPrompts(p, state.level);
+}
+
+function renderScreenUi(p, state) {
   p.push();
   p.textAlign(p.LEFT, p.TOP);
   p.textSize(14);
   p.noStroke();
 
   // Chest counter moved to HTML - see index.html
-/*
-  const npcs = state.level?.npcs || [];
-  if (npcs.length) {
-    const panelW = 188;
-    const lineH = 16;
-    const maxRows = Math.min(8, npcs.length);
-    const statePanelH = 28 + maxRows * lineH;
-    const statePanelX = p.width - panelW - 12;
-    const statePanelY = p.height - statePanelH - 12;
-    p.fill(8, 15, 28, 175);
-    p.rect(statePanelX, statePanelY, panelW, statePanelH, 10);
-    p.fill('#cbd5e1');
-    p.textAlign(p.LEFT, p.TOP);
-    p.text('NPC States', statePanelX + 10, statePanelY + 8);
-    npcs.slice(0, maxRows).forEach((npc, index) => {
-      const y = statePanelY + 28 + index * lineH;
-      const color = npc.state === 'CHASE' ? '#fb7185' : npc.state === 'SEARCH' ? '#f59e0b' : '#86efac';
-      p.fill(color);
-      p.text(`${npc.id || `npc${index + 1}`}: ${npc.stateLabel || npc.state || 'PATROL'}`, statePanelX + 10, y);
-    });
-  }
-*/
+
   if (state.ui.message) {
     const msgW = Math.min(420, p.width - 32);
     const msgX = (p.width - msgW) / 2;

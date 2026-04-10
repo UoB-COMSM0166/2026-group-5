@@ -100,30 +100,13 @@ button:hover { filter: brightness(1.08); }
   margin-top: 150px;
   margin-bottom: 10px;
   font-size: 12px;
-  color: #29157a;
+  color: #fff4d6;
 }
 
 .hud-panel .arrow {
   font-family: 'VT323', monospace;  
   font-size: 12px;
   margin: 0 1px;
-}
-.guide-item {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  line-height: 0.7;
-}
- 
-.guide-item strong {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.15);
-  color: #404270;
-  padding: 2px 7px;
-  border-radius: 4px;
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
 }
 
 .collectibles-row {
@@ -176,29 +159,6 @@ button:hover { filter: brightness(1.08); }
   margin-top: 150px;
 }
 
-.keyboardPC-icon{
-  width: 18px;
-  height: 18px;
-  image-rendering: pixelated;
-}
-
-.keyboardMove-icon{
-  width: 120px;
-  height: 30px;
-  image-rendering: pixelated;
-}
-
-.keyboard2keys-icon{
-  width: 36px;
-  height: 18px;
-  image-rendering: pixelated;
-}
-
-.mousePC-icon{
-  width: 18px;
-  height: 27px;
-  image-rendering: pixelated;
-}
 
 /* Stamina bar styling */
 .stamina-bar-container {

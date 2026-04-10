@@ -240,7 +240,7 @@ function renderFootsteps(p, level) {
 }
 
 // Render E-key interaction hints at doors when player is nearby
-function renderDoorInteractionPrompts(p, level) {
+export function renderDoorInteractionPrompts(p, level) {
   const prompt = getInteractionPrompt(level);
   if (!prompt || prompt.type !== 'door') return;
 
@@ -280,7 +280,7 @@ function renderDoorInteractionPrompts(p, level) {
 }
 
 // Render E-key interaction hints at light buttons when player is nearby
-function renderButtonInteractionPrompts(p, level) {
+export function renderButtonInteractionPrompts(p, level) {
   const prompt = getInteractionPrompt(level);
   if (!prompt || prompt.type !== 'light') return;
 
@@ -395,10 +395,4 @@ export function renderEntities(p, state) {
     const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
     drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
   }
-
-  // Draw E-key hints above doors when player can interact
-  renderDoorInteractionPrompts(p, level);
-
-  // Draw E-key hints above light buttons when player can interact
-  renderButtonInteractionPrompts(p, level);
 }
