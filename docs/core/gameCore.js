@@ -13,7 +13,7 @@ import { createScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { createCamera, configureCameraBounds, resizeCamera, updateCamera, changeCameraZoom, setCameraZoom } from '../systems/cameraSystem.js';
 import { handleStartScreenKey, resetStartScreen } from '../states/startScreen.js';
 import { handleIntroScreenKey, resetIntroScreen } from '../states/introScreen.js';
-import { createInventory, collectLoot, formatInventory } from '../systems/lootTable.js';
+import { createInventory, collectLoot, formatInventory, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
 import { handleTutorialScreenKey, handleTutorialScreenMouse, resetTutorialScreen } from '../states/tutorialScreen.js';
 
 export function createGameCore({ initialLevel = 'map2' } = {}) {
@@ -31,6 +31,30 @@ export function createGameCore({ initialLevel = 'map2' } = {}) {
     const assetState = getAssetState();
     document.getElementById('assetState')?.replaceChildren(document.createTextNode(`${assetState.imageCount}/${assetState.requestedCount}${assetState.failedCount ? ` fallback ${assetState.failedCount}` : ''}`));
     document.getElementById('inventoryText')?.replaceChildren(document.createTextNode(formatInventory(state.inventory)));
+
+    // Sync chest counter
+    const chestCountEl = document.getElementById('chest-count');
+    if (chestCountEl && state.level) {
+      const openedChests = state.level.boxSystem.boxes.filter((box) => box.opened).length;
+      const totalChests = state.level.boxSystem.boxes.length;
+      chestCountEl.textContent = `${openedChests}/${totalChests}`;
+    }
+
+    // Sync key counter
+    const keyCountEl = document.getElementById('key-count');
+    if (keyCountEl) {
+      const collectedKeys = state.inventory.keys.length;
+      const totalKeys = countTotalKeys(state.levelId);
+      keyCountEl.textContent = `${collectedKeys}/${totalKeys}`;
+    }
+
+    // Sync note counter
+    const noteCountEl = document.getElementById('note-count');
+    if (noteCountEl) {
+      const collectedNotes = state.inventory.note || 0;
+      const totalNotes = countTotalNotes(state.levelId);
+      noteCountEl.textContent = `${collectedNotes}/${totalNotes}`;
+    }
   }
 
   function setMessage(text, seconds = 1.5) {

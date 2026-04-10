@@ -88,3 +88,27 @@ export function consumeKey(inventory, keyId) {
 export function formatInventory(inventory) {
   return `Keys: ${inventory.keys.length}  |  Notes: ${inventory.note || 0}`;
 }
+
+export function countTotalKeys(levelId) {
+  const loot = MAP_LOOT[levelId];
+  if (!loot) return 0;
+  let count = 0;
+  for (const entry of Object.values(loot)) {
+    if (typeof entry === 'object' && entry?.type === 'key') {
+      count++;
+    }
+  }
+  return count;
+}
+
+export function countTotalNotes(levelId) {
+  const loot = MAP_LOOT[levelId];
+  if (!loot) return 0;
+  let count = 0;
+  for (const entry of Object.values(loot)) {
+    if (entry === 'note') {
+      count++;
+    }
+  }
+  return count;
+}

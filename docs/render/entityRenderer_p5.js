@@ -134,30 +134,18 @@ function drawChest(p, chest, tile) {
   const rh = (chest.renderH || chest.h) * tile;
   const px = chest.x * tile + (chest.renderOffsetX || 0) * tile;
   const py = chest.y * tile + (chest.renderOffsetY || 0) * tile;
-  const baseImg = getImage(SPRITE_PATHS.chest.base);
-  const lidImg = getImage(SPRITE_PATHS.chest.lid);
-  if (baseImg) p.image(baseImg, px + 1, py + rh / 2, rw - 2, rh / 2 - 1);
-  else {
+
+  // Use closed or open image based on chest state
+  const imgPath = chest.opened ? SPRITE_PATHS.chest.open : SPRITE_PATHS.chest.closed;
+  const img = getImage(imgPath);
+
+  if (img) {
+    p.image(img, px, py, rw, rh);
+  } else {
+    // Fallback: simple colored rectangle
     p.noStroke();
-    p.fill('#7a4b1f');
-    p.rect(px + 1, py + rh / 2, rw - 2, rh / 2 - 1, 3);
-  }
-
-  const hingeX = px + rw / 2;
-  const hingeY = py + rh / 2;
-  p.push();
-  p.translate(hingeX, hingeY);
-  p.rotate(chest.angle || 0);
-  if (lidImg) p.image(lidImg, -rw / 2 + 1, -rh / 2 + 1, rw - 2, rh / 2 - 2);
-  else {
     p.fill(chest.opened ? '#d4b14d' : '#8b5a2b');
-    p.rect(-rw / 2 + 1, -rh / 2 + 1, rw - 2, rh / 2 - 2, 3);
-  }
-  p.pop();
-
-  if (chest.opened) {
-    p.fill(254, 243, 199, 70 + 110 * chest.lootPulse);
-    p.rect(px + 4, py + rh / 2 + 2, rw - 8, 5, 2);
+    p.rect(px + 1, py + 1, rw - 2, rh - 2, 3);
   }
 }
 
@@ -218,7 +206,7 @@ function renderNpcAlertBar(p, npc) {
   const levelValue = Math.max(0, Math.min(1, (npc.alertLevel || 0) / 100));
   const width = Math.max(18, npc.w + 8);
   const x = npc.x + npc.w / 2 - width / 2;
-  const y = npc.y - 8;
+  const y = npc.y - 22;
   p.push();
   p.noStroke();
   p.fill(15, 23, 42, 180);
@@ -255,22 +243,22 @@ function renderFootsteps(p, level) {
 function renderDoorInteractionPrompts(p, level) {
   const prompt = getInteractionPrompt(level);
   if (!prompt || prompt.type !== 'door') return;
-  
+
   const door = prompt.entity;
   const tile = level.settings.baseTile;
-  
+
   // Don't show prompt if doorway is blocked
   const blockedByPlayer = isActorOnDoorTiles(level.player, door, tile);
   const blockedByNpc = (level.npcs || []).some((npc) => isActorOnDoorTiles(npc, door, tile));
   if (blockedByPlayer || blockedByNpc) return;
-  
+
   const x = door.x * tile;
   const y = door.y * tile;
   const w = (door.w || 2) * tile;
   const h = (door.h || 2) * tile;
   const centerX = x + w / 2;
   const topY = y - 8; // Slightly above the door
-  
+
   p.push();
   // Draw key background
   p.noStroke();
@@ -287,6 +275,38 @@ function renderDoorInteractionPrompts(p, level) {
   p.textSize(8);
   p.fill(255, 255, 255, 180);
   const actionText = door.state === 'OPEN' ? 'Close' : door.state === 'LOCKED' ? 'Unlock' : 'Open';
+  p.text(actionText, centerX, topY + 10);
+  p.pop();
+}
+
+// Render E-key interaction hints at light buttons when player is nearby
+function renderButtonInteractionPrompts(p, level) {
+  const prompt = getInteractionPrompt(level);
+  if (!prompt || prompt.type !== 'light') return;
+
+  const button = prompt.entity;
+  const tile = level.settings.baseTile;
+
+  const centerX = (button.x + 0.5) * tile;
+  const topY = button.y * tile - 8; // Slightly above the button
+
+  p.push();
+  // Draw key background
+  p.noStroke();
+  p.fill(15, 23, 42, 200);
+  p.rect(centerX - 12, topY - 14, 24, 20, 4);
+  // Draw 'E' text
+  p.fill(255, 255, 255, 240);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(12);
+  p.textStyle(p.BOLD);
+  p.text('E', centerX, topY - 4);
+  // Draw action text below
+  p.textStyle(p.NORMAL);
+  p.textSize(8);
+  p.fill(255, 255, 255, 180);
+  const isLit = level.roomSystem.isLit(button.roomId);
+  const actionText = isLit ? 'Lights off' : 'Lights on';
   p.text(actionText, centerX, topY + 10);
   p.pop();
 }
@@ -361,11 +381,7 @@ export function renderEntities(p, state) {
     renderNpcAlertBar(p, npc);
   }
 
-  if (isRectVisible(camera, level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
-    const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
-    drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
-  }
-
+  // Render chests first (ground layer), then characters on top
   for (const chest of level.boxSystem.boxes) {
     const rw = (chest.renderW || chest.w) * tile;
     const rh = (chest.renderH || chest.h) * tile;
@@ -375,6 +391,14 @@ export function renderEntities(p, state) {
     drawChest(p, chest, tile);
   }
 
+  if (isRectVisible(camera, level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
+    const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
+    drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
+  }
+
   // Draw E-key hints above doors when player can interact
   renderDoorInteractionPrompts(p, level);
+
+  // Draw E-key hints above light buttons when player can interact
+  renderButtonInteractionPrompts(p, level);
 }

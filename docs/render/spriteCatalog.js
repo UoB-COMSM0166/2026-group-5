@@ -19,8 +19,8 @@ export const SPRITE_PATHS = {
     doubleB: './assets/images/sprites/door_double_b.png'
   },
   chest: {
-    base: './assets/images/sprites/chest_base.png',
-    lid: './assets/images/sprites/chest_lid.png'
+    closed: './assets/images/sprites/chest_closed.png',
+    open: './assets/images/sprites/chest_open.png'
   },
   button: {
     on: './assets/images/sprites/button_on.png',

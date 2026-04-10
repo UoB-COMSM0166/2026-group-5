@@ -108,7 +108,7 @@ const SLIDE_VECTORS = {
 // Double doors always split left / right
 const DOUBLE_SPLIT = { a: { dx: -1, dy: 0 }, b: { dx: 1, dy: 0 } };
 
-function makeDoor({ id, x, y, w, h, panels, slideDir, initialState, keyId, tiles }, tileSize) {
+function makeDoor({ id, x, y, w, h, panels, slideDir, initialState, keyId, tiles, visualOnly }, tileSize) {
   const isOpen = initialState === DOOR_STATES.OPEN;
   return {
     id,
@@ -126,7 +126,8 @@ function makeDoor({ id, x, y, w, h, panels, slideDir, initialState, keyId, tiles
     panelB: { ox: 0, oy: 0 },
     tiles,
     centerX: (x + w / 2) * tileSize,
-    centerY: (y + h / 2) * tileSize
+    centerY: (y + h / 2) * tileSize,
+    visualOnly: visualOnly || false
   };
 }
 
@@ -154,6 +155,7 @@ export function createDoorSystem(mapData, tileSize = 16, seededDoors = [], colli
       initialState,
       keyId: source.keyId,
       tiles,
+      visualOnly: source.visualOnly,
     }, tileSize));
   }
 
@@ -239,7 +241,8 @@ function api(doors, tileSize, collision) {
 
     // Unlock a LOCKED door with matching keyId. Returns true on success.
     unlock(door, keyId) {
-      if (!door || door.state !== DOOR_STATES.LOCKED || door.cooldown > 0) return false;
+      if (!door || door.visualOnly) return false;
+      if (door.state !== DOOR_STATES.LOCKED || door.cooldown > 0) return false;
       if (door.keyId && keyId !== door.keyId) return false;
       door.state = DOOR_STATES.OPEN;
       door.cooldown = DOOR_TIMING.MIN_STATE;
@@ -250,7 +253,8 @@ function api(doors, tileSize, collision) {
 
     // Open a CLOSED (or LOCKED for NPC) door. Returns true on success.
     open(door) {
-      if (!door || door.cooldown > 0) return false;
+      if (!door || door.visualOnly) return false;
+      if (door.cooldown > 0) return false;
       if (door.state === DOOR_STATES.OPEN) return false;
       door.state = DOOR_STATES.OPEN;
       door.cooldown = DOOR_TIMING.MIN_STATE;
@@ -261,7 +265,8 @@ function api(doors, tileSize, collision) {
 
     // Close an OPEN door back to CLOSED. Returns true on success.
     close(door) {
-      if (!door || door.cooldown > 0) return false;
+      if (!door || door.visualOnly) return false;
+      if (door.cooldown > 0) return false;
       if (door.state !== DOOR_STATES.OPEN) return false;
       door.state = DOOR_STATES.CLOSED;
       door.cooldown = DOOR_TIMING.MIN_STATE;
@@ -280,6 +285,7 @@ function api(doors, tileSize, collision) {
 
     isDoorTile(tx, ty) {
       for (const door of doors) {
+        if (door.visualOnly) continue;
         if (door.tiles?.some((t) => t.x === tx && t.y === ty)) return true;
       }
       return false;
@@ -299,6 +305,9 @@ function api(doors, tileSize, collision) {
         if (t >= 1) activePushes.splice(i, 1);
       }
       for (const door of doors) {
+        // Skip visualOnly doors - they render but have no functionality
+        if (door.visualOnly) continue;
+
         if (door.cooldown > 0) door.cooldown = Math.max(0, door.cooldown - deltaTime);
 
         const target = door.state === DOOR_STATES.OPEN ? 1 : 0;

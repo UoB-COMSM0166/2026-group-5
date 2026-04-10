@@ -1,5 +1,6 @@
 // Top-level render: composes map, lighting, entities, HUD, and screen overlays.
-import { getAssetState } from '../core/assetLoader.js';
+import { getAssetState, getImage } from '../core/assetLoader.js';
+import { SPRITE_PATHS } from './spriteCatalog.js';
 import { renderMap } from './mapRenderer_p5.js';
 import { renderEntities } from './entityRenderer_p5.js';
 import { renderLightingOverlay, renderUnexploredOverlay } from './lightingRenderer_p5.js';
@@ -39,26 +40,8 @@ function renderHud(p, state) {
   p.textSize(14);
   p.noStroke();
 
-  const compactLines = [
-    `Chests: ${state.meta.collected}/${state.meta.target}`,
-    `Objective: ${state.meta.objective || '-'}`,
-    `Prompt: ${state.prompt || '-'}`,
-    `Extract: ${state.meta.exitDistanceText || '-'}`
-  ];
-
-  const panelW = 240;
-  const panelX = p.width - panelW - 8;  
-  const panelY = 12;  
-  const panelH = 88;
-  p.fill(8, 15, 28, 165);
-  p.rect(panelX, panelY, panelW, panelH, 10);
- 
-  p.fill('#ffffff');
-
-  compactLines.forEach((line, idx) => {
-    p.text(line, panelX + 12, panelY + 10 + idx * 18);
-  });
-
+  // Chest counter moved to HTML - see index.html
+/*
   const npcs = state.level?.npcs || [];
   if (npcs.length) {
     const panelW = 188;
@@ -79,7 +62,7 @@ function renderHud(p, state) {
       p.text(`${npc.id || `npc${index + 1}`}: ${npc.stateLabel || npc.state || 'PATROL'}`, statePanelX + 10, y);
     });
   }
-
+*/
   if (state.ui.message) {
     const msgW = Math.min(420, p.width - 32);
     const msgX = (p.width - msgW) / 2;

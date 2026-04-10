@@ -59,7 +59,7 @@ export function getInteractionPrompt(level) {
   if (chest && !chest.opened) return { type: 'box', entity: chest, text: 'Press E to open chest' };
 
   const door = findNearbyDoor(level.player, level.doorSystem.doors, tileSize, 1);
-  if (door && door.cooldown <= 0) {
+  if (door && !door.visualOnly && door.cooldown <= 0) {
     if (door.state === DOOR_STATES.LOCKED) return { type: 'door', entity: door, text: 'Press E to unlock (key)' };
     if (door.state === DOOR_STATES.OPEN) return { type: 'door', entity: door, text: 'Press E to close door' };
     return { type: 'door', entity: door, text: 'Press E to open door' };

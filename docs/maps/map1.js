@@ -156,7 +156,7 @@ const Map1Config = {
       { id: 'door_2', tiles: [{ x: 31, y: 10 }, { x: 31, y: 11 }, { x: 32, y: 11 }, { x: 32, y: 10 }], slideDir: 'left', keyId: 'key_B' },
       { id: 'door_3', tiles: [{ x: 54, y: 10 }, { x: 54, y: 11 }, { x: 55, y: 11 }, { x: 55, y: 10 }], slideDir: 'left', keyId: 'key_C' },
       { id: 'door_4', tiles: [{ x: 29, y: 30 }, { x: 29, y: 31 }], slideDir: 'up', locked: false, state: 'CLOSED' },
-      { id: 'door_5', tiles: [{ x: 29, y: 37 }, { x: 29, y: 38 }], slideDir: 'up', locked: false, state: 'CLOSED' }
+      { id: 'door_5', tiles: [{ x: 29, y: 37 }, { x: 29, y: 38 }], slideDir: 'up', locked: false, state: 'CLOSED', visualOnly: true }
     ],
     chests: [
       { id: 'chest_1', x: 1, y: 3, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },

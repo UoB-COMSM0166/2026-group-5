@@ -3,6 +3,25 @@ import { canMoveToRect } from './collisionSystem.js';
 import { isPointInsideNpcVision } from './npcSystem.js';
 import { updateHumanoidAnimation, triggerOneShotAnimation } from './animationSystem.js';
 
+function updateStaminaBar(player) {
+  const staminaFill = document.getElementById('stamina-fill');
+  if (!staminaFill) return;
+
+  const maxStamina = player.staminaMax || 100;
+  const currentStamina = player.stamina || 0;
+  const percentage = (currentStamina / maxStamina) * 100;
+
+  staminaFill.style.width = `${percentage}%`;
+
+  // Update color based on stamina level
+  staminaFill.classList.remove('low', 'critical');
+  if (percentage <= 20) {
+    staminaFill.classList.add('critical');
+  } else if (percentage <= 40) {
+    staminaFill.classList.add('low');
+  }
+}
+
 export function triggerPlayerAction(player, mode = 'interact', duration = 0.26) {
   triggerOneShotAnimation(player, mode, duration, { facing: player.facing || 'down' });
 }
@@ -142,6 +161,9 @@ export function updatePlayer(player, input, level, deltaTime) {
       player.stamina = Math.min(player.staminaMax || 100, player.stamina + (player.staminaRecover || 0) * deltaTime);
     }
   }
+
+  // Update stamina bar UI
+  updateStaminaBar(player);
 
   if (hasMoveInput) {
     if (Math.abs(ix) >= Math.abs(iy)) {
