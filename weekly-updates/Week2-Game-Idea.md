@@ -1,6 +1,6 @@
 # Game Idea: Invisible Inc.
 
-![invisble_inc](../devlog/images/invisible_inc.jpg)
+![invisble_inc](../devlog/images/invisible-inc.jpg)
 
 **Author:** Tracy Cui
 

@@ -228,6 +228,74 @@ function consumeLightSearchTrigger(npc, level) {
 }
 
 function updateSearchScan(npc, deltaTime, level) {
+  // For LIGHT search: go directly to button position (searchBaseX/Y) using smart pathfinding
+  // For other searches: use random wandering behavior
+  const isLightSearch = npc.searchReason === 'LIGHT';
+
+  if (isLightSearch) {
+    const tileSize = level.settings.baseTile || 16;
+
+    // Phase 1: Navigate to button area using smart pathfinding
+    if (npc.searchTimer === -1) {
+      const targetX = npc.searchBaseX ?? npc.searchTargetX;
+      const targetY = npc.searchBaseY ?? npc.searchTargetY;
+      runNpcTracker(npc, {
+        profile: 'patrol_route',
+        targetX,
+        targetY,
+        speed: npc.speedPatrol || 48,
+        label: 'light_search',
+        axisBias: 1.35,
+        reachThreshold: tileSize * 0.5,
+        preferDirectSight: true,
+        waypoints: [{ x: targetX, y: targetY }]
+      }, deltaTime, level);
+      return;
+    }
+
+    // Phase 2: Countdown active - random wandering near button area
+    if (npc.searchTimer > 0) {
+      npc.searchScanStepTimer = Math.max(0, (npc.searchScanStepTimer || 0) - deltaTime);
+      const needsNewTarget = !Number.isFinite(npc.searchMoveTargetX)
+        || !Number.isFinite(npc.searchMoveTargetY)
+        || npc.searchScanStepTimer <= 0;
+      if (needsNewTarget) {
+        // Generate random point near button (searchBaseX/Y)
+        const baseX = npc.searchBaseX ?? npc.x;
+        const baseY = npc.searchBaseY ?? npc.y;
+        const wanderRadius = tileSize * 3; // Wander within 3 tiles of button
+        for (let i = 0; i < 8; i += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const distance = Math.random() * wanderRadius;
+          const candidateX = baseX + Math.cos(angle) * distance;
+          const candidateY = baseY + Math.sin(angle) * distance;
+          const npcCenter = { x: npc.x + npc.w / 2, y: npc.y + npc.h / 2 };
+          if (hasLineOfSight(level.collision, npcCenter.x, npcCenter.y, candidateX, candidateY, tileSize, 4, level)) {
+            npc.searchMoveTargetX = candidateX;
+            npc.searchMoveTargetY = candidateY;
+            break;
+          }
+        }
+        npc.searchScanStepTimer = 0.5;
+      }
+      const moveTarget = getSearchMoveTarget(npc);
+      if (moveTarget) {
+        runNpcTracker(npc, {
+          profile: 'patrol_route',
+          targetX: moveTarget.x,
+          targetY: moveTarget.y,
+          speed: npc.speedPatrol || 48,
+          label: 'light_wander',
+          axisBias: 1.35,
+          reachThreshold: 8,
+          waypoints: [moveTarget]
+        }, deltaTime, level);
+      }
+      return;
+    }
+  }
+
+  // Original random wandering for non-LIGHT searches
   npc.searchScanStepTimer = Math.max(0, (npc.searchScanStepTimer || 0) - deltaTime);
   const needsNewTarget = !Number.isFinite(npc.searchMoveTargetX)
     || !Number.isFinite(npc.searchMoveTargetY)

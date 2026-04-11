@@ -14,7 +14,7 @@ export function ensureNpcRuntimeState(npc, now = Date.now()) {
   npc.state = npc.state || NPC_STATES.PATROL;
   npc.stateChangedAt = npc.stateChangedAt || now;
   npc.wpIndex = npc.wpIndex || 0;
-  npc.searchTimer = npc.searchTimer || 0;
+  npc.searchTimer = (npc.searchTimer !== undefined && npc.searchTimer !== null) ? npc.searchTimer : 0;
   npc.alertLevel = npc.alertLevel || 0;
   npc.moving = false;
   npc.vision = null;
