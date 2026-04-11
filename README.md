@@ -36,7 +36,7 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 # 2. Development Team
 
-<img src="devlog/images/group_pic.jpeg" alt="Group pic" width="900" height="800">
+<img src="devlog/images/group-pic.jpeg" alt="Group pic" width="900" height="800">
 
 | Person        | Email                    | GitHub                    | Roles                                        |
 | ------------- | ------------------------ | ------------------------- | -------------------------------------------- | 
@@ -59,7 +59,7 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
-<img src="devlog/images/onion_model.jpg" alt="Onion Model" width="600" height="600">
+<img src="devlog/images/onion-model.jpg" alt="Onion Model" width="600" height="600">
 
 - Core Development Team
   - Design, implementation, testing, evaluation and documentation
@@ -88,7 +88,7 @@ The following figure shows our Stakeholder Onion Model, with layers indicated in
 
 ## Qualitative
 
-<img src="devlog/images/think_aloud.jpg" alt="think aloud mindmap" width="900" height="800">
+<img src="devlog/images/think-aloud.jpg" alt="think aloud mindmap" width="900" height="800">
 
 Changes made:
 
