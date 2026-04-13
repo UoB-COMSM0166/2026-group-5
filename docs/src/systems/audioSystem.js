@@ -8,15 +8,22 @@ const TRACK_CONFIG = {
   pause: { src: './assets/audio/startScreen.mp3', volume: 0.12, loop: true }
 };
 
-export function createAudioSystem() {
-  const tracks = new Map();
-  let currentKey = null;
-  let muted = false;
-  let unlocked = false;
+export class AudioSystem {
+  #tracks;
+  #currentKey;
+  #muted;
+  #unlocked;
 
-  function ensureTrack(key) {
+  constructor() {
+    this.#tracks = new Map();
+    this.#currentKey = null;
+    this.#muted = false;
+    this.#unlocked = false;
+  }
+
+  #ensureTrack(key) {
     if (!TRACK_CONFIG[key]) return null;
-    if (tracks.has(key)) return tracks.get(key);
+    if (this.#tracks.has(key)) return this.#tracks.get(key);
     try {
       const cfg = TRACK_CONFIG[key];
       const audio = new Audio(cfg.src);
@@ -26,66 +33,65 @@ export function createAudioSystem() {
       audio.onerror = () => {
         if (cfg.fallback) audio.src = cfg.fallback;
       };
-      tracks.set(key, audio);
+      this.#tracks.set(key, audio);
       return audio;
     } catch {
       return null;
     }
   }
 
-  function targetVolume(key) {
+  #targetVolume(key) {
     const config = TRACK_CONFIG[key];
-    if (!config || muted) return 0;
+    if (!config || this.#muted) return 0;
     return Math.max(0, Math.min(1, config.volume ?? 1));
   }
 
-  function stopAll() {
-    for (const track of tracks.values()) {
+  unlock() { this.#unlocked = true; }
+
+  stopAll() {
+    for (const track of this.#tracks.values()) {
       try {
         track.pause();
         track.currentTime = 0;
         track.volume = 0;
       } catch {}
     }
-    currentKey = null;
+    this.#currentKey = null;
   }
 
-  async function sync(stateKey) {
-    if (!unlocked || currentKey === stateKey) return;
-    const next = ensureTrack(stateKey);
+  async sync(stateKey) {
+    if (!this.#unlocked || this.#currentKey === stateKey) return;
+    const next = this.#ensureTrack(stateKey);
     if (!next) {
-      stopAll();
-      currentKey = stateKey;
+      this.stopAll();
+      this.#currentKey = stateKey;
       return;
     }
-    for (const [key, track] of tracks.entries()) {
+    for (const [key, track] of this.#tracks.entries()) {
       if (key !== stateKey) {
         try { track.pause(); track.currentTime = 0; track.volume = 0; } catch {}
       }
     }
     try {
-      next.volume = targetVolume(stateKey);
+      next.volume = this.#targetVolume(stateKey);
       next.currentTime = 0;
       await next.play();
-      currentKey = stateKey;
+      this.#currentKey = stateKey;
     } catch {
-      currentKey = stateKey;
+      this.#currentKey = stateKey;
     }
   }
 
-  return {
-    unlock() { unlocked = true; },
-    sync,
-    toggleMute() {
-      muted = !muted;
-      if (currentKey) {
-        const track = ensureTrack(currentKey);
-        if (track) track.volume = targetVolume(currentKey);
-      }
-      return muted;
-    },
-    setMuted(value) { muted = !!value; },
-    stopAll,
-    getState() { return { currentKey, muted, unlocked }; }
-  };
+  toggleMute() {
+    this.#muted = !this.#muted;
+    if (this.#currentKey) {
+      const track = this.#ensureTrack(this.#currentKey);
+      if (track) track.volume = this.#targetVolume(this.#currentKey);
+    }
+    return this.#muted;
+  }
+
+  setMuted(value) { this.#muted = !!value; }
+
+  getState() { return { currentKey: this.#currentKey, muted: this.#muted, unlocked: this.#unlocked }; }
 }

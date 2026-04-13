@@ -1,0 +1,370 @@
+// Game core: main loop, screen transitions, level loading, input dispatch.
+import { SCREEN_STATES, GameState } from './gameState.js';
+import { InputSystem } from './inputSystem.js';
+import { loadAssetsAsync, getAssetState } from './assetLoader.js';
+import { bootstrapLegacyMaps, getMap } from '../maps/mapManager.js';
+import { createRuntimeLevel } from '../maps/mapFactory.js';
+import { updatePlayer, triggerPlayerAction } from '../systems/playerSystem.js';
+import { getInteractionPrompt, tryInteract } from '../systems/interactionSystem.js';
+import { updateNpcs } from '../systems/npcSystem.js';
+import { renderScene } from '../render/renderSystem.js';
+import { AudioSystem } from '../systems/audioSystem.js';
+import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
+import { Camera } from '../systems/cameraSystem.js';
+import { handleStartScreenKey, resetStartScreen } from '../states/startScreen.js';
+import { handleIntroScreenKey, resetIntroScreen } from '../states/introScreen.js';
+import { createInventory, collectLoot, formatInventory, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
+import { handleTutorialScreenKey, handleTutorialScreenMouse, resetTutorialScreen } from '../states/tutorialScreen.js';
+
+export class GameCore {
+  #state;
+  #input;
+  #audio;
+  #overlay;
+  #currentLevelId;
+  #camera;
+
+  constructor({ initialLevel = 'map2' } = {}) {
+    this.#state = new GameState();
+    this.#input = new InputSystem();
+    this.#audio = new AudioSystem();
+    this.#overlay = new ScreenOverlaySystem();
+    this.#currentLevelId = initialLevel;
+    this.#camera = new Camera(960, 640);
+  }
+
+  #syncHud() {
+    document.getElementById('screenState')?.replaceChildren(document.createTextNode(this.#state.screen));
+    document.getElementById('levelName')?.replaceChildren(document.createTextNode(this.#state.levelId || '-'));
+    document.getElementById('promptText')?.replaceChildren(document.createTextNode(this.#state.prompt || '-'));
+    const assetState = getAssetState();
+    document.getElementById('assetState')?.replaceChildren(document.createTextNode(`${assetState.imageCount}/${assetState.requestedCount}${assetState.failedCount ? ` fallback ${assetState.failedCount}` : ''}`));
+    document.getElementById('inventoryText')?.replaceChildren(document.createTextNode(formatInventory(this.#state.inventory)));
+
+    // Sync chest counter
+    const chestCountEl = document.getElementById('chest-count');
+    if (chestCountEl && this.#state.level) {
+      const openedChests = this.#state.level.boxSystem.boxes.filter((box) => box.opened).length;
+      const totalChests = this.#state.level.boxSystem.boxes.length;
+      chestCountEl.textContent = `${openedChests}/${totalChests}`;
+    }
+
+    // Sync key counter
+    const keyCountEl = document.getElementById('key-count');
+    if (keyCountEl) {
+      const collectedKeys = this.#state.inventory.keys.length;
+      const totalKeys = countTotalKeys(this.#state.levelId);
+      keyCountEl.textContent = `${collectedKeys}/${totalKeys}`;
+    }
+
+    // Sync note counter
+    const noteCountEl = document.getElementById('note-count');
+    if (noteCountEl) {
+      const collectedNotes = this.#state.inventory.note || 0;
+      const totalNotes = countTotalNotes(this.#state.levelId);
+      noteCountEl.textContent = `${collectedNotes}/${totalNotes}`;
+    }
+  }
+
+  #setMessage(text, seconds = 1.5) {
+    this.#state.ui.message = text;
+    this.#state.ui.messageTimer = seconds;
+  }
+
+  #markMissionStart() {
+    this.#state.meta.startedAt = performance.now();
+  }
+
+  #loadLevel(levelId) {
+    const config = getMap(levelId);
+    if (!config) throw new Error(`Unknown level: ${levelId}`);
+    this.#state.levelId = levelId;
+    this.#state.level = createRuntimeLevel(levelId, config);
+    this.#camera.configureBounds(this.#state.level.mapWidth, this.#state.level.mapHeight, this.#state.level.settings.baseTile);
+    this.#camera.x = 0;
+    this.#camera.y = 0;
+    const initialZoom = this.#state.level.settings.initialZoom ?? 1.0;
+    this.#camera.setZoom(initialZoom);
+    this.#state.camera = this.#camera;
+    this.#state.meta.collected = this.#state.level.boxSystem.boxes.filter((box) => box.opened).length;
+    this.#state.meta.target = this.#state.level.boxSystem.boxes.length;
+    this.#state.meta.detectedBy = null;
+    this.#state.meta.elapsedMs = 0;
+    this.#state.meta.startedAt = 0;
+    this.#state.meta.levelSession += 1;
+    this.#state.meta.objective = this.#state.level.missionSystem.getObjectiveText(this.#state.meta.collected, this.#state.meta.target);
+    this.#state.meta.exitDistanceText = this.#state.level.missionSystem.isUnlocked() ? `${this.#state.level.missionSystem.getDistanceToExit(this.#state.level.player).toFixed(0)} px` : 'locked';
+    this.#state.inventory = createInventory();
+    this.#state.prompt = 'Arrow Up / Down to choose, Enter to confirm';
+    this.#syncHud();
+  }
+
+  #setScreen(screen) {
+    this.#input.reset?.();
+    this.#state.previousScreen = this.#state.screen;
+    this.#state.screen = screen;
+    this.#state.screenEnteredAt = performance.now();
+    this.#state.screenTimeMs = 0;
+    if (screen === SCREEN_STATES.START) this.#state.prompt = 'Arrow Up / Down to choose, Enter to confirm';
+    if (screen === SCREEN_STATES.INTRO) this.#state.prompt = 'Press Enter to skip';
+    if (screen === SCREEN_STATES.PLAYING) this.#state.prompt = 'Find the chests';
+    if (screen === SCREEN_STATES.PAUSE) this.#state.prompt = 'Paused';
+    if (screen === SCREEN_STATES.TUTORIAL) this.#state.prompt = 'Click arrows or press ← → to turn pages';
+    this.#audio.sync(screen);
+    const audioState = this.#audio.getState();
+    this.#state.audio.currentTrack = audioState.currentKey;
+    this.#state.audio.muted = audioState.muted;
+    this.#syncHud();
+  }
+
+  restartLevel() {
+    this.#loadLevel(this.#currentLevelId);
+    this.#state.nearestLightButton = null;
+    resetStartScreen();
+    resetIntroScreen();
+    resetTutorialScreen(this.#state);
+    this.#setScreen(SCREEN_STATES.START);
+    this.#overlay.flash(this.#state, 0.3);
+  }
+
+  switchLevel(levelId) {
+    this.#currentLevelId = levelId;
+    this.#loadLevel(levelId);
+    resetStartScreen();
+    resetIntroScreen();
+    resetTutorialScreen(this.#state);
+    this.#setScreen(SCREEN_STATES.START);
+    this.#overlay.flash(this.#state, 0.3);
+  }
+
+  #togglePause() {
+    if (this.#state.screen === SCREEN_STATES.PLAYING) this.#setScreen(SCREEN_STATES.PAUSE);
+    else if (this.#state.screen === SCREEN_STATES.PAUSE) this.#setScreen(SCREEN_STATES.PLAYING);
+  }
+
+  #getApi() {
+    return {
+      setScreen: (s) => this.#setScreen(s),
+      setMessage: (t, s) => this.#setMessage(t, s),
+      markMissionStart: () => this.#markMissionStart(),
+      restartLevel: () => this.restartLevel()
+    };
+  }
+
+  #handleNonPlayingKey(key) {
+    const api = this.#getApi();
+    if (this.#state.screen === SCREEN_STATES.START) return handleStartScreenKey(key, this.#state, api);
+    if (this.#state.screen === SCREEN_STATES.INTRO) return handleIntroScreenKey(key, this.#state, api);
+    if (this.#state.screen === SCREEN_STATES.WIN || this.#state.screen === SCREEN_STATES.LOSE) {
+      if (key.toLowerCase() === 'r' || key === 'Enter') {
+        this.restartLevel();
+        return true;
+      }
+    }
+    if (this.#state.screen === SCREEN_STATES.TUTORIAL) return handleTutorialScreenKey(key, this.#state, api);
+    return false;
+  }
+
+  async loadAssets(p) {
+    this.#state.loading.message = 'Loading assets...';
+    try {
+      const result = await loadAssetsAsync(p);
+      this.#state.loading.ready = true;
+      this.#state.loading.message = result.failedCount > 0 ? `Loaded with ${result.failedCount} fallback asset(s)` : 'Assets loaded';
+    } catch (error) {
+      this.#state.loading.error = error?.message || String(error);
+      throw error;
+    }
+    this.#syncHud();
+  }
+
+  setup() {
+    const validationReport = bootstrapLegacyMaps();
+    if (validationReport.length) {
+      const details = validationReport
+        .map((entry) => `${entry.levelId}: ${entry.issues.join(', ')}`)
+        .join(' | ');
+      throw new Error(`Legacy map bootstrap failed: ${details}`);
+    }
+    this.#loadLevel(this.#currentLevelId);
+    resetStartScreen();
+    resetIntroScreen();
+    resetTutorialScreen(this.#state);
+    this.#setScreen(SCREEN_STATES.START);
+    this.#setMessage('Ready.', 1.2);
+  }
+
+  update(deltaTime) {
+    this.#state.screenTimeMs = performance.now() - this.#state.screenEnteredAt;
+    this.#overlay.update(this.#state, deltaTime);
+    if (this.#state.ui.messageTimer > 0) {
+      this.#state.ui.messageTimer -= deltaTime;
+      if (this.#state.ui.messageTimer <= 0) this.#state.ui.message = '';
+    }
+
+    if (this.#state.screen !== SCREEN_STATES.PLAYING) {
+      this.#syncHud();
+      return;
+    }
+
+    this.#state.meta.elapsedMs = Math.max(0, performance.now() - this.#state.meta.startedAt);
+    updatePlayer(this.#state.level.player, this.#input.getMovement(), this.#state.level, deltaTime);
+    if (this.#state.camera) this.#state.camera.update(this.#state.level.player, deltaTime);
+
+    const roomSystem = this.#state.level.roomSystem;
+    const playerRoomId = roomSystem.getActorRoomId(this.#state.level.player);
+    if (playerRoomId > 1 && roomSystem.explorePlayerRoom(this.#state.level.player)) {}
+
+    this.#state.level.doorSystem.update(deltaTime, [this.#state.level.player, ...(this.#state.level.npcs || [])]);
+    this.#state.level.boxSystem.update(deltaTime);
+    this.#state.level.roomSystem.update(deltaTime);
+    this.#state.level.missionSystem.update(deltaTime);
+
+    const detectedBy = updateNpcs(this.#state.level, deltaTime);
+    if (detectedBy) {
+      triggerPlayerAction(this.#state.level.player, 'alert', 0.32);
+      this.#state.meta.detectedBy = detectedBy;
+      this.#setScreen(SCREEN_STATES.LOSE);
+      this.#overlay.flash(this.#state, 0.45);
+      this.#setMessage('You were spotted', 2);
+      this.#syncHud();
+      return;
+    }
+
+    this.#state.meta.objective = this.#state.level.missionSystem.getObjectiveText(this.#state.meta.collected, this.#state.meta.target);
+    this.#state.meta.exitDistanceText = this.#state.level.missionSystem.isUnlocked() ? `${this.#state.level.missionSystem.getDistanceToExit(this.#state.level.player).toFixed(0)} px` : 'locked';
+
+    const prompt = getInteractionPrompt(this.#state.level);
+    this.#state.nearestLightButton = prompt?.type === 'light' ? prompt.entity : null;
+    this.#state.prompt = prompt?.text || (this.#state.level.missionSystem.isUnlocked() ? 'Head to extraction' : 'Find the chests');
+    if (this.#input.consumeInteract()) {
+      const result = tryInteract(this.#state.level, this.#state.inventory);
+      if (result.success) {
+        triggerPlayerAction(this.#state.level.player, result.kind === 'light' ? 'alert' : 'interact', result.kind === 'light' ? 0.22 : 0.28);
+        this.#setMessage(result.text, 1.2);
+        this.#overlay.flash(this.#state, result.kind === 'light' ? 0.12 : 0.18);
+      } else if (result.text) {
+        this.#setMessage(result.text, 1);
+      }
+      if (result.success && result.kind === 'exit') {
+        this.#setScreen(SCREEN_STATES.WIN);
+        this.#overlay.flash(this.#state, 0.28);
+        this.#setMessage('Extraction confirmed', 1.4);
+        this.#syncHud();
+        return;
+      }
+      if (result.success && result.kind === 'light') {
+        const roomId = result.entity?.roomId;
+        if (roomId) this.#setMessage(this.#state.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3);
+      }
+      if (result.success && result.kind === 'door') this.#setMessage(result.text, 1);
+      if (result.success && result.kind === 'box') {
+        const loot = collectLoot(this.#state.inventory, result.entity.id, this.#state.levelId);
+        if (loot) this.#setMessage(`Found: ${loot.label}`, 1.5);
+        this.#state.meta.collected = this.#state.level.boxSystem.boxes.filter((box) => box.opened).length;
+        if (this.#state.meta.collected >= this.#state.meta.target && this.#state.meta.target > 0 && !this.#state.level.missionSystem.isUnlocked()) {
+            state.level.missionSystem.unlock();
+            state.meta.objective = state.level.missionSystem.getObjectiveText(state.meta.collected, state.meta.target);
+            state.prompt = 'Extraction unlocked';
+            setMessage('All chests secured. Reach extraction.', 2);
+            overlay.flash(state, 0.26);
+          }
+        }
+      }
+      syncHud();
+    },
+    render(p) {
+      renderScene(p, state, overlay);
+    },
+    onKeyPressed(key, keyCode) {
+      audio.unlock();
+      const handledByScreen = handleNonPlayingKey(key);
+      if (handledByScreen) {
+        const audioState = audio.getState();
+        state.audio.currentTrack = audioState.currentKey;
+        state.audio.muted = audioState.muted;
+        syncHud();
+        return;
+      }
+      input.onKeyPressed(key, keyCode);
+      const lower = String(key).toLowerCase();
+      if (keyCode === 27) restartLevel();
+      if (lower === '1') switchLevel('map1');
+      if (lower === '2') switchLevel('map2');
+      if (lower === '3') switchLevel('map3');
+      if (lower === 'b') state.debug.showRooms = !state.debug.showRooms;
+      if (lower === 'c') state.debug.showCollision = !state.debug.showCollision;
+      if (lower === 'g') state.debug.showCamera = !state.debug.showCamera;
+      if (lower === 'v') state.debug.showExploration = !state.debug.showExploration;
+      if (lower === 'p') togglePause();
+      if (lower === 'h' && state.level) {
+        const next = state.level.player.characterVariant === 'default' ? 'stealth' : 'default';
+        state.level.player.characterVariant = next;
+        setMessage(`Player skin: ${next}`, 1);
+      }
+      if (lower === 'm') {
+        state.audio.muted = audio.toggleMute();
+        setMessage(state.audio.muted ? 'Muted' : 'Unmuted', 1);
+      }
+      const audioState = audio.getState();
+      state.audio.currentTrack = audioState.currentKey;
+      state.audio.muted = audioState.muted;
+      syncHud();
+    },
+    onKeyReleased(key, keyCode) {
+      input.onKeyReleased(key, keyCode);
+    },
+    onWindowBlur() {
+      input.reset?.();
+      if (state.screen === SCREEN_STATES.PLAYING) setMessage('Input reset', 0.6);
+      syncHud();
+    },
+
+    onDomKeyDown(key, code) {
+      input.onDomKeyDown?.(key, code);
+    },
+    onDomKeyUp(key, code) {
+      input.onDomKeyUp?.(key, code);
+    },
+
+    onMouseWheel(delta, mouseX, mouseY) {
+      if (state.screen !== SCREEN_STATES.PLAYING || !state.camera) return;
+      
+      // Calculate zoom delta (negative delta means zoom in, positive means zoom out)
+      const zoomDelta = delta > 0 ? -0.1 : 0.1;
+      
+      // Use player center as zoom center if mouse is not on canvas, otherwise use mouse position
+      const player = state.level.player;
+      const playerScreenX = (player.x + player.w / 2 - state.camera.x) * state.camera.zoom;
+      const playerScreenY = (player.y + player.h / 2 - state.camera.y) * state.camera.zoom;
+      
+      // Determine zoom center (mouse position or player center)
+      const centerX = (mouseX >= 0 && mouseX <= state.camera.width) ? mouseX : playerScreenX;
+      const centerY = (mouseY >= 0 && mouseY <= state.camera.height) ? mouseY : playerScreenY;
+      
+      state.camera.changeZoom(zoomDelta, centerX, centerY);
+    },
+
+    onMousePressed(mouseX, mouseY, mouseButton, p) {
+      if (state.screen === SCREEN_STATES.TUTORIAL) {
+        const handled = handleTutorialScreenMouse(mouseX, mouseY, p, state, api);
+        if (handled) {
+          syncHud();
+          return;
+        }
+      }
+    },
+
+    syncInputSnapshot(snapshot) {
+      input.syncMovementFromSnapshot?.(snapshot);
+    },
+    onResize(width, height) {
+      camera.resize(width, height);
+      if (state.level) camera.configureBounds(state.level.mapWidth, state.level.mapHeight, state.level.settings.baseTile);
+      state.camera = camera;
+    },
+    switchLevel,
+    restartLevel,
+    getState() { return state; }
+  };
+}

@@ -1,14 +1,11 @@
-// Loot system: item type registry, per-map chest loot assignments, inventory management.
-//
-// Keys carry a keyId that matches a door's keyId.
-// Loot entries: string 'note' | { type: 'key', keyId: string }
+// Loot system: ES6 Classes for Inventory and LootTable management
 export const LOOT_TYPES = Object.freeze({
   key:  { id: 'key',  label: 'Key',           icon: null },
   note: { id: 'note', label: 'Note Fragment',  icon: null }
 });
 
-const MAP_LOOT = {
-  map1: {
+const MAP_LOOT = Object.freeze({
+  map1: Object.freeze({
     chest_1: { type: 'key', keyId: 'key_A' },
     chest_2: 'note',
     chest_3: 'note',
@@ -17,8 +14,8 @@ const MAP_LOOT = {
     chest_6: 'note',
     chest_7: { type: 'key', keyId: 'key_C' },
     chest_8: 'note'
-  },
-  map2: {
+  }),
+  map2: Object.freeze({
     'chest-2-1': { type: 'key', keyId: 'key_A' },
     'chest-2-2': 'note',
     'chest-2-3': 'note',
@@ -29,8 +26,8 @@ const MAP_LOOT = {
     'chest-2-8': 'note',
     'chest-2-9': { type: 'key', keyId: 'key_D' },
     'chest-2-10': 'note'
-  },
-  map3: {
+  }),
+  map3: Object.freeze({
     'chest-3-1': 'note',
     'chest-3-2': { type: 'key', keyId: 'key_A' },
     'chest-3-3': 'note',
@@ -41,74 +38,161 @@ const MAP_LOOT = {
     'chest-3-8': 'note',
     'chest-3-9': { type: 'key', keyId: 'key_D' },
     'chest-3-10': 'note'
-  }
-};
+  })
+});
 
-export function createInventory() {
-  return {
-    keys: [],
-    note: 0
-  };
+// Inventory: player item storage with encapsulated state
+export class Inventory {
+  #keys;
+  #note;
+
+  constructor() {
+    this.#keys = [];
+    this.#note = 0;
+  }
+
+  get keys() { return [...this.#keys]; }
+  get note() { return this.#note; }
+
+  addKey(keyId) {
+    this.#keys.push(keyId);
+    return { ...LOOT_TYPES.key, keyId };
+  }
+
+  addNote() {
+    this.#note += 1;
+    return LOOT_TYPES.note;
+  }
+
+  hasKey(keyId = null) {
+    if (!keyId) return this.#keys.length > 0;
+    return this.#keys.includes(keyId);
+  }
+
+  consumeKey(keyId = null) {
+    if (!keyId) {
+      if (!this.#keys.length) return false;
+      this.#keys.splice(0, 1);
+      return true;
+    }
+    const idx = this.#keys.indexOf(keyId);
+    if (idx === -1) return false;
+    this.#keys.splice(idx, 1);
+    return true;
+  }
+
+  toString() {
+    return `Keys: ${this.#keys.length}  |  Notes: ${this.#note}`;
+  }
+
+  // Legacy compatibility - returns plain object for existing code
+  toJSON() {
+    return { keys: [...this.#keys], note: this.#note };
+  }
 }
 
-export function collectLoot(inventory, chestId, levelId) {
-  const entry = MAP_LOOT[levelId]?.[chestId];
-  if (!entry) return null;
-  if (typeof entry === 'string') {
-    if (entry === 'note') {
-      inventory.note = (inventory.note || 0) + 1;
-      return LOOT_TYPES.note;
+// LootTable: manages level-specific loot distribution
+export class LootTable {
+  #levelId;
+
+  constructor(levelId) {
+    this.#levelId = levelId;
+  }
+
+  get levelId() { return this.#levelId; }
+
+  collect(chestId, inventory) {
+    const entry = MAP_LOOT[this.#levelId]?.[chestId];
+    if (!entry) return null;
+
+    if (typeof entry === 'string') {
+      if (entry === 'note') {
+        return inventory.addNote();
+      }
+      return null;
+    }
+
+    if (entry.type === 'key') {
+      return inventory.addKey(entry.keyId);
     }
     return null;
   }
-  if (entry.type === 'key') {
-    inventory.keys.push(entry.keyId);
-    return { ...LOOT_TYPES.key, keyId: entry.keyId };
+
+  countTotalKeys() {
+    const loot = MAP_LOOT[this.#levelId];
+    if (!loot) return 0;
+    let count = 0;
+    for (const entry of Object.values(loot)) {
+      if (typeof entry === 'object' && entry?.type === 'key') {
+        count++;
+      }
+    }
+    return count;
   }
-  return null;
+
+  countTotalNotes() {
+    const loot = MAP_LOOT[this.#levelId];
+    if (!loot) return 0;
+    let count = 0;
+    for (const entry of Object.values(loot)) {
+      if (entry === 'note') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  static countTotalKeys(levelId) {
+    const loot = MAP_LOOT[levelId];
+    if (!loot) return 0;
+    let count = 0;
+    for (const entry of Object.values(loot)) {
+      if (typeof entry === 'object' && entry?.type === 'key') {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  static countTotalNotes(levelId) {
+    const loot = MAP_LOOT[levelId];
+    if (!loot) return 0;
+    let count = 0;
+    for (const entry of Object.values(loot)) {
+      if (entry === 'note') {
+        count++;
+      }
+    }
+    return count;
+  }
+}
+
+// Backward compatibility - factory functions wrap classes
+export function createInventory() {
+  return new Inventory();
+}
+
+export function collectLoot(inventory, chestId, levelId) {
+  const table = new LootTable(levelId);
+  return table.collect(chestId, inventory);
 }
 
 export function hasKey(inventory, keyId) {
-  if (!keyId) return inventory.keys.length > 0;
-  return inventory.keys.includes(keyId);
+  return inventory.hasKey(keyId);
 }
 
 export function consumeKey(inventory, keyId) {
-  if (!keyId) {
-    if (!inventory.keys.length) return false;
-    inventory.keys.splice(0, 1);
-    return true;
-  }
-  const idx = inventory.keys.indexOf(keyId);
-  if (idx === -1) return false;
-  inventory.keys.splice(idx, 1);
-  return true;
+  return inventory.consumeKey(keyId);
 }
 
 export function formatInventory(inventory) {
-  return `Keys: ${inventory.keys.length}  |  Notes: ${inventory.note || 0}`;
+  return inventory.toString();
 }
 
 export function countTotalKeys(levelId) {
-  const loot = MAP_LOOT[levelId];
-  if (!loot) return 0;
-  let count = 0;
-  for (const entry of Object.values(loot)) {
-    if (typeof entry === 'object' && entry?.type === 'key') {
-      count++;
-    }
-  }
-  return count;
+  return LootTable.countTotalKeys(levelId);
 }
 
 export function countTotalNotes(levelId) {
-  const loot = MAP_LOOT[levelId];
-  if (!loot) return 0;
-  let count = 0;
-  for (const entry of Object.values(loot)) {
-    if (entry === 'note') {
-      count++;
-    }
-  }
-  return count;
+  return LootTable.countTotalNotes(levelId);
 }

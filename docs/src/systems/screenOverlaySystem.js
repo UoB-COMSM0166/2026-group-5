@@ -1,49 +1,35 @@
-// Screen overlay: dispatches start/intro/win/lose draws, vignette, flash effects.
+// Screen overlay: dispatches screen rendering via ScreenManager.
 import { SCREEN_STATES } from '../core/gameState.js';
-import { drawStartScreen } from '../states/startScreen.js';
-import { drawIntroScreen } from '../states/introScreen.js';
-import { drawWinScreen } from '../states/winScreen.js';
-import { drawLoseScreen } from '../states/loseScreen.js';
-import { drawTutorialScreen, updateTutorialScreen } from '../states/tutorialScreen.js';
+import { ScreenManager } from '../screens/ScreenManager.js';
 
-export function createScreenOverlaySystem() {
-  return {
-    update(state, deltaTime) {
-      const targetAlpha = state.screen === 'playing' ? 0 : 0.18;
-      state.ui.overlayAlpha += (targetAlpha - state.ui.overlayAlpha) * Math.min(1, deltaTime * 6);
-      if (state.ui.messageTimer > 0) {
-        state.ui.messageTimer = Math.max(0, state.ui.messageTimer - deltaTime);
-        if (state.ui.messageTimer === 0) state.ui.message = '';
-      }
-      state.ui.flashAlpha = Math.max(0, state.ui.flashAlpha - deltaTime * 1.8);
-      if (state.screen === SCREEN_STATES.TUTORIAL) {
-        updateTutorialScreen(state, deltaTime);
-      }
-    },
-    flash(state, alpha = 0.35) {
-      state.ui.flashAlpha = Math.max(state.ui.flashAlpha, alpha);
-    },
-    render(p, state) {
-      if (state.screen === SCREEN_STATES.START) {
-        drawStartScreen(p, state);
-        return;
-      }
-      if (state.screen === SCREEN_STATES.INTRO) {
-        drawIntroScreen(p, state);
-        return;
-      }
-      if (state.screen === SCREEN_STATES.WIN) {
-        drawWinScreen(p, state);
-        return;
-      }
-      if (state.screen === SCREEN_STATES.LOSE) {
-        drawLoseScreen(p, state);
-        return;
-      }
-      if (state.screen === SCREEN_STATES.TUTORIAL) {
-        drawTutorialScreen(p, state);
-        return;
-      }
+export class ScreenOverlaySystem {
+  #screenManager;
+
+  constructor() {
+    this.#screenManager = new ScreenManager();
+  }
+
+  get screenManager() { return this.#screenManager; }
+
+  update(state, deltaTime) {
+    const targetAlpha = state.screen === 'playing' ? 0 : 0.18;
+    state.ui.overlayAlpha += (targetAlpha - state.ui.overlayAlpha) * Math.min(1, deltaTime * 6);
+    if (state.ui.messageTimer > 0) {
+      state.ui.messageTimer = Math.max(0, state.ui.messageTimer - deltaTime);
+      if (state.ui.messageTimer === 0) state.ui.message = '';
+    }
+    state.ui.flashAlpha = Math.max(0, state.ui.flashAlpha - deltaTime * 1.8);
+    this.#screenManager.update(state.screen, state, deltaTime);
+  }
+
+  flash(state, alpha = 0.35) {
+    state.ui.flashAlpha = Math.max(state.ui.flashAlpha, alpha);
+  }
+
+  render(p, state) {
+    this.#screenManager.render(state.screen, p, state);
+
+    if (state.screen === SCREEN_STATES.PLAYING || state.screen === SCREEN_STATES.PAUSE) {
       if (state.ui.vignette > 0) {
         p.noStroke();
         p.fill(0, 0, 0, 60);
@@ -60,7 +46,6 @@ export function createScreenOverlaySystem() {
         p.fill(255, 255, 255, 255 * state.ui.flashAlpha);
         p.rect(0, 0, p.width, p.height);
       }
-
     }
-  };
+  }
 }

@@ -1,7 +1,7 @@
 // Entity renderer: draws doors, chests, buttons, NPCs, player, footsteps.
 import { getImage } from '../core/assetLoader.js';
 import { SPRITE_PATHS, resolveCharacterSprite } from './spriteCatalog.js';
-import { isRectVisible } from '../systems/cameraSystem.js';
+import { Camera } from '../systems/cameraSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
 
@@ -327,32 +327,32 @@ export function renderEntities(p, state) {
   if (!level) return;
   const tile = level.settings.baseTile;
 
-  const camera = state.camera || { x: 0, y: 0, width: p.width, height: p.height };
+  const camera = state.camera || new Camera(p.width, p.height);
 
   for (const door of level.doorSystem.doors) {
     const worldX = door.x * tile;
     const worldY = door.y * tile;
     const worldW = (door.w || 2) * tile;
     const worldH = (door.h || 2) * tile;
-    if (!isRectVisible(camera, worldX, worldY, worldW, worldH, 48)) continue;
+    if (!camera.isRectVisible(worldX, worldY, worldW, worldH, 48)) continue;
     if (door.panels === 'double') drawDoubleDoor(p, door, tile);
     else drawSingleDoor(p, door, tile);
   }
 
   if (level.missionSystem?.exit) {
     const exit = level.missionSystem.exit;
-    if (isRectVisible(camera, exit.x, exit.y, exit.w, exit.h, 64)) drawExitBeacon(p, level.missionSystem, tile);
+    if (camera.isRectVisible(exit.x, exit.y, exit.w, exit.h, 64)) drawExitBeacon(p, level.missionSystem, tile);
   }
 
   for (const button of level.roomSystem.buttons) {
-    if (!isRectVisible(camera, button.centerX - 10, button.centerY - 10, 20, 20, 16)) continue;
+    if (!camera.isRectVisible(button.centerX - 10, button.centerY - 10, 20, 20, 16)) continue;
     renderButton(p, level, button);
   }
 
   renderFootsteps(p, level);
 
   for (const npc of level.npcs) {
-    if (!isRectVisible(camera, npc.x, npc.y, npc.w, npc.h, 64)) continue;
+    if (!camera.isRectVisible(npc.x, npc.y, npc.w, npc.h, 64)) continue;
     const vision = npc.vision;
     if (vision?.points?.length) {
       const alpha = npc.state === 'CHASE' ? 52 : npc.state === 'SEARCH' ? 36 : 24;
@@ -387,11 +387,11 @@ export function renderEntities(p, state) {
     const rh = (chest.renderH || chest.h) * tile;
     const rx = chest.x * tile + (chest.renderOffsetX || 0) * tile;
     const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
-    if (!isRectVisible(camera, rx, ry, rw, rh, 24)) continue;
+    if (!camera.isRectVisible(rx, ry, rw, rh, 24)) continue;
     drawChest(p, chest, tile);
   }
 
-  if (isRectVisible(camera, level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
+  if (camera.isRectVisible(level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
     const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
     drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
   }

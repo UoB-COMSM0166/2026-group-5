@@ -4,7 +4,6 @@ import { SPRITE_PATHS } from './spriteCatalog.js';
 import { renderMap } from './mapRenderer_p5.js';
 import { renderEntities, renderDoorInteractionPrompts, renderButtonInteractionPrompts } from './entityRenderer_p5.js';
 import { renderLightingOverlay, renderUnexploredOverlay } from './lightingRenderer_p5.js';
-import { renderPauseScreen } from '../states/pauseScreen.js';
 
 export function renderScene(p, state, overlaySystem) {
   const showWorld = state.screen === 'playing' || state.screen === 'pause';
@@ -31,7 +30,6 @@ export function renderScene(p, state, overlaySystem) {
   if (showWorld) {
     renderScreenUi(p, state);
   }
-  if (state.screen === 'pause') renderPauseScreen(p, state);
   if (state.debug.showCamera && state.camera) renderCameraDebug(p, state);
   overlaySystem?.render(p, state);
 }

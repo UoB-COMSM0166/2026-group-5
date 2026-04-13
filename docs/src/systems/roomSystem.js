@@ -74,154 +74,181 @@ function buildButtonsFromRooms(roomMatrix, doors = [], manualButtons = []) {
   return buttons;
 }
 
-export function createRoomSystem(roomMatrix, options = {}) {
-  const baseTile = options.baseTile || 16;
-  const roomTiles = collectRoomTiles(roomMatrix || []);
-  const rooms = new Map();
+export class RoomSystem {
+  #matrix;
+  #rooms;
+  #roomTiles;
+  #buttons;
+  #attachedNpcs;
+  #baseTile;
+  #chaseVisionMultiplier;
+  #darkVisionMultiplier;
+  #normalVisionMultiplier;
 
-  for (const roomId of roomTiles.keys()) {
-    rooms.set(roomId, {
-      lightOn: true,
-      alert: 0,
-      pendingLightAlert: false,
-      lastChangedAt: 0,
-      forcedBy: null,
-      explored: false
-    });
+  constructor(roomMatrix, options = {}) {
+    this.#baseTile = options.baseTile || 16;
+    this.#chaseVisionMultiplier = options.chaseVisionMultiplier || 1.2;
+    this.#darkVisionMultiplier = options.darkVisionMultiplier || 0.5;
+    this.#normalVisionMultiplier = options.normalVisionMultiplier || 1;
+    this.#matrix = roomMatrix || [];
+    this.#roomTiles = collectRoomTiles(this.#matrix);
+    this.#rooms = new Map();
+    this.#attachedNpcs = [];
+
+    for (const roomId of this.#roomTiles.keys()) {
+      this.#rooms.set(roomId, {
+        lightOn: true,
+        alert: 0,
+        pendingLightAlert: false,
+        lastChangedAt: 0,
+        forcedBy: null,
+        explored: false
+      });
+    }
+
+    this.#buttons = buildButtonsFromRooms(this.#matrix, options.doors || [], options.manualButtons || []).map((button) => ({
+      ...button,
+      centerX: button.x * this.#baseTile + this.#baseTile / 2,
+      centerY: button.y * this.#baseTile + this.#baseTile / 2
+    }));
   }
 
-  const buttons = buildButtonsFromRooms(roomMatrix || [], options.doors || [], options.manualButtons || []).map((button) => ({
-    ...button,
-    centerX: button.x * baseTile + baseTile / 2,
-    centerY: button.y * baseTile + baseTile / 2
-  }));
+  get matrix() { return this.#matrix; }
+  get rooms() { return this.#rooms; }
+  get roomTiles() { return this.#roomTiles; }
+  get buttons() { return this.#buttons; }
+  get attachedNpcs() { return this.#attachedNpcs; }
 
-  const api = {
-    matrix: roomMatrix || [],
-    rooms,
-    roomTiles,
-    buttons,
-    attachedNpcs: [],
-    attachNpcs(npcs) {
-      this.attachedNpcs = Array.isArray(npcs) ? npcs : [];
-    },
-    getRoomId(tx, ty) {
-      return getRoomIdAt(this.matrix, tx, ty);
-    },
-    getActorRoomId(actor) {
-      const cx = actor.x + actor.w / 2;
-      const cy = actor.y + actor.h / 2;
-      return this.getRoomId(Math.floor(cx / baseTile), Math.floor(cy / baseTile));
-    },
-    isLit(roomId) {
-      return this.rooms.get(roomId)?.lightOn ?? true;
-    },
-    isExplored(roomId) {
-      return this.rooms.get(roomId)?.explored ?? false;
-    },
-    exploreRoom(roomId) {
-      const room = this.rooms.get(roomId);
-      if (!room || room.explored) return false;
-      room.explored = true;
-      room.exploredAt = performance.now();
-      return true;
-    },
-    resetExploration() {
-      for (const room of this.rooms.values()) {
-        room.explored = false;
-      }
-    },
-    explorePlayerRoom(player) {
-      const roomId = this.getActorRoomId(player);
-      if (roomId > 1) {
-        return this.exploreRoom(roomId);
-      }
-      return false;
-    },
-    getNpcVisionRange(npc, baseRange) {
-      if (npc.state === 'CHASE') return baseRange * (options.chaseVisionMultiplier || 1.2);
-      if (npc.state === 'SEARCH') return baseRange * 0.9;
-      const roomId = this.getActorRoomId(npc);
-      if (!this.isLit(roomId)) return baseRange * (options.darkVisionMultiplier || 0.5);
-      return baseRange * (options.normalVisionMultiplier || 1);
-    },
-    getNearestButtonForPlayer(player, maxDistance = baseTile * 1.6) {
-      const px = player.x + player.w / 2;
-      const py = player.y + player.h / 2;
-      const playerTileX = Math.floor(px / baseTile);
-      const playerTileY = Math.floor(py / baseTile);
-      
-      for (const button of this.buttons) {
-        // Interaction range: (button.y+2, button.x-1), (button.y+2, button.x), (button.y+2, button.x+1)
-        const targetRow = button.y + 2;
-        const validCols = [button.x - 1, button.x, button.x + 1];
-        
-        if (playerTileY === targetRow && validCols.includes(playerTileX)) {
-          return button;
-        }
-      }
-      return null;
-    },
-    toggleRoom(roomId, source = 'player') {
-      const room = this.rooms.get(roomId);
-      if (!room) return false;
-      room.lightOn = !room.lightOn;
-      room.alert = 1;
-      room.pendingLightAlert = true;
-      room.forcedBy = source;
-      room.lastChangedAt = Date.now();
-      const button = this.buttons.find((entry) => entry.roomId === roomId);
-      if (button) button.responseGlow = 1;
-      this.notifyNpcsOfLightChange(roomId, source);
-      return true;
-    },
-    notifyNpcsOfLightChange(roomId, source) {
-      const button = this.buttons.find((entry) => entry.roomId === roomId);
-      if (!button) return;
-      for (const npc of this.attachedNpcs) {
-        const npcRoomId = this.getActorRoomId(npc);
-        if (npcRoomId !== roomId) continue;
-        if (npc.state === 'CHASE') continue;
-        npc.roomLightResponse = {
-          roomId,
-          source,
-          buttonTile: { x: button.x, y: button.y },
-          buttonX: button.centerX,
-          buttonY: button.centerY
-        };
-        npc.searchTargetX = button.centerX;
-        npc.searchTargetY = button.centerY;
-      }
-    },
-    consumeButtonResponse(button, source = 'npc') {
-      const room = this.rooms.get(button.roomId);
-      if (!room) return false;
-      if (!room.lightOn) room.lightOn = true;
-      room.pendingLightAlert = false;
-      room.alert = 0.65;
-      room.forcedBy = source;
-      room.lastChangedAt = Date.now();
-      button.responseGlow = 1;
-      return true;
-    },
-    update(deltaTime) {
-      for (const room of this.rooms.values()) {
-        room.alert = Math.max(0, room.alert - deltaTime * 1.15);
-      }
-      for (const button of this.buttons) {
-        button.responseGlow = Math.max(0, button.responseGlow - deltaTime * 1.7);
-      }
-    },
-    getUnexploredRooms() {
-      const unexplored = [];
-      for (const [roomId, room] of this.rooms.entries()) {
-        if (!room.explored) {
-          unexplored.push(roomId);
-        }
-      }
-      return unexplored;
+  attachNpcs(npcs) {
+    this.#attachedNpcs = Array.isArray(npcs) ? npcs : [];
+  }
+
+  getRoomId(tx, ty) {
+    return getRoomIdAt(this.#matrix, tx, ty);
+  }
+
+  getActorRoomId(actor) {
+    const cx = actor.x + actor.w / 2;
+    const cy = actor.y + actor.h / 2;
+    return this.getRoomId(Math.floor(cx / this.#baseTile), Math.floor(cy / this.#baseTile));
+  }
+
+  isLit(roomId) {
+    return this.#rooms.get(roomId)?.lightOn ?? true;
+  }
+
+  isExplored(roomId) {
+    return this.#rooms.get(roomId)?.explored ?? false;
+  }
+
+  exploreRoom(roomId) {
+    const room = this.#rooms.get(roomId);
+    if (!room || room.explored) return false;
+    room.explored = true;
+    room.exploredAt = performance.now();
+    return true;
+  }
+
+  resetExploration() {
+    for (const room of this.#rooms.values()) {
+      room.explored = false;
     }
-  };
+  }
 
-  return api;
+  explorePlayerRoom(player) {
+    const roomId = this.getActorRoomId(player);
+    if (roomId > 1) {
+      return this.exploreRoom(roomId);
+    }
+    return false;
+  }
+
+  getNpcVisionRange(npc, baseRange) {
+    if (npc.state === 'CHASE') return baseRange * this.#chaseVisionMultiplier;
+    if (npc.state === 'SEARCH') return baseRange * 0.9;
+    const roomId = this.getActorRoomId(npc);
+    if (!this.isLit(roomId)) return baseRange * this.#darkVisionMultiplier;
+    return baseRange * this.#normalVisionMultiplier;
+  }
+
+  getNearestButtonForPlayer(player, maxDistance = this.#baseTile * 1.6) {
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    const playerTileX = Math.floor(px / this.#baseTile);
+    const playerTileY = Math.floor(py / this.#baseTile);
+
+    for (const button of this.#buttons) {
+      const targetRow = button.y + 2;
+      const validCols = [button.x - 1, button.x, button.x + 1];
+
+      if (playerTileY === targetRow && validCols.includes(playerTileX)) {
+        return button;
+      }
+    }
+    return null;
+  }
+
+  toggleRoom(roomId, source = 'player') {
+    const room = this.#rooms.get(roomId);
+    if (!room) return false;
+    room.lightOn = !room.lightOn;
+    room.alert = 1;
+    room.pendingLightAlert = true;
+    room.forcedBy = source;
+    room.lastChangedAt = Date.now();
+    const button = this.#buttons.find((entry) => entry.roomId === roomId);
+    if (button) button.responseGlow = 1;
+    this.notifyNpcsOfLightChange(roomId, source);
+    return true;
+  }
+
+  notifyNpcsOfLightChange(roomId, source) {
+    const button = this.#buttons.find((entry) => entry.roomId === roomId);
+    if (!button) return;
+    for (const npc of this.#attachedNpcs) {
+      const npcRoomId = this.getActorRoomId(npc);
+      if (npcRoomId !== roomId) continue;
+      if (npc.state === 'CHASE') continue;
+      npc.roomLightResponse = {
+        roomId,
+        source,
+        buttonTile: { x: button.x, y: button.y },
+        buttonX: button.centerX,
+        buttonY: button.centerY
+      };
+      npc.searchTargetX = button.centerX;
+      npc.searchTargetY = button.centerY;
+    }
+  }
+
+  consumeButtonResponse(button, source = 'npc') {
+    const room = this.#rooms.get(button.roomId);
+    if (!room) return false;
+    if (!room.lightOn) room.lightOn = true;
+    room.pendingLightAlert = false;
+    room.alert = 0.65;
+    room.forcedBy = source;
+    room.lastChangedAt = Date.now();
+    button.responseGlow = 1;
+    return true;
+  }
+
+  update(deltaTime) {
+    for (const room of this.#rooms.values()) {
+      room.alert = Math.max(0, room.alert - deltaTime * 1.15);
+    }
+    for (const button of this.#buttons) {
+      button.responseGlow = Math.max(0, button.responseGlow - deltaTime * 1.7);
+    }
+  }
+
+  getUnexploredRooms() {
+    const unexplored = [];
+    for (const [roomId, room] of this.#rooms.entries()) {
+      if (!room.explored) {
+        unexplored.push(roomId);
+      }
+    }
+    return unexplored;
+  }
 }

@@ -27,53 +27,62 @@ function chooseExitTile(collision, spawnX, spawnY) {
   return { x: best.x, y: best.y };
 }
 
-export function createMissionSystem(collision, baseTile, spawnTile, totalChests = 0, objective = {}) {
-  const fixedExit = objective?.exitTile || null;
-  const exitTile = fixedExit || chooseExitTile(collision, spawnTile.x, spawnTile.y);
-  const exit = {
-    tileX: exitTile.x,
-    tileY: exitTile.y,
-    x: exitTile.x * baseTile,
-    y: exitTile.y * baseTile,
-    w: baseTile,
-    h: baseTile,
-    unlocked: totalChests <= 0,
-    pulse: 0,
-    hintPulse: 0,
-    label: totalChests > 0 ? 'Locked extraction' : 'Extraction'
-  };
+export class MissionSystem {
+  #exit;
 
-  return {
-    exit,
-    unlock() {
-      exit.unlocked = true;
-      exit.label = 'Extraction ready';
-    },
-    update(deltaTime) {
-      exit.pulse += deltaTime * (exit.unlocked ? 2.8 : 1.2);
-      exit.hintPulse += deltaTime * 1.6;
-    },
-    isUnlocked() {
-      return !!exit.unlocked;
-    },
-    getObjectiveText(collected, target) {
-      if (!exit.unlocked) return `Collect all chests (${collected}/${target})`;
-      return 'Reach extraction';
-    },
-    getDistanceToExit(player) {
-      const px = player.x + player.w / 2;
-      const py = player.y + player.h / 2;
-      const ex = exit.x + exit.w / 2;
-      const ey = exit.y + exit.h / 2;
-      return Math.hypot(px - ex, py - ey);
-    },
-    isPlayerInside(player, margin = 6) {
-      const px = player.x + player.w / 2;
-      const py = player.y + player.h / 2;
-      return px >= exit.x - margin && px <= exit.x + exit.w + margin && py >= exit.y - margin && py <= exit.y + exit.h + margin;
-    },
-    getInteractPrompt() {
-      return exit.unlocked ? 'Press E to extract' : 'Locked extraction';
-    }
-  };
+  constructor(collision, baseTile, spawnTile, totalChests = 0, objective = {}) {
+    const fixedExit = objective?.exitTile || null;
+    const exitTile = fixedExit || chooseExitTile(collision, spawnTile.x, spawnTile.y);
+    this.#exit = {
+      tileX: exitTile.x,
+      tileY: exitTile.y,
+      x: exitTile.x * baseTile,
+      y: exitTile.y * baseTile,
+      w: baseTile,
+      h: baseTile,
+      unlocked: totalChests <= 0,
+      pulse: 0,
+      hintPulse: 0,
+      label: totalChests > 0 ? 'Locked extraction' : 'Extraction'
+    };
+  }
+
+  get exit() { return this.#exit; }
+
+  unlock() {
+    this.#exit.unlocked = true;
+    this.#exit.label = 'Extraction ready';
+  }
+
+  update(deltaTime) {
+    this.#exit.pulse += deltaTime * (this.#exit.unlocked ? 2.8 : 1.2);
+    this.#exit.hintPulse += deltaTime * 1.6;
+  }
+
+  isUnlocked() {
+    return !!this.#exit.unlocked;
+  }
+
+  getObjectiveText(collected, target) {
+    if (!this.#exit.unlocked) return `Collect all chests (${collected}/${target})`;
+    return 'Reach extraction';
+  }
+
+  getDistanceToExit(player) {
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    const ex = this.#exit.x + this.#exit.w / 2;
+    const ey = this.#exit.y + this.#exit.h / 2;
+    return Math.hypot(px - ex, py - ey);
+  }
+
+  isPlayerInside(player, margin = 6) {
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    return px >= this.#exit.x - margin && px <= this.#exit.x + this.#exit.w + margin && py >= this.#exit.y - margin && py <= this.#exit.y + this.#exit.h + margin;
+  }
+
+  getInteractPrompt() {
+    return this.#exit.unlocked ? 'Press E to extract' : 'Locked extraction';
+  }
 }

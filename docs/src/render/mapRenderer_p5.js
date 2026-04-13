@@ -1,6 +1,6 @@
 import { getImage } from '../core/assetLoader.js';
 import { getTilesetConfig, GID_REMAP, GID_COLORS } from './tilesetCatalog.js';
-import { getVisibleTileBounds } from '../systems/cameraSystem.js';
+import { Camera } from '../systems/cameraSystem.js';
 
 const FLIP_H = 0x80000000;
 const FLIP_V = 0x40000000;
@@ -31,7 +31,7 @@ function getTilesetInfo(levelId, gid) {
 
 function drawFallbackCollision(p, level, camera) {
   const tile = level.settings.baseTile;
-  const bounds = getVisibleTileBounds(camera, tile, level.collision[0]?.length || 0, level.collision.length || 0);
+  const bounds = camera.getVisibleTileBounds(tile, level.collision[0]?.length || 0, level.collision.length || 0);
   p.noStroke();
   for (let y = bounds.startRow; y < bounds.endRow; y += 1) {
     for (let x = bounds.startCol; x < bounds.endCol; x += 1) {
@@ -103,7 +103,7 @@ function drawLayer(p, level, layer, camera) {
   const tile = level.settings.baseTile;
   const width = level.mapData.width;
   const height = level.mapData.height;
-  const bounds = getVisibleTileBounds(camera, tile, width, height);
+  const bounds = camera.getVisibleTileBounds(tile, width, height);
   p.noStroke();
   for (let y = bounds.startRow; y < bounds.endRow; y += 1) {
     for (let x = bounds.startCol; x < bounds.endCol; x += 1) {
@@ -120,7 +120,7 @@ function drawLayer(p, level, layer, camera) {
 export function renderMap(p, state) {
   const level = state.level;
   if (!level) return;
-  const camera = state.camera || { x: 0, y: 0, width: p.width, height: p.height };
+  const camera = state.camera || new Camera(p.width, p.height);
 
   if (!level.mapData?.layers) {
   drawFallbackCollision(p, level, camera);
