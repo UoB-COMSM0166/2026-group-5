@@ -59,15 +59,44 @@ During the ideation process, team members took turns proposing their ideas. Our 
 
 Due to the semester-long nature of the course, the difficulty and time it would take to implement a game became deciding factors. Because of that, we decided that the rogue-like would not be feasible to complete to a satisfactory level given our timeframe. We created paper prototypes for the remaining two ideas and presented them to classmates.
 
-For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies.
+For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
 
 ## Stakeholders
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
-<img src="devlog/images/onion_model.png" alt="Onion Model" width="600">
+<img src="devlog/images/onion_model.png" alt="Onion Model">
 
 The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (dev team, teaching staff). The Wider Environment captures university-level constraints and infrastructure.
+
+## Epics and User Stories
+
+We used an epic-driven approach to define our feature scope. Each epic represents a major gameplay system, with user stories capturing specific player needs. These stories were then tracked as GitHub issues to manage implementation and progress.
+
+Our Epics include:
+- **Epic 1**: Stealth and Movement
+- **Epic 2**: Enemy Visibility and Feedback
+- **Epic 3**: Rooms, Doors, and Progression
+- **Epic 4**: Keys and Interactables
+- **Epic 5**: Challenge and Learning Curve
+- **Epic 6**: Portal Mechanics
+- **Epic 7**: Inventory and Items
+- **Epic 8**: Game Flow and Feedback
+
+Below are the user stories for our first epic, Stealth and Movement. Please see the appendix for the remaining user stories.
+
+**Epic 1: Stealth and Movement**
+
+| Number        | User Story               | Priority                  | 
+| ------------- | ------------------------ | ------------------------- | 
+| U1.1          | As a player, I want responsive movement so I can position precisely to avoid enemy vision and alert zones.    | High            |
+| U1.2          | As a player, I want walls, doors, and solid obstacles to block movement so navigation feels consistent.    | High            |
+| U1.3          | As a player, I want obstacles and corners to provide cover so I can avoid line of sight strategically.    | High            |
+| U1.4          | As a player, I want to switch between walking and sprinting so that I can trade safety for speed when escaping danger.    | High            |
+| U1.5          | As a player, I want sprinting to generate visible/audible noise feedback so I understand when enemies may investigate.    | High            |
+| U1.6          | As a player, I want guards to lose me when I successfully break line-of-sight so that stealth feels skill-based.    | High            |
+| U1.7          | As a player, I want to fail only when a guard reaches me in a chase so that mistakes feel fair and understandable.    | High            |
+| U1.8          | As a player, I want to preview nearby danger (panning camera) so I can scout safely before advancing.    | Medium            |
 
 <!-- - Core Development Team
   - Design, implementation, testing, evaluation and documentation
