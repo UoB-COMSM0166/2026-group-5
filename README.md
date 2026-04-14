@@ -65,16 +65,18 @@ For the stealth game, we prototyped navigating around rooms, enemy field of view
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
-<img src="devlog/images/onion-model.jpg" alt="Onion Model" width="600" height="600">
+<img src="devlog/images/onion_model.png" alt="Onion Model" width="600">
 
-- Core Development Team
+The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (dev team, teaching staff). The Wider Environment captures university-level constraints and infrastructure.
+
+<!-- - Core Development Team
   - Design, implementation, testing, evaluation and documentation
 - End-Users & Community
   - Classmates & peer reviewers: provide usability and feature feedback to guide iterations
   - Online players via GitHub Pages: use the deployed version and report issues or suggestions
 - Course Staff
   - Instructors & Teaching Assistants: define requirements and grading criteria
-
+-->
 
 
 # 4. Design
