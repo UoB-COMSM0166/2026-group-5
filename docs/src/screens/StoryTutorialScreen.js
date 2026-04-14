@@ -20,7 +20,7 @@ export class TutorialScreen extends Screen {
   #turning;
 
   constructor() {
-    super('tutorial', 'Click arrows or press Left / Right to turn pages');
+    super('tutorial', 'Press ← → to flip pages, Enter to skip');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
@@ -52,13 +52,18 @@ export class TutorialScreen extends Screen {
       this.#startTurn(-1);
       return true;
     }
-    if (key === 'ArrowRight' || key === 'Enter') {
+    if (key === 'ArrowRight') {
       if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
         this.#startTurn(1);
       } else {
         api.restartCurrentStoryRun?.();
         api.setMessage?.('Mission started', 1.2);
       }
+      return true;
+    }
+    if (key === 'Enter') {
+      api.restartCurrentStoryRun?.();
+      api.setMessage?.('Mission started', 1.2);
       return true;
     }
     return false;
@@ -136,15 +141,15 @@ export class TutorialScreen extends Screen {
     p.noStroke();
     p.text(
       this.#pageIndex === TUTORIAL_PAGES.length - 1
-        ? 'Press Enter or click > to start'
-        : 'Press Enter or click > to continue',
+        ? 'Press → or Enter to start'
+        : 'Press ← → to flip pages, Enter to skip',
       layout.width / 2,
       tutorialY + tutorialH + sy(25, layout)
     );
     p.pop();
 
     state.prompt = this.#pageIndex === TUTORIAL_PAGES.length - 1
-      ? 'Press Enter to start the run'
+      ? 'Press → or Enter to start'
       : this.promptText;
   }
 
