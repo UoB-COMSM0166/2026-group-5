@@ -8,12 +8,13 @@ const CAPTURED = './assets/images/original/drawings/captured.png';
 
 export class LoseScreen extends Screen {
   constructor() {
-    super('lose', 'Press R to retry');
+    super('lose', 'Press R or Enter to retry');
   }
 
   handleKey(key, state, api) {
     if (key.toLowerCase() === 'r' || key === 'Enter') {
-      api.restartLevel();
+      if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
+      else api.restartLevel?.();
       return true;
     }
     return false;

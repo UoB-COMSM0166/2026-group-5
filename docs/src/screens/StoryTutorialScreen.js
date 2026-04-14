@@ -2,9 +2,8 @@ import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy } from '../utils/screenLayout.js';
-import { SCREEN_STATES } from '../core/gameState.js';
 
-const TUTORIAL_PAGES = [
+const TUTORIAL_PAGES = Object.freeze([
   './assets/images/gif/ASDW.gif',
   './assets/images/gif/b.gif',
   './assets/images/gif/c.gif',
@@ -12,7 +11,7 @@ const TUTORIAL_PAGES = [
   './assets/images/gif/e.gif',
   './assets/images/gif/f.gif',
   './assets/images/gif/g.gif'
-];
+]);
 
 export class TutorialScreen extends Screen {
   #pageIndex;
@@ -21,14 +20,19 @@ export class TutorialScreen extends Screen {
   #turning;
 
   constructor() {
-    super('tutorial', 'Click arrows or press ← → to turn pages');
+    super('tutorial', 'Click arrows or press Left / Right to turn pages');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
     this.#turning = false;
   }
 
-  reset() { this.#pageIndex = 0; this.#turnDir = 0; this.#turnT = 0; this.#turning = false; }
+  reset() {
+    this.#pageIndex = 0;
+    this.#turnDir = 0;
+    this.#turnT = 0;
+    this.#turning = false;
+  }
 
   update(state, deltaTime) {
     if (!this.#turning) return;
@@ -44,24 +48,53 @@ export class TutorialScreen extends Screen {
 
   handleKey(key, state, api) {
     if (this.#turning) return true;
-    if (key === 'ArrowLeft') { this.#startTurn(-1); return true; }
-    if (key === 'ArrowRight') { this.#startTurn(1); return true; }
-    if (key === 'Escape' || key === 'Enter') { api.setScreen(SCREEN_STATES.START); return true; }
+    if (key === 'ArrowLeft' && this.#pageIndex > 0) {
+      this.#startTurn(-1);
+      return true;
+    }
+    if (key === 'ArrowRight' || key === 'Enter') {
+      if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
+        this.#startTurn(1);
+      } else {
+        api.restartCurrentStoryRun?.();
+        api.setMessage?.('Mission started', 1.2);
+      }
+      return true;
+    }
     return false;
   }
 
   handleMouse(mouseX, mouseY, p, state, api) {
     const layout = getLayout(p);
-    const tutorialW = sx(760, layout);
-    const btnSize = sy(40, layout);
-    const leftBtnX = (layout.width - tutorialW) / 2 - btnSize - sx(20, layout);
-    const rightBtnX = (layout.width + tutorialW) / 2 + sx(20, layout);
-    const btnY = layout.height / 2;
+    if (this.#turning) return true;
 
-    if (mouseY >= btnY - btnSize / 2 && mouseY <= btnY + btnSize / 2) {
-      if (!this.#turning && this.#pageIndex > 0 && mouseX >= leftBtnX && mouseX <= leftBtnX + btnSize) { this.#startTurn(-1); return true; }
-      if (!this.#turning && this.#pageIndex < TUTORIAL_PAGES.length - 1 && mouseX >= rightBtnX && mouseX <= rightBtnX + btnSize) { this.#startTurn(1); return true; }
+    const x = mouseX - layout.offsetX;
+    const y = mouseY - layout.offsetY;
+    const tutorialW = sx(760, layout);
+    const tutorialH = sy(430, layout);
+    const tutorialX = (layout.width - tutorialW) / 2;
+    const tutorialY = (layout.height - tutorialH) / 2;
+    const btnSize = sy(40, layout);
+    const leftBtnX = tutorialX - btnSize - sx(20, layout);
+    const rightBtnX = tutorialX + tutorialW + sx(20, layout);
+    const btnY = tutorialY + tutorialH / 2 - btnSize / 2;
+
+    if (y >= btnY && y <= btnY + btnSize) {
+      if (this.#pageIndex > 0 && x >= leftBtnX && x <= leftBtnX + btnSize) {
+        this.#startTurn(-1);
+        return true;
+      }
+      if (x >= rightBtnX && x <= rightBtnX + btnSize) {
+        if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
+          this.#startTurn(1);
+        } else {
+          api.restartCurrentStoryRun?.();
+          api.setMessage?.('Mission started', 1.2);
+        }
+        return true;
+      }
     }
+
     return false;
   }
 
@@ -101,8 +134,18 @@ export class TutorialScreen extends Screen {
     setFont(p, Math.max(10, sx(11, layout)), FONTS.ui);
     p.textAlign(p.CENTER, p.CENTER);
     p.noStroke();
-    p.text('Press ESC or Enter to return', layout.width / 2, tutorialY + tutorialH + sy(25, layout));
+    p.text(
+      this.#pageIndex === TUTORIAL_PAGES.length - 1
+        ? 'Press Enter or click > to start'
+        : 'Press Enter or click > to continue',
+      layout.width / 2,
+      tutorialY + tutorialH + sy(25, layout)
+    );
     p.pop();
+
+    state.prompt = this.#pageIndex === TUTORIAL_PAGES.length - 1
+      ? 'Press Enter to start the run'
+      : this.promptText;
   }
 
   #drawPageContent(p, pageImg, x, y, w, h, layout) {
@@ -149,7 +192,7 @@ export class TutorialScreen extends Screen {
     p.noStroke();
     p.fill(this.#pageIndex > 0 ? '#4a5568' : '#2d3748');
     p.rect(leftBtnX, btnY, btnSize, btnSize, 8);
-    p.fill(this.#pageIndex < TUTORIAL_PAGES.length - 1 ? '#4a5568' : '#2d3748');
+    p.fill(this.#pageIndex < TUTORIAL_PAGES.length - 1 ? '#4a5568' : '#c92d59');
     p.rect(rightBtnX, btnY, btnSize, btnSize, 8);
 
     p.fill('#ffffff');
@@ -167,7 +210,7 @@ export class TutorialScreen extends Screen {
     const dotY = y + h - sy(25, layout);
 
     p.noStroke();
-    for (let i = 0; i < TUTORIAL_PAGES.length; i++) {
+    for (let i = 0; i < TUTORIAL_PAGES.length; i += 1) {
       p.fill(i === this.#pageIndex ? '#f5c443' : '#4a5568');
       p.circle(startX + i * (dotSize + dotGap) + dotSize / 2, dotY, dotSize);
     }

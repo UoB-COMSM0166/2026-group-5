@@ -23,7 +23,7 @@ export class Screen {
   }
 
   // Optional hook: subclasses MAY override
-  reset() {
+  reset(_state) {
     // Default: no-op
   }
 

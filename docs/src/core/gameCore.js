@@ -3,7 +3,7 @@ import { SCREEN_STATES, GameState } from './gameState.js';
 import { InputSystem } from './inputSystem.js';
 import { loadAssetsAsync, getAssetState } from './assetLoader.js';
 import { bootstrapLegacyMaps, getMap } from '../maps/mapManager.js';
-import { Level, createRuntimeLevel } from '../maps/mapFactory.js';
+import { Level } from '../maps/mapFactory.js';
 import { updatePlayer, triggerPlayerAction } from '../systems/playerSystem.js';
 import { getInteractionPrompt, tryInteract } from '../systems/interactionSystem.js';
 import { updateNpcs } from '../systems/npcSystem.js';
@@ -11,7 +11,7 @@ import { renderScene } from '../render/renderSystem.js';
 import { AudioSystem } from '../systems/audioSystem.js';
 import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { Camera } from '../systems/cameraSystem.js';
-import { Inventory, LootTable, collectLoot, formatInventory, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
+import { Inventory, collectLoot, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
 
 export class GameCore {
   #state;
@@ -45,11 +45,16 @@ export class GameCore {
     const keyCountEl = document.getElementById('key-count');
     if (keyCountEl) keyCountEl.textContent = `${s.inventory.keys.length}/${countTotalKeys(s.levelId)}`;
     const noteCountEl = document.getElementById('note-count');
-    if (noteCountEl) noteCountEl.textContent = `${s.inventory.note}/${LootTable.countTotalNotes(s.levelId)}`;
+    if (noteCountEl) noteCountEl.textContent = `${s.inventory.note}/${countTotalNotes(s.levelId)}`;
   }
 
   #setMessage(text, seconds = 1.5) { this.#state.ui.message = text; this.#state.ui.messageTimer = seconds; }
   #markMissionStart() { this.#state.meta.startedAt = performance.now(); }
+  #resetStorySelection() {
+    this.#state.story.currentPlaythrough = 1;
+    this.#state.story.selectedRoute = null;
+    this.#state.story.introVariant = 'first';
+  }
 
   #loadLevel(levelId) {
     const config = getMap(levelId);
@@ -76,16 +81,18 @@ export class GameCore {
     const s = this.#state;
     s.previousScreen = s.screen; s.screen = screen; s.screenEnteredAt = performance.now(); s.screenTimeMs = 0;
     s.prompt = this.#overlay.screenManager.getPrompt(screen);
-    this.#overlay.screenManager.reset(screen);
+    this.#overlay.screenManager.reset(screen, s);
     this.#audio.sync(screen);
     const audioState = this.#audio.getState();
-    s.audio.currentTrack = audioState.currentKey; s.audio.muted = audioState.muted;
+    s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen);
+    s.audio.muted = audioState.muted;
     this.#syncHud();
   }
 
   restartLevel() {
     this.#loadLevel(this.#currentLevelId);
     this.#state.nearestLightButton = null;
+    this.#resetStorySelection();
     this.#setScreen(SCREEN_STATES.START);
     this.#overlay.flash(this.#state, 0.3);
   }
@@ -97,13 +104,77 @@ export class GameCore {
     this.#overlay.flash(this.#state, 0.3);
   }
 
+  loadStoryLevel(levelId) {
+    this.#currentLevelId = levelId;
+    this.#loadLevel(levelId);
+    this.#state.nearestLightButton = null;
+    this.#overlay.flash(this.#state, 0.3);
+  }
+
+  restartCurrentStoryRun() {
+    const story = this.#state.story;
+
+    if (story.currentPlaythrough === 1) {
+      this.#currentLevelId = 'map1';
+      this.#loadLevel('map1');
+      this.#state.nearestLightButton = null;
+      this.#markMissionStart();
+      this.#setScreen(SCREEN_STATES.PLAYING);
+      this.#overlay.flash(this.#state, 0.3);
+      return;
+    }
+
+    if (story.currentPlaythrough === 2) {
+      const levelId = story.selectedRoute === 'salon' ? 'map3' : 'map2';
+      this.#currentLevelId = levelId;
+      this.#loadLevel(levelId);
+      this.#state.nearestLightButton = null;
+      this.#markMissionStart();
+      this.#setScreen(SCREEN_STATES.PLAYING);
+      this.#overlay.flash(this.#state, 0.3);
+      return;
+    }
+
+    this.restartLevel();
+  }
+
+  resumeGame() {
+    this.#state.ui.pause.view = 'menu';
+    this.#setScreen(SCREEN_STATES.PLAYING);
+  }
+
+  exitToTitle() {
+    this.#resetStorySelection();
+    this.#setScreen(SCREEN_STATES.START);
+    this.#setMessage('Returned to title', 1.0);
+  }
+
   #togglePause() {
     if (this.#state.screen === SCREEN_STATES.PLAYING) this.#setScreen(SCREEN_STATES.PAUSE);
-    else if (this.#state.screen === SCREEN_STATES.PAUSE) this.#setScreen(SCREEN_STATES.PLAYING);
+    else if (this.#state.screen === SCREEN_STATES.PAUSE) this.resumeGame();
+  }
+
+  #ensureAudioReadyForCurrentScreen() {
+    const audioState = this.#audio.getState();
+    if (audioState.unlocked) return;
+
+    this.#audio.unlock();
+    this.#audio.sync(this.#state.screen);
+    this.#state.audio.currentTrack = this.#audio.getTrackKeyForScreen(this.#state.screen);
+    this.#state.audio.muted = this.#audio.getState().muted;
   }
 
   #getApi() {
-    return { setScreen: s => this.#setScreen(s), setMessage: (t, s) => this.#setMessage(t, s), markMissionStart: () => this.#markMissionStart(), restartLevel: () => this.restartLevel() };
+    return {
+      setScreen: s => this.#setScreen(s),
+      setMessage: (t, s) => this.#setMessage(t, s),
+      markMissionStart: () => this.#markMissionStart(),
+      restartLevel: () => this.restartLevel(),
+      restartCurrentStoryRun: () => this.restartCurrentStoryRun(),
+      resumeGame: () => this.resumeGame(),
+      exitToTitle: () => this.exitToTitle(),
+      loadStoryLevel: (levelId) => this.loadStoryLevel(levelId)
+    };
   }
 
   #handleNonPlayingKey(key) {
@@ -155,7 +226,18 @@ export class GameCore {
         triggerPlayerAction(s.level.player, r.kind === 'light' ? 'alert' : 'interact', r.kind === 'light' ? 0.22 : 0.28);
         this.#setMessage(r.text, 1.2); this.#overlay.flash(s, r.kind === 'light' ? 0.12 : 0.18);
       } else if (r.text) this.#setMessage(r.text, 1);
-      if (r.success && r.kind === 'exit') { this.#setScreen(SCREEN_STATES.WIN); this.#overlay.flash(s, 0.28); this.#setMessage('Extraction confirmed', 1.4); this.#syncHud(); return; }
+      if (r.success && r.kind === 'exit') {
+        if (s.story.currentPlaythrough === 1) {
+          this.#setScreen(SCREEN_STATES.FALSE_ENDING);
+          this.#setMessage('A strange ending has been reached', 1.4);
+        } else {
+          this.#setScreen(SCREEN_STATES.TRUE_ENDING);
+          this.#setMessage('The real ending is unfolding', 1.4);
+        }
+        this.#overlay.flash(s, 0.28);
+        this.#syncHud();
+        return;
+      }
       if (r.success && r.kind === 'light') { const roomId = r.entity?.roomId; if (roomId) this.#setMessage(s.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3); }
       if (r.success && r.kind === 'door') this.#setMessage(r.text, 1);
       if (r.success && r.kind === 'box') {
@@ -174,15 +256,15 @@ export class GameCore {
   render(p) { renderScene(p, this.#state, this.#overlay); }
 
   onKeyPressed(key, keyCode) {
-    this.#audio.unlock();
+    this.#ensureAudioReadyForCurrentScreen();
     if (this.#handleNonPlayingKey(key)) { const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return; }
     this.#input.onKeyPressed(key, keyCode);
     const l = String(key).toLowerCase(), s = this.#state;
-    if (keyCode === 27) this.restartLevel();
+    if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
+    if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
     if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');
     if (l === 'b') s.debug.showRooms = !s.debug.showRooms; if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
     if (l === 'g') s.debug.showCamera = !s.debug.showCamera; if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
-    if (l === 'p') this.#togglePause();
     if (l === 'h' && s.level) { const next = s.level.player.characterVariant === 'default' ? 'stealth' : 'default'; s.level.player.characterVariant = next; this.#setMessage(`Player skin: ${next}`, 1); }
     if (l === 'm') { s.audio.muted = this.#audio.toggleMute(); this.#setMessage(s.audio.muted ? 'Muted' : 'Unmuted', 1); }
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();
@@ -202,6 +284,7 @@ export class GameCore {
   }
 
   onMousePressed(mouseX, mouseY, mouseButton, p) {
+    this.#ensureAudioReadyForCurrentScreen();
     if (this.#overlay.screenManager.handleMouse(this.#state.screen, mouseX, mouseY, p, this.#state, this.#getApi())) { this.#syncHud(); }
   }
 

@@ -240,7 +240,7 @@ const Map1Config = {
   defaultSpawn: { x: 30, y: 38 },
 
   objective: {
-    exitTile: { x: 54, y: 11 }
+    exitTile: { x: 54, y: 12 }
   }
 };
 

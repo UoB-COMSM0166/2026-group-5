@@ -55,6 +55,14 @@ function findNearbyDoor(player, doors, tileSize, maxTileGap = 1) {
 
 export function getInteractionPrompt(level) {
   const tileSize = level.settings.baseTile;
+  const mission = level.missionSystem;
+
+  // Extraction should take priority once unlocked, otherwise overlapping exit doors
+  // can trap the player in a door prompt and block the ending transition.
+  if (mission?.isUnlocked() && mission.getDistanceToExit(level.player) <= tileSize * 1.2) {
+    return { type: 'exit', entity: mission.exit, text: mission.getInteractPrompt?.() || 'Press E to extract' };
+  }
+
   const chest = findNearbyEntity(level.player, level.boxSystem.boxes, tileSize, 1.8);
   if (chest && !chest.opened) return { type: 'box', entity: chest, text: 'Press E to open chest' };
 
@@ -67,11 +75,6 @@ export function getInteractionPrompt(level) {
 
   const button = level.roomSystem.getNearestButtonForPlayer(level.player, tileSize * 1.35);
   if (button) return { type: 'light', entity: button, text: level.roomSystem.isLit(button.roomId) ? 'Press E to turn lights off' : 'Press E to restore lights' };
-
-  const mission = level.missionSystem;
-  if (mission?.isUnlocked() && mission.getDistanceToExit(level.player) <= tileSize * 1.2) {
-    return { type: 'exit', entity: mission.exit, text: mission.getInteractPrompt?.() || 'Press E to extract' };
-  }
   return null;
 }
 

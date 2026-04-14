@@ -5,12 +5,13 @@ import { SCREEN_STATES } from '../core/gameState.js';
 
 export class WinScreen extends Screen {
   constructor() {
-    super('win', 'Press R to restart');
+    super('win', 'Press R or Enter to restart');
   }
 
   handleKey(key, state, api) {
     if (key.toLowerCase() === 'r' || key === 'Enter') {
-      api.restartLevel();
+      if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
+      else api.restartLevel?.();
       return true;
     }
     return false;

@@ -1,10 +1,15 @@
 import { StartScreen } from './StartScreen.js';
-import { IntroScreen } from './IntroScreen.js';
-import { TutorialScreen } from './TutorialScreen.js';
+import { IntroScreen } from './StoryIntroScreen.js';
+import { TutorialScreen } from './StoryTutorialScreen.js';
+import { PlaythroughSelectScreen } from './PlaythroughSelectScreen.js';
+import { MapSelectScreen } from './MapSelectScreen.js';
 import { PlayingScreen } from './PlayingScreen.js';
 import { PauseScreen } from './PauseScreen.js';
+import { FalseEndingScreen } from './FalseEndingScreen.js';
+import { TrueEndingScreen } from './TrueEndingScreen.js';
 import { WinScreen } from './WinScreen.js';
 import { LoseScreen } from './LoseScreen.js';
+import { CreditsScreen } from './CreditsScreen.js';
 
 export class ScreenManager {
   #screens;
@@ -13,12 +18,17 @@ export class ScreenManager {
   constructor() {
     this.#screens = {
       start: new StartScreen(),
+      playthrough_select: new PlaythroughSelectScreen(),
       intro: new IntroScreen(),
       tutorial: new TutorialScreen(),
+      map_select: new MapSelectScreen(),
       playing: new PlayingScreen(),
       pause: new PauseScreen(),
+      false_ending: new FalseEndingScreen(),
+      true_ending: new TrueEndingScreen(),
       win: new WinScreen(),
-      lose: new LoseScreen()
+      lose: new LoseScreen(),
+      credits: new CreditsScreen()
     };
     this.#currentScreen = null;
   }
@@ -27,9 +37,9 @@ export class ScreenManager {
     return this.#screens[name] || null;
   }
 
-  reset(screenName) {
+  reset(screenName, state) {
     const screen = this.#screens[screenName];
-    if (screen) screen.reset();
+    if (screen) screen.reset(state);
   }
 
   update(screenName, state, deltaTime) {

@@ -74,7 +74,7 @@ function renderScreenUi(p, state) {
       `Assets: ${assets.imageCount}/${assets.requestedCount}${assets.failedCount ? ` fb ${assets.failedCount}` : ''}`,
       `Track: ${state.audio.currentTrack || '-'}${state.audio.muted ? ' (muted)' : ''}`,
       `Camera: ${Math.round(state.camera?.x || 0)}, ${Math.round(state.camera?.y || 0)} Z:${state.camera?.zoom?.toFixed(2) || '1.00'}`,
-      'R restart | 1 2 3 map | B/C/G debug | P/Esc pause | M mute | Wheel zoom'
+      'R restart run | 1 2 3 map | B/C/G debug | Esc pause | M mute | Wheel zoom'
     ];
     const dbgW = Math.min(440, p.width - 24);
     const dbgH = 104;

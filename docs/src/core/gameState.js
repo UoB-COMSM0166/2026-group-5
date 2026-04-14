@@ -3,12 +3,17 @@ import { Inventory } from '../systems/lootTable.js';
 
 export const SCREEN_STATES = Object.freeze({
   START: 'start',
+  PLAYTHROUGH_SELECT: 'playthrough_select',
   INTRO: 'intro',
   TUTORIAL: 'tutorial',
+  MAP_SELECT: 'map_select',
   PLAYING: 'playing',
   PAUSE: 'pause',
+  FALSE_ENDING: 'false_ending',
+  TRUE_ENDING: 'true_ending',
   WIN: 'win',
-  LOSE: 'lose'
+  LOSE: 'lose',
+  CREDITS: 'credits'
 });
 
 export class GameState {
@@ -24,6 +29,7 @@ export class GameState {
   #inventory;
   #camera;
   #loading;
+  #story;
   #screenEnteredAt;
   #screenTimeMs;
   #nearestLightButton;
@@ -55,6 +61,12 @@ export class GameState {
         turnDir: 0,
         turnT: 0,
         turning: false
+      },
+      pause: {
+        view: 'menu',
+        menuIndex: 0,
+        notesIndex: 0,
+        selectedNoteId: null
       }
     };
     this.#audio = {
@@ -75,6 +87,12 @@ export class GameState {
       ready: false,
       message: 'Loading assets...',
       error: ''
+    };
+    this.#story = {
+      currentPlaythrough: 1,
+      secondPlaythroughUnlocked: false,
+      selectedRoute: null,
+      introVariant: 'first'
     };
     this.#screenEnteredAt = 0;
     this.#screenTimeMs = 0;
@@ -105,6 +123,8 @@ export class GameState {
   set camera(v) { this.#camera = v; }
   get loading() { return this.#loading; }
   set loading(v) { this.#loading = v; }
+  get story() { return this.#story; }
+  set story(v) { this.#story = v; }
   get screenEnteredAt() { return this.#screenEnteredAt; }
   set screenEnteredAt(v) { this.#screenEnteredAt = v; }
   get screenTimeMs() { return this.#screenTimeMs; }

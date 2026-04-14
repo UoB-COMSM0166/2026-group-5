@@ -1,6 +1,7 @@
 // Async image loader: collects all tileset and sprite paths, loads via p5 or DOM.
 import { collectTilesetPaths } from '../render/tilesetCatalog.js';
 import { SPRITE_PATHS, collectCharacterPaths } from '../render/spriteCatalog.js';
+import { STORY_SCREEN_ASSET_PATHS } from '../screens/storyAssetCatalog.js';
 
 const assets = {
   images: new Map(),
@@ -31,26 +32,66 @@ function collectPaths() {
   paths.add('./assets/images/gif/e.gif');
   paths.add('./assets/images/gif/f.gif');
   paths.add('./assets/images/gif/g.gif');
+  STORY_SCREEN_ASSET_PATHS.forEach((path) => paths.add(path));
 
   // v19 intentionally stops probing every potential character variant path.
   // Only concrete fallback assets are requested here, so missing-file noise stays low.
   return Array.from(paths).filter(Boolean);
 }
 
-function loadImageAsync(p, path) {
+function wrapDomImage(img) {
+  return {
+    elt: img,
+    width: img.naturalWidth || img.width || 0,
+    height: img.naturalHeight || img.height || 0
+  };
+}
+
+function loadDomImageAsync(path) {
   return new Promise((resolve) => {
-    if (p && typeof p.loadImage === 'function') {
-      p.loadImage(
-        path,
-        (img) => resolve({ path, img, ok: true }),
-        () => resolve({ path, img: null, ok: false })
-      );
+    if (typeof Image === 'undefined') {
+      resolve({ path, img: null, ok: false });
       return;
     }
     const img = new Image();
-    img.onload = () => resolve({ path, img, ok: true });
+    img.decoding = 'async';
+    img.onload = () => resolve({ path, img: wrapDomImage(img), ok: true });
     img.onerror = () => resolve({ path, img: null, ok: false });
     img.src = path;
+  });
+}
+
+function loadImageAsync(p, path) {
+  if (!p || typeof p.loadImage !== 'function') return loadDomImageAsync(path);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    let timeoutId = null;
+
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      if (timeoutId !== null) clearTimeout(timeoutId);
+      resolve(result);
+    };
+
+    // Invalid GIF files can leave p5's loader unresolved. Fall back to a DOM image
+    // probe so bad optional assets don't block startup.
+    timeoutId = setTimeout(() => {
+      loadDomImageAsync(path).then(finish);
+    }, 2500);
+
+    try {
+      p.loadImage(
+        path,
+        (img) => finish({ path, img, ok: true }),
+        () => {
+          loadDomImageAsync(path).then(finish);
+        }
+      );
+    } catch {
+      loadDomImageAsync(path).then(finish);
+    }
   });
 }
 

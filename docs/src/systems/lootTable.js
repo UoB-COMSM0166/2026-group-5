@@ -41,27 +41,57 @@ const MAP_LOOT = Object.freeze({
   })
 });
 
+const NOTE_IDS_BY_CHEST = Object.freeze({
+  map1: Object.freeze({
+    chest_2: 'note_1',
+    chest_3: 'note_2',
+    chest_5: 'note_3',
+    chest_6: 'note_4',
+    chest_8: 'note_5'
+  }),
+  map2: Object.freeze({
+    'chest-2-2': 'note_6',
+    'chest-2-3': 'note_7',
+    'chest-2-5': 'note_8',
+    'chest-2-6': 'note_9',
+    'chest-2-8': 'note_10',
+    'chest-2-10': 'note_11'
+  }),
+  map3: Object.freeze({
+    'chest-3-1': 'note_12',
+    'chest-3-3': 'note_13',
+    'chest-3-5': 'note_14',
+    'chest-3-6': 'note_15',
+    'chest-3-8': 'note_16',
+    'chest-3-10': 'note_17'
+  })
+});
+
 // Inventory: player item storage with encapsulated state
 export class Inventory {
   #keys;
   #note;
+  #notesCollected;
 
   constructor() {
     this.#keys = [];
     this.#note = 0;
+    this.#notesCollected = [];
   }
 
   get keys() { return [...this.#keys]; }
   get note() { return this.#note; }
+  get notesCollected() { return [...this.#notesCollected]; }
 
   addKey(keyId) {
     this.#keys.push(keyId);
     return { ...LOOT_TYPES.key, keyId };
   }
 
-  addNote() {
+  addNote(noteId = null) {
     this.#note += 1;
-    return LOOT_TYPES.note;
+    if (noteId) this.#notesCollected.push(noteId);
+    return noteId ? { ...LOOT_TYPES.note, noteId } : LOOT_TYPES.note;
   }
 
   hasKey(keyId = null) {
@@ -87,7 +117,11 @@ export class Inventory {
 
   // Legacy compatibility - returns plain object for existing code
   toJSON() {
-    return { keys: [...this.#keys], note: this.#note };
+    return {
+      keys: [...this.#keys],
+      note: this.#note,
+      notesCollected: [...this.#notesCollected]
+    };
   }
 }
 
@@ -107,7 +141,8 @@ export class LootTable {
 
     if (typeof entry === 'string') {
       if (entry === 'note') {
-        return inventory.addNote();
+        const noteId = NOTE_IDS_BY_CHEST[this.#levelId]?.[chestId] || null;
+        return inventory.addNote(noteId);
       }
       return null;
     }
