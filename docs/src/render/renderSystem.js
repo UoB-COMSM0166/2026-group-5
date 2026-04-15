@@ -2,9 +2,10 @@
 import { getAssetState, getImage } from '../core/assetLoader.js';
 import { SPRITE_PATHS } from './spriteCatalog.js';
 import { renderMap } from './mapRenderer_p5.js';
-import { renderEntities, renderDoorInteractionPrompts, renderButtonInteractionPrompts } from './entityRenderer_p5.js';
+import { renderEntities, renderDoorInteractionPrompts, renderButtonInteractionPrompts, renderChestInteractionPrompts } from './entityRenderer_p5.js';
 import { renderLightingOverlay, renderUnexploredOverlay } from './lightingRenderer_p5.js';
 
+// Compose the full frame: map, entities, lighting, HUD, and screen overlay.
 export function renderScene(p, state, overlaySystem) {
   const showWorld = state.screen === 'playing' || state.screen === 'pause';
   if (showWorld) {
@@ -35,9 +36,10 @@ export function renderScene(p, state, overlaySystem) {
 }
 
 function renderWorldUi(p, state) {
-  // Draw world-space UI on top of black mask (E-key prompts for doors and buttons)
+  // Draw world-space UI on top of black mask (E-key prompts for doors, buttons and chests)
   renderDoorInteractionPrompts(p, state.level);
   renderButtonInteractionPrompts(p, state.level);
+  renderChestInteractionPrompts(p, state.level);
 }
 
 function renderScreenUi(p, state) {

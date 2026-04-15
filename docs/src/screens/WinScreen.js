@@ -1,3 +1,4 @@
+// Win screen: "YOU WIN!" message with restart prompt.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy } from '../utils/screenLayout.js';
@@ -5,11 +6,11 @@ import { SCREEN_STATES } from '../core/gameState.js';
 
 export class WinScreen extends Screen {
   constructor() {
-    super('win', 'Press R or Enter to restart');
+    super('win', 'Press Enter to restart');
   }
 
   handleKey(key, state, api) {
-    if (key.toLowerCase() === 'r' || key === 'Enter') {
+    if (key === 'Enter') {
       if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
       else api.restartLevel?.();
       return true;
@@ -43,7 +44,7 @@ export class WinScreen extends Screen {
     setFont(p, Math.max(12, sx(12, layout)), FONTS.ui);
     p.text('Princess is now safe and sound!', layout.width / 2, sy(245, layout));
     p.fill(255, 255, 255, alpha);
-    p.text('Press R to restart', layout.width / 2, sy(315, layout));
+    p.text('Press Enter to restart', layout.width / 2, sy(315, layout));
     p.pop();
   }
 }

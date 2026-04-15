@@ -1,6 +1,7 @@
-// Screen state enum and GameState class.
+// Screen state enum and central GameState class holding all runtime game data.
 import { Inventory } from '../systems/lootTable.js';
 
+// All possible screen/state identifiers the game can be in.
 export const SCREEN_STATES = Object.freeze({
   START: 'start',
   PLAYTHROUGH_SELECT: 'playthrough_select',
@@ -16,6 +17,7 @@ export const SCREEN_STATES = Object.freeze({
   CREDITS: 'credits'
 });
 
+// Centralised game state: tracks screen, level, inventory, UI, audio, debug, and story progress.
 export class GameState {
   #screen;
   #previousScreen;
@@ -34,6 +36,7 @@ export class GameState {
   #screenTimeMs;
   #nearestLightButton;
 
+  // Initialise every state field to its default starting value.
   constructor() {
     this.#screen = SCREEN_STATES.START;
     this.#previousScreen = SCREEN_STATES.START;
@@ -133,7 +136,7 @@ export class GameState {
   set nearestLightButton(v) { this.#nearestLightButton = v; }
 }
 
-// Backward compatibility - factory function wraps class
+// Factory wrapper for backward compatibility.
 export function createGameState() {
   return new GameState();
 }

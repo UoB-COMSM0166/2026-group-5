@@ -1,6 +1,7 @@
 // Lighting overlay: per-tile darkness, player reveal glow, button glow, room debug.
 import { getTileDarkness } from '../systems/lightingSystem.js';
 
+// Overlay dark rectangles on unlit tiles.
 function drawTileDarkness(p, level) {
   const tile = level.settings.baseTile;
   const matrix = level.roomSystem.matrix || [];
@@ -117,7 +118,7 @@ function drawRoomGradientOutline(p, level, matrix, roomSystem) {
   }
 }
 
-// Unexplored room overlay (drawn on top of everything)
+// Fog-of-war overlay hiding rooms the player has not yet visited.
 export function renderUnexploredOverlay(p, state) {
   const level = state.level;
   if (!level) return;
@@ -180,6 +181,7 @@ export function renderUnexploredOverlay(p, state) {
   }
 }
 
+// Draw a radial glow around the player in dark rooms.
 function drawPlayerReveal(p, level) {
   const roomId = level.roomSystem.getActorRoomId(level.player);
   if (level.roomSystem.isLit(roomId)) return;
@@ -195,6 +197,7 @@ function drawPlayerReveal(p, level) {
   }
 }
 
+// Draw room IDs on each tile for debugging.
 function drawRoomDebug(p, level) {
   const tile = level.settings.baseTile;
   const matrix = level.roomSystem.matrix || [];
@@ -214,6 +217,7 @@ function drawRoomDebug(p, level) {
   }
 }
 
+// Animate a glow ring on buttons that were recently toggled.
 function drawButtonsGlow(p, level) {
   for (const button of level.roomSystem.buttons) {
     if (!(button.responseGlow > 0.01)) continue;
@@ -224,6 +228,7 @@ function drawButtonsGlow(p, level) {
   }
 }
 
+// Compose all lighting effects: tile darkness, player reveal, button glow.
 export function renderLightingOverlay(p, state) {
   const level = state.level;
   if (!level) return;

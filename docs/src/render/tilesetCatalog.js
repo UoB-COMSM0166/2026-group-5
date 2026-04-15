@@ -88,6 +88,7 @@ export const GID_COLORS = {
   27: '#7f1d1d', 28: '#ec4899', 29: '#3b82f6', 30: '#22c55e', 59: '#8b7355', 83: '#8b7355'
 };
 
+// Return the tileset config object for the given level ID.
 export function getTilesetConfig(levelId) {
   if (levelId === 'map2') return MAP2_TILESET_CONFIG;
   else if(levelId === 'map3') return MAP3_TILESET_CONFIG;
@@ -95,6 +96,7 @@ export function getTilesetConfig(levelId) {
 }
 
 
+// Collect all tileset image paths for preloading.
 export function collectTilesetPaths() {
   const paths = new Set();
   for (const config of [MAP1_TILESET_CONFIG, MAP2_TILESET_CONFIG,MAP3_TILESET_CONFIG]) {

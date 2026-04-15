@@ -98,7 +98,7 @@ export class Level {
       visionRange: spec?.settings?.visionRange || 112,
       searchDuration: spec?.settings?.searchDuration || 3.5,
       chaseVisionMultiplier: spec?.settings?.chaseVisionMultiplier || 1.2,
-      darkVisionMultiplier: spec?.settings?.darkVisionMultiplier || 0.65,
+      darkVisionMultiplier: spec?.settings?.darkVisionMultiplier || 0.6,
       normalVisionMultiplier: spec?.settings?.normalVisionMultiplier || 1,
       lightingMode: spec?.settings?.lightingMode || 'tile_darkness',
       ...this.#clone(spec?.settings || {})

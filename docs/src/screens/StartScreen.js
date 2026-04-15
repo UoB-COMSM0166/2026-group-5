@@ -1,3 +1,4 @@
+// Start screen: title, animated background, and "Press Enter" prompt.
 import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { setFont, FONTS } from '../utils/fonts.js';

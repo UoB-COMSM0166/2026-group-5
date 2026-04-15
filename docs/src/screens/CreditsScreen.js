@@ -1,3 +1,4 @@
+// Credits screen: displays developer group and return-to-title prompt.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx } from '../utils/screenLayout.js';
@@ -8,7 +9,7 @@ export class CreditsScreen extends Screen {
   }
 
   handleKey(key, state, api) {
-    if (key === 'Enter' || String(key).toLowerCase() === 'r') {
+    if (key === 'Enter') {
       api.exitToTitle?.();
       return true;
     }

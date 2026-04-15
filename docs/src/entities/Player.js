@@ -1,5 +1,6 @@
 import { Entity } from './Entity.js';
 
+// Player entity with movement, stamina, sprinting, and footstep trail state.
 export class Player extends Entity {
   #speed;
   #sprint;
@@ -17,6 +18,7 @@ export class Player extends Entity {
   #lastFootstepAt;
   #footstepSide;
 
+  // Initialise player stats from optional settings with sensible defaults.
   constructor(x, y, w, h, settings = {}) {
     super(x, y, w, h, 'player');
     this.#speed = settings.speed || 72;

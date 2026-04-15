@@ -3,6 +3,7 @@ import { canMoveToRect } from './collisionSystem.js';
 import { isPointInsideNpcVision } from './npcSystem.js';
 import { updateHumanoidAnimation, triggerOneShotAnimation } from './animationSystem.js';
 
+// Update the DOM stamina bar width and colour class.
 function updateStaminaBar(player) {
   const staminaFill = document.getElementById('stamina-fill');
   if (!staminaFill) return;
@@ -22,10 +23,12 @@ function updateStaminaBar(player) {
   }
 }
 
+// Trigger a one-shot player animation (e.g. interact).
 export function triggerPlayerAction(player, mode = 'interact', duration = 0.26) {
   triggerOneShotAnimation(player, mode, duration, { facing: player.facing || 'down' });
 }
 
+// Guarantee the player has footstep trail tracking fields.
 function ensureFootstepState(player) {
   player.footsteps ||= [];
   if (player.footstepTrailX == null) player.footstepTrailX = null;
@@ -34,6 +37,7 @@ function ensureFootstepState(player) {
   if (player.footstepSide == null) player.footstepSide = 1;
 }
 
+// Place a single footstep marker at the given position.
 function addFootstep(player, x, y, dirX, dirY, level) {
   const now = Date.now();
   let fx = 0;
@@ -64,6 +68,7 @@ function addFootstep(player, x, y, dirX, dirY, level) {
   if (player.footsteps.length > maxFootsteps) player.footsteps.shift();
 }
 
+// Distribute footstep markers along the movement path at stride intervals.
 function addFootstepsAlongPath(player, startX, startY, endX, endY, dirX, dirY, level) {
   const stride = level.settings.footstepStride || 7;
 
@@ -89,6 +94,7 @@ function addFootstepsAlongPath(player, startX, startY, endX, endY, dirX, dirY, l
   }
 }
 
+// Expire old footsteps and reset trail state when none remain.
 function updateFootsteps(player, level) {
   const now = Date.now();
   const lifetime = level.settings.footstepLifetime || 3000;
@@ -100,6 +106,7 @@ function updateFootsteps(player, level) {
   }
 }
 
+// Check if the player is within any NPC's vision cone.
 function isPlayerInsideAnyNpcWarningRange(player, level) {
   const targetX = player.x + player.w / 2;
   const targetY = player.y + player.h / 2;
@@ -109,6 +116,7 @@ function isPlayerInsideAnyNpcWarningRange(player, level) {
   return false;
 }
 
+// Move the player by (dx, dy), resolving axis-independent collisions.
 function moveActor(player, dx, dy, level) {
   const tileSize = level.settings.baseTile;
   const nextX = player.x + dx;
@@ -127,6 +135,7 @@ function moveActor(player, dx, dy, level) {
   player.y = Math.max(0, Math.min(maxY, player.y));
 }
 
+// Main per-frame player update: movement, stamina, footsteps, animation.
 export function updatePlayer(player, input, level, deltaTime) {
   ensureFootstepState(player);
   let ix = input.x;

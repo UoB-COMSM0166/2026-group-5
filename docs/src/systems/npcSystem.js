@@ -25,12 +25,14 @@ import {
 } from './npcTrackerSystem.js';
 import { DOOR_STATES, DOOR_TIMING } from './doorSystem.js';
 
+// Get the current waypoint position for the NPC's patrol route.
 function getWaypointTarget(npc) {
   const point = npc.waypoints?.[npc.wpIndex];
   if (!point) return null;
   return point;
 }
 
+// Convert a waypoint tile position to a safe world-centre target.
 function getTileCenterTarget(npc, point, level) {
   if (!point) return null;
   const tileSize = level.settings.baseTile || 16;
@@ -41,26 +43,31 @@ function getTileCenterTarget(npc, point, level) {
   return getNpcWorldCenterTarget(npc, safeCenterX, safeCenterY);
 }
 
+// Build a list of all patrol waypoint targets in world coordinates.
 function getPatrolTargets(npc, level) {
   return (npc.waypoints || [])
     .map((point) => getTileCenterTarget(npc, point, level))
     .filter(Boolean);
 }
 
+// Return the NPC's current search movement destination.
 function getSearchMoveTarget(npc) {
   if (!Number.isFinite(npc.searchMoveTargetX) || !Number.isFinite(npc.searchMoveTargetY)) return null;
   return getNpcWorldCenterTarget(npc, npc.searchMoveTargetX, npc.searchMoveTargetY);
 }
 
 
+// Compute the pixel-centre of the player entity.
 function getPlayerCenter(player) {
   return { x: player.x + player.w / 2, y: player.y + player.h / 2 };
 }
 
+// Compute the pixel-centre of an NPC entity.
 function getNpcCenter(npc) {
   return { x: npc.x + npc.w / 2, y: npc.y + npc.h / 2 };
 }
 
+// Pick a random point around the NPC's search target.
 function getRandomSearchPoint(npc, level) {
   const tileSize = level.settings.baseTile || 16;
   const radius = tileSize * 1.1;
@@ -71,6 +78,7 @@ function getRandomSearchPoint(npc, level) {
   };
 }
 
+// Find a walkable random point within the search wander radius.
 function getReachableSearchPoint(npc, level) {
   const tileSize = level.settings.baseTile || 16;
   const npcCenter = getNpcCenter(npc);
@@ -136,6 +144,7 @@ function getNpcVisionRange(npc, level) {
   return level.roomSystem.getNpcVisionRange(npc, level.settings.visionRange || 112);
 }
 
+// Test whether a world point falls inside an NPC's vision cone.
 export function isPointInsideNpcVision(npc, targetX, targetY, level) {
   return isPointInsideVisionCone(npc, targetX, targetY, level);
 }
@@ -155,6 +164,7 @@ function isPointInsideVisionCone(npc, targetX, targetY, level) {
   return delta <= spread / 2;
 }
 
+// Build the polygon vertices representing an NPC's vision cone.
 export function getNpcVisionPolygon(npc, level) {
   const npcCenter = getNpcCenter(npc);
   const range = getNpcVisionRange(npc, level);
@@ -323,6 +333,7 @@ function updateSearchScan(npc, deltaTime, level) {
   }, deltaTime, level);
 }
 
+// Per-frame update for all NPCs: vision, alert, state transitions, movement.
 export function updateNpcs(level, deltaTime) {
   debugTickNpcTracker(deltaTime);
   let detectedBy = null;

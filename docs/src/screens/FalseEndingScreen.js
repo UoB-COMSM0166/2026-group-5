@@ -1,3 +1,4 @@
+// False ending: timed cutscene sequence that unlocks the second playthrough.
 import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { SCREEN_STATES } from '../core/gameState.js';

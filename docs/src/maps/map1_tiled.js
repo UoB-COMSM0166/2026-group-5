@@ -1,3 +1,4 @@
+// Tiled editor export for level 1 (registered on globalThis.TileMaps).
 (function(name,data){
  if(typeof onTileMapLoaded === 'undefined') {
   if(typeof TileMaps === 'undefined') TileMaps = {};

@@ -2,6 +2,7 @@
 import { DOOR_STATES } from './doorSystem.js';
 import { hasKey, consumeKey } from './lootTable.js';
 
+// Find the closest entity to the player within a tile-based radius.
 export function findNearbyEntity(player, entities, tileSize, maxDistanceTiles = 1.25) {
   const px = player.x + player.w / 2;
   const py = player.y + player.h / 2;
@@ -20,6 +21,7 @@ export function findNearbyEntity(player, entities, tileSize, maxDistanceTiles = 
   return best;
 }
 
+// Get the tile-coordinate bounding rectangle for an actor.
 function getActorTileRect(actor, tileSize) {
   return {
     left: Math.floor(actor.x / tileSize),
@@ -29,11 +31,13 @@ function getActorTileRect(actor, tileSize) {
   };
 }
 
+// Check if an actor's tile rect overlaps any door tile.
 function actorOverlapsDoor(actor, door, tileSize) {
   const rect = getActorTileRect(actor, tileSize);
   return (door.tiles || []).some((tile) => tile.x >= rect.left && tile.x <= rect.right && tile.y >= rect.top && tile.y <= rect.bottom);
 }
 
+// Find the nearest door within maxTileGap tiles of the player.
 function findNearbyDoor(player, doors, tileSize, maxTileGap = 1) {
   const rect = getActorTileRect(player, tileSize);
   let best = null;
@@ -53,6 +57,7 @@ function findNearbyDoor(player, doors, tileSize, maxTileGap = 1) {
   return best;
 }
 
+// Determine which interaction prompt to show (exit > chest > door > button).
 export function getInteractionPrompt(level) {
   const tileSize = level.settings.baseTile;
   const mission = level.missionSystem;
@@ -78,6 +83,7 @@ export function getInteractionPrompt(level) {
   return null;
 }
 
+// Execute the player's interact action on the nearest interactable entity.
 export function tryInteract(level, inventory) {
   const prompt = getInteractionPrompt(level);
   if (!prompt) return { success: false, text: '' };

@@ -1,10 +1,12 @@
 // Room system: room lighting, button placement, NPC light-change notification.
+// Look up the room ID for a tile coordinate, defaulting to 1 (no room).
 function getRoomIdAt(matrix, x, y) {
   if (!Array.isArray(matrix) || y < 0 || y >= matrix.length) return 1;
   if (x < 0 || x >= (matrix[y]?.length || 0)) return 1;
   return matrix[y]?.[x] || 1;
 }
 
+// Group all tiles by their room ID.
 function collectRoomTiles(roomMatrix) {
   const roomTiles = new Map();
   for (let y = 0; y < roomMatrix.length; y += 1) {
@@ -18,6 +20,7 @@ function collectRoomTiles(roomMatrix) {
   return roomTiles;
 }
 
+// Create light-switch button positions: from manual config or derived from room tiles.
 function buildButtonsFromRooms(roomMatrix, doors = [], manualButtons = []) {
   // If manual buttons provided, use them directly
   if (manualButtons && manualButtons.length > 0) {
@@ -74,6 +77,7 @@ function buildButtonsFromRooms(roomMatrix, doors = [], manualButtons = []) {
   return buttons;
 }
 
+// Manages room lighting state, light buttons, NPC notification, and exploration.
 export class RoomSystem {
   #matrix;
   #rooms;
@@ -85,10 +89,11 @@ export class RoomSystem {
   #darkVisionMultiplier;
   #normalVisionMultiplier;
 
+  // Build rooms and buttons from the room matrix.
   constructor(roomMatrix, options = {}) {
     this.#baseTile = options.baseTile || 16;
     this.#chaseVisionMultiplier = options.chaseVisionMultiplier || 1.2;
-    this.#darkVisionMultiplier = options.darkVisionMultiplier || 0.5;
+    this.#darkVisionMultiplier = options.darkVisionMultiplier || 0.6;
     this.#normalVisionMultiplier = options.normalVisionMultiplier || 1;
     this.#matrix = roomMatrix || [];
     this.#roomTiles = collectRoomTiles(this.#matrix);
@@ -119,20 +124,24 @@ export class RoomSystem {
   get buttons() { return this.#buttons; }
   get attachedNpcs() { return this.#attachedNpcs; }
 
+  // Register NPCs so they can be notified of light changes.
   attachNpcs(npcs) {
     this.#attachedNpcs = Array.isArray(npcs) ? npcs : [];
   }
 
+  // Return the room ID at a given tile coordinate.
   getRoomId(tx, ty) {
     return getRoomIdAt(this.#matrix, tx, ty);
   }
 
+  // Return the room ID the actor's centre is currently in.
   getActorRoomId(actor) {
     const cx = actor.x + actor.w / 2;
     const cy = actor.y + actor.h / 2;
     return this.getRoomId(Math.floor(cx / this.#baseTile), Math.floor(cy / this.#baseTile));
   }
 
+  // Check whether a room's lights are on.
   isLit(roomId) {
     return this.#rooms.get(roomId)?.lightOn ?? true;
   }
@@ -141,6 +150,7 @@ export class RoomSystem {
     return this.#rooms.get(roomId)?.explored ?? false;
   }
 
+  // Mark a room as explored (for fog-of-war).
   exploreRoom(roomId) {
     const room = this.#rooms.get(roomId);
     if (!room || room.explored) return false;
@@ -155,6 +165,7 @@ export class RoomSystem {
     }
   }
 
+  // Explore the room the player currently occupies.
   explorePlayerRoom(player) {
     const roomId = this.getActorRoomId(player);
     if (roomId > 1) {
@@ -163,14 +174,17 @@ export class RoomSystem {
     return false;
   }
 
+  // Adjust NPC vision range based on room lighting and NPC state.
   getNpcVisionRange(npc, baseRange) {
+    const roomId = this.getActorRoomId(npc);
+    // Lights off: always minimum vision, even during chase
+    if (!this.isLit(roomId)) return baseRange * this.#darkVisionMultiplier;
     if (npc.state === 'CHASE') return baseRange * this.#chaseVisionMultiplier;
     if (npc.state === 'SEARCH') return baseRange * 0.9;
-    const roomId = this.getActorRoomId(npc);
-    if (!this.isLit(roomId)) return baseRange * this.#darkVisionMultiplier;
     return baseRange * this.#normalVisionMultiplier;
   }
 
+  // Find the light button the player is standing near enough to interact with.
   getNearestButtonForPlayer(player, maxDistance = this.#baseTile * 1.6) {
     const px = player.x + player.w / 2;
     const py = player.y + player.h / 2;
@@ -188,6 +202,7 @@ export class RoomSystem {
     return null;
   }
 
+  // Toggle room lights and alert nearby NPCs.
   toggleRoom(roomId, source = 'player') {
     const room = this.#rooms.get(roomId);
     if (!room) return false;
@@ -202,6 +217,7 @@ export class RoomSystem {
     return true;
   }
 
+  // Tell NPCs in the affected room to investigate the light switch.
   notifyNpcsOfLightChange(roomId, source) {
     const button = this.#buttons.find((entry) => entry.roomId === roomId);
     if (!button) return;
@@ -221,6 +237,7 @@ export class RoomSystem {
     }
   }
 
+  // NPC restores lights and clears the pending alert for a button.
   consumeButtonResponse(button, source = 'npc') {
     const room = this.#rooms.get(button.roomId);
     if (!room) return false;
@@ -233,6 +250,7 @@ export class RoomSystem {
     return true;
   }
 
+  // Decay alert levels and button glow each frame.
   update(deltaTime) {
     for (const room of this.#rooms.values()) {
       room.alert = Math.max(0, room.alert - deltaTime * 1.15);
@@ -242,6 +260,7 @@ export class RoomSystem {
     }
   }
 
+  // List room IDs that have not yet been explored.
   getUnexploredRooms() {
     const unexplored = [];
     for (const [roomId, room] of this.#rooms.entries()) {

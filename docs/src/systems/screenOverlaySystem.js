@@ -2,15 +2,18 @@
 import { SCREEN_STATES } from '../core/gameState.js';
 import { ScreenManager } from '../screens/ScreenManager.js';
 
+// Manages screen overlays (fades, flashes, vignette) and delegates to ScreenManager.
 export class ScreenOverlaySystem {
   #screenManager;
 
+  // Create the screen manager instance.
   constructor() {
     this.#screenManager = new ScreenManager();
   }
 
   get screenManager() { return this.#screenManager; }
 
+  // Advance overlay fade, message timer, flash decay, and delegate to ScreenManager.
   update(state, deltaTime) {
     const targetAlpha = state.screen === 'playing' ? 0 : 0.18;
     state.ui.overlayAlpha += (targetAlpha - state.ui.overlayAlpha) * Math.min(1, deltaTime * 6);
@@ -22,10 +25,12 @@ export class ScreenOverlaySystem {
     this.#screenManager.update(state.screen, state, deltaTime);
   }
 
+  // Trigger a white flash overlay.
   flash(state, alpha = 0.35) {
     state.ui.flashAlpha = Math.max(state.ui.flashAlpha, alpha);
   }
 
+  // Draw the active screen, HUD overlays, messages, and vignette.
   render(p, state) {
     this.#screenManager.render(state.screen, p, state);
 

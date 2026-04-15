@@ -27,9 +27,11 @@ function chooseExitTile(collision, spawnX, spawnY) {
   return { x: best.x, y: best.y };
 }
 
+// Tracks the level exit: placement, lock state, animation, and distance to player.
 export class MissionSystem {
   #exit;
 
+  // Initialise exit tile, lock state, and animation timer.
   constructor(collision, baseTile, spawnTile, totalChests = 0, objective = {}) {
     const fixedExit = objective?.exitTile || null;
     const exitTile = fixedExit || chooseExitTile(collision, spawnTile.x, spawnTile.y);
@@ -49,25 +51,30 @@ export class MissionSystem {
 
   get exit() { return this.#exit; }
 
+  // Mark the exit as unlocked so the player can extract.
   unlock() {
     this.#exit.unlocked = true;
     this.#exit.label = 'Extraction ready';
   }
 
+  // Advance exit and hint pulse animations.
   update(deltaTime) {
     this.#exit.pulse += deltaTime * (this.#exit.unlocked ? 2.8 : 1.2);
     this.#exit.hintPulse += deltaTime * 1.6;
   }
 
+  // Check if the exit is currently unlocked.
   isUnlocked() {
     return !!this.#exit.unlocked;
   }
 
+  // Return objective string based on chest progress.
   getObjectiveText(collected, target) {
     if (!this.#exit.unlocked) return `Collect all chests (${collected}/${target})`;
     return 'Reach extraction';
   }
 
+  // Pixel distance from the player's centre to the exit centre.
   getDistanceToExit(player) {
     const px = player.x + player.w / 2;
     const py = player.y + player.h / 2;
@@ -76,12 +83,14 @@ export class MissionSystem {
     return Math.hypot(px - ex, py - ey);
   }
 
+  // Check if the player is standing on the exit tile.
   isPlayerInside(player, margin = 6) {
     const px = player.x + player.w / 2;
     const py = player.y + player.h / 2;
     return px >= this.#exit.x - margin && px <= this.#exit.x + this.#exit.w + margin && py >= this.#exit.y - margin && py <= this.#exit.y + this.#exit.h + margin;
   }
 
+  // Return the interaction prompt text for the exit.
   getInteractPrompt() {
     return this.#exit.unlocked ? 'Press E to extract' : 'Locked extraction';
   }

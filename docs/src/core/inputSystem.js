@@ -1,4 +1,4 @@
-// Keyboard input: tracks pressed keys with timestamps for last-wins axis resolution.
+// Keyboard input system: tracks pressed keys with timestamps for last-wins axis resolution.
 export class InputSystem {
   #pressed;
   #interactPressed;
@@ -9,6 +9,7 @@ export class InputSystem {
   #DOWN_CODES;
   #SPRINT_CODES;
 
+  // Set up key code sets for movement and sprint detection.
   constructor() {
     this.#pressed = new Map();
     this.#interactPressed = false;
@@ -20,12 +21,14 @@ export class InputSystem {
     this.#SPRINT_CODES = new Set(['ShiftLeft', 'ShiftRight']);
   }
 
+  // Record or remove a key press with a high-resolution timestamp.
   #setPressed(code, isDown) {
     if (!code) return;
     if (isDown) this.#pressed.set(code, performance.now());
     else this.#pressed.delete(code);
   }
 
+  // Return the most recent press timestamp among a set of key codes.
   #latestTime(codes) {
     let best = -1;
     for (const code of codes) {
@@ -35,6 +38,7 @@ export class InputSystem {
     return best;
   }
 
+  // Resolve a -1/0/+1 axis from two opposing key-code sets (last press wins).
   #axisValue(negativeCodes, positiveCodes) {
     const neg = this.#latestTime(negativeCodes);
     const pos = this.#latestTime(positiveCodes);
@@ -62,6 +66,7 @@ export class InputSystem {
     this.#setPressed(code || key, false);
   }
 
+  // Return current movement vector {x, y} and sprint flag.
   getMovement() {
     return {
       x: this.#axisValue(this.#LEFT_CODES, this.#RIGHT_CODES),
@@ -70,18 +75,21 @@ export class InputSystem {
     };
   }
 
+  // Read and clear the one-shot interact flag (E key).
   consumeInteract() {
     const value = this.#interactPressed;
     this.#interactPressed = false;
     return value;
   }
 
+  // Read and clear the one-shot confirm flag (Enter / Space).
   consumeConfirm() {
     const value = this.#confirmPressed;
     this.#confirmPressed = false;
     return value;
   }
 
+  // Clear all tracked key state (used on window blur).
   reset() {
     this.#pressed.clear();
     this.#interactPressed = false;

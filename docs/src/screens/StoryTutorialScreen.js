@@ -1,3 +1,4 @@
+// Tutorial screen: paginated GIF-based tutorial pages with navigation and skip.
 import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { setFont, FONTS } from '../utils/fonts.js';

@@ -1,3 +1,4 @@
+// Playing screen: placeholder — actual gameplay is driven by GameCore and renderScene.
 import { Screen } from './Screen.js';
 
 export class PlayingScreen extends Screen {

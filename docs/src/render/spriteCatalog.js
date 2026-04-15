@@ -1,4 +1,5 @@
 // Sprite catalog: asset paths, character pack definitions, directional resolution.
+// Fallback sprite image paths keyed by entity type and state.
 export const SPRITE_PATHS = {
   player: './assets/images/sprites/player.png',
   playerSheet: './assets/images/sprites/player_sheet.png',
@@ -28,6 +29,7 @@ export const SPRITE_PATHS = {
   }
 };
 
+// Naming conventions for character sprite sheets and directional images.
 export const CHARACTER_ASSET_RULES = {
   baseDir: './assets/images/characters',
   pattern: '{baseDir}/{character}/{variant}/{mode}_{facing}.png',
@@ -36,6 +38,7 @@ export const CHARACTER_ASSET_RULES = {
   supportedFacings: ['down', 'left', 'right', 'up']
 };
 
+// Per-character, per-variant sprite pack definitions.
 export const CHARACTER_PACKS = {
   player: {
     default: {
@@ -73,6 +76,7 @@ function directionalPaths(character, variant, mode) {
   return out;
 }
 
+// Collect all character sprite file paths for preloading.
 export function collectCharacterPaths() {
   const paths = new Set();
   for (const variants of Object.values(CHARACTER_PACKS)) {
@@ -96,6 +100,7 @@ function normalizeMode(mode = 'idle') {
   return mode;
 }
 
+// Resolve the best available sprite descriptor for a character+variant+mode+facing.
 export function resolveCharacterSprite(character, variant = 'default', mode = 'idle', facing = 'down') {
   const packs = CHARACTER_PACKS[character] || {};
   const pack = packs[variant] || packs.default || Object.values(packs)[0] || null;

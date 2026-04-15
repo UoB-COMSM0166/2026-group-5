@@ -1,5 +1,6 @@
 import { Entity } from './Entity.js';
 
+// NPC entity with patrol, search, chase state, vision, and pathfinding data.
 export class NPC extends Entity {
   #id;
   #state;
@@ -37,6 +38,7 @@ export class NPC extends Entity {
   #homeY;
   #vision;
 
+  // Initialise NPC behaviour parameters, waypoints, and tracking fields.
   constructor(x, y, w, h, settings = {}) {
     super(x, y, w, h, 'npc');
     this.#id = settings.id || `npc-${Math.random().toString(36).slice(2, 8)}`;

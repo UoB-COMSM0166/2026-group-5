@@ -1,3 +1,4 @@
+// Map tile renderer: resolves GIDs, draws tile layers with tileset images or fallback colours.
 import { getImage } from '../core/assetLoader.js';
 import { getTilesetConfig, GID_REMAP, GID_COLORS } from './tilesetCatalog.js';
 import { Camera } from '../systems/cameraSystem.js';
@@ -7,6 +8,7 @@ const FLIP_V = 0x40000000;
 const FLIP_D = 0x20000000;
 const FLIP_MASK = FLIP_H | FLIP_V | FLIP_D;
 
+// Strip Tiled flip flags from a raw GID.
 function normalizeGid(gid) {
   return (gid >>> 0) & ~FLIP_MASK;
 }
@@ -16,6 +18,7 @@ function resolveBaseGid(gid) {
   return GID_REMAP[raw] || raw;
 }
 
+// Look up which tileset a GID belongs to and compute the local tile index.
 function getTilesetInfo(levelId, gid) {
   const tilesetConfig = getTilesetConfig(levelId);
   const base = resolveBaseGid(gid);
@@ -29,6 +32,7 @@ function getTilesetInfo(levelId, gid) {
   return { firstgid, config: tilesetConfig[firstgid], localId: base - firstgid, resolvedGid: base };
 }
 
+// Draw collision tiles as semi-transparent red rectangles (debug).
 function drawFallbackCollision(p, level, camera) {
   const tile = level.settings.baseTile;
   const bounds = camera.getVisibleTileBounds(tile, level.collision[0]?.length || 0, level.collision.length || 0);
@@ -99,6 +103,7 @@ function drawFallbackTile(p, levelId, gid, x, y, tile) {
   p.rect(drawX, drawY, destW, destH);
 }
 
+// Render one tile layer using tileset images or colour fallback.
 function drawLayer(p, level, layer, camera) {
   const tile = level.settings.baseTile;
   const width = level.mapData.width;
@@ -117,6 +122,7 @@ function drawLayer(p, level, layer, camera) {
   }
 }
 
+// Main entry: render all visible map layers and optional debug overlays.
 export function renderMap(p, state) {
   const level = state.level;
   if (!level) return;

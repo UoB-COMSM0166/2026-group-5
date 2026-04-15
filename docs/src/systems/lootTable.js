@@ -1,9 +1,11 @@
 // Loot system: ES6 Classes for Inventory and LootTable management
+// Available loot categories with display labels.
 export const LOOT_TYPES = Object.freeze({
   key:  { id: 'key',  label: 'Key',           icon: null },
   note: { id: 'note', label: 'Note Fragment',  icon: null }
 });
 
+// Per-map loot tables mapping chest IDs to their drop type.
 const MAP_LOOT = Object.freeze({
   map1: Object.freeze({
     chest_1: { type: 'key', keyId: 'key_A' },
@@ -41,6 +43,7 @@ const MAP_LOOT = Object.freeze({
   })
 });
 
+// Map chest IDs to specific note IDs for story content.
 const NOTE_IDS_BY_CHEST = Object.freeze({
   map1: Object.freeze({
     chest_2: 'note_1',
@@ -83,22 +86,26 @@ export class Inventory {
   get note() { return this.#note; }
   get notesCollected() { return [...this.#notesCollected]; }
 
+  // Add a key to the inventory and return the loot descriptor.
   addKey(keyId) {
     this.#keys.push(keyId);
     return { ...LOOT_TYPES.key, keyId };
   }
 
+  // Add a note to the inventory, optionally with a specific note ID.
   addNote(noteId = null) {
     this.#note += 1;
     if (noteId) this.#notesCollected.push(noteId);
     return noteId ? { ...LOOT_TYPES.note, noteId } : LOOT_TYPES.note;
   }
 
+  // Check if the inventory contains a specific key (or any key).
   hasKey(keyId = null) {
     if (!keyId) return this.#keys.length > 0;
     return this.#keys.includes(keyId);
   }
 
+  // Remove and consume a key from the inventory.
   consumeKey(keyId = null) {
     if (!keyId) {
       if (!this.#keys.length) return false;
@@ -135,6 +142,7 @@ export class LootTable {
 
   get levelId() { return this.#levelId; }
 
+  // Collect loot from a chest and add it to the inventory.
   collect(chestId, inventory) {
     const entry = MAP_LOOT[this.#levelId]?.[chestId];
     if (!entry) return null;
@@ -153,6 +161,7 @@ export class LootTable {
     return null;
   }
 
+  // Count total keys available in this level's loot table.
   countTotalKeys() {
     const loot = MAP_LOOT[this.#levelId];
     if (!loot) return 0;
@@ -165,6 +174,7 @@ export class LootTable {
     return count;
   }
 
+  // Count total notes available in this level's loot table.
   countTotalNotes() {
     const loot = MAP_LOOT[this.#levelId];
     if (!loot) return 0;
@@ -177,6 +187,7 @@ export class LootTable {
     return count;
   }
 
+  // Static: count total keys for any level ID.
   static countTotalKeys(levelId) {
     const loot = MAP_LOOT[levelId];
     if (!loot) return 0;
@@ -189,6 +200,7 @@ export class LootTable {
     return count;
   }
 
+  // Static: count total notes for any level ID.
   static countTotalNotes(levelId) {
     const loot = MAP_LOOT[levelId];
     if (!loot) return 0;
@@ -207,15 +219,18 @@ export function createInventory() {
   return new Inventory();
 }
 
+// Collect loot from a chest into the inventory (backward-compatible wrapper).
 export function collectLoot(inventory, chestId, levelId) {
   const table = new LootTable(levelId);
   return table.collect(chestId, inventory);
 }
 
+// Check if the inventory has a specific key (backward-compatible wrapper).
 export function hasKey(inventory, keyId) {
   return inventory.hasKey(keyId);
 }
 
+// Consume a key from the inventory (backward-compatible wrapper).
 export function consumeKey(inventory, keyId) {
   return inventory.consumeKey(keyId);
 }
@@ -224,10 +239,12 @@ export function formatInventory(inventory) {
   return inventory.toString();
 }
 
+// Count total keys for a level (backward-compatible wrapper).
 export function countTotalKeys(levelId) {
   return LootTable.countTotalKeys(levelId);
 }
 
+// Count total notes for a level (backward-compatible wrapper).
 export function countTotalNotes(levelId) {
   return LootTable.countTotalNotes(levelId);
 }

@@ -1,3 +1,4 @@
+// Pause menu: resume, read collected notes, or exit to title.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';

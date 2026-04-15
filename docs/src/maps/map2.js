@@ -54,10 +54,10 @@ const Map2Config = {
     speed: 100,  // Move speed
     sprint: 1.5,  // Sprint multiplier
     stamina: 80,  // Initial stamina
-    staminaMax: 80,  // Maximum stamina
-    staminaDrain: 30,  // Sprint stamina drain
-    staminaRecover: 15,  // Stamina recovery speed
-    staminaRecoverDelay: 3,  // Recovery delay
+    staminaMax: 120,  // Maximum stamina
+    staminaDrain: 22,  // Sprint stamina drain (slower drain = longer use time)
+    staminaRecover: 20,  // Stamina recovery speed
+    staminaRecoverDelay: 1.5,  // Recovery delay (shorter wait after exhausted)
     color: '#33ff66',  // Player tint
     spawnOffsetX: 0,
     spawnOffsetY: 0

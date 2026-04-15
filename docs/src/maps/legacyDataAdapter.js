@@ -1,8 +1,10 @@
 // Legacy adapter: normalizes global map configs into standardized map specs.
+// Deep-clone a value via JSON round-trip (null-safe).
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
 }
 
+// Collect legacy map configurations and tile maps from globalThis.
 function getGlobalLegacyData() {
   return {
     tileMaps: globalThis.TileMaps || {},
@@ -14,6 +16,7 @@ function getGlobalLegacyData() {
   };
 }
 
+// Look up Tiled map data using config.mapName or levelId-based aliases.
 function resolveMapData(levelId, config, globals) {
   const aliases = [];
   if (config?.mapName) aliases.push(config.mapName);
@@ -24,10 +27,12 @@ function resolveMapData(levelId, config, globals) {
   return null;
 }
 
+// Extract and clone the room matrix from a map config.
 function resolveRoomMatrix(config) {
   return clone(config?.roomMatrix || []);
 }
 
+// Build a normalised player spec with defaults for missing fields.
 function normalizePlayer(config, levelId) {
   return {
     w: config?.player?.w || 10,
@@ -48,6 +53,7 @@ function normalizePlayer(config, levelId) {
   };
 }
 
+// Build a normalised NPC spec, filling in defaults for behaviour and movement fields.
 function normalizeNpc(npc) {
   return {
     ...clone(npc),
@@ -70,6 +76,7 @@ function normalizeNpc(npc) {
   };
 }
 
+// Normalise door and chest entity arrays from the config.
 function normalizeEntities(config) {
   const configDoors = clone(config?.entities?.doors || []);
   const configChests = clone(config?.entities?.chests || []).map((chest) => ({ ...chest, w: chest.w || 1, h: chest.h || 1 }));
@@ -79,10 +86,12 @@ function normalizeEntities(config) {
   };
 }
 
+// Clone the collision matrix, defaulting to an empty array.
 function normalizeCollision(config) {
   return clone(config?.collisionMatrix || []);
 }
 
+// Extract the default spawn tile coordinates.
 function normalizeSpawn(config) {
   return {
     x: config?.defaultSpawn?.x ?? 2,
@@ -90,6 +99,7 @@ function normalizeSpawn(config) {
   };
 }
 
+// Assemble a complete, normalised map specification from a raw config.
 function normalizeMapConfig(levelId, config, globals) {
   const mapData = resolveMapData(levelId, config, globals);
   const roomMatrix = resolveRoomMatrix(config);
@@ -101,7 +111,7 @@ function normalizeMapConfig(levelId, config, globals) {
     visionRange: config?.settings?.visionRange || 112,
     searchDuration: config?.settings?.searchDuration || 3.5,
     chaseVisionMultiplier: config?.settings?.chaseVisionMultiplier || 1.2,
-    darkVisionMultiplier: config?.settings?.darkVisionMultiplier || 0.65,
+    darkVisionMultiplier: config?.settings?.darkVisionMultiplier || 0.6,
     normalVisionMultiplier: config?.settings?.normalVisionMultiplier || 1,
     lightingMode: config?.settings?.lightingMode || 'tile_darkness',
     ...clone(config?.settings || {})
@@ -130,6 +140,7 @@ function normalizeMapConfig(levelId, config, globals) {
   };
 }
 
+// Check a map spec for missing critical data and return a list of issues.
 function validateMapSpec(spec) {
   const issues = [];
   if (!spec) issues.push('missing map spec');
@@ -140,6 +151,7 @@ function validateMapSpec(spec) {
   return issues;
 }
 
+// Load and normalise all legacy map specs from globalThis configs.
 export function loadLegacyMapSpecs() {
   const globals = getGlobalLegacyData();
   const specs = new Map();
@@ -152,6 +164,7 @@ export function loadLegacyMapSpecs() {
   return specs;
 }
 
+// Validate a set of map specs, returning a report of any issues per level.
 export function validateLegacyMapSpecs(specs) {
   const report = [];
   for (const [levelId, spec] of specs.entries()) {

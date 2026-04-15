@@ -1,3 +1,4 @@
+// Map3 - level 3 configuration: room matrix, NPC waypoints, doors, chests, and buttons.
 (function () {
   const MAP3_ROOM_MATRIX = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -229,10 +230,10 @@
       speed: 100,
       sprint: 1.5,
       stamina: 80,
-      staminaMax: 80,
-      staminaDrain: 30,
-      staminaRecover: 15,
-      staminaRecoverDelay: 3,
+      staminaMax: 120,
+      staminaDrain: 22,
+      staminaRecover: 20,
+      staminaRecoverDelay: 1.5,
       color: '#33ff66',
       spawnOffsetX: 0,
       spawnOffsetY: 0

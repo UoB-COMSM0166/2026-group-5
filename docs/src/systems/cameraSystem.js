@@ -1,8 +1,10 @@
 // Camera: dead-zone follow, smooth lerp, world bounds clamping, viewport helpers, zoom support.
+// Restrict a value to the [min, max] range.
 function clamp(value, min, max) {
   return Math.max(min, Math.min(value, max));
 }
 
+// Follow-camera with dead-zone, smooth lerp, zoom, and world-bounds clamping.
 export class Camera {
   #x;
   #y;
@@ -20,6 +22,7 @@ export class Camera {
   #maxZoom;
   #zoomSmoothing;
 
+  // Initialise viewport dimensions, dead-zones, and zoom limits.
   constructor(viewWidth, viewHeight) {
     this.#x = 0;
     this.#y = 0;
@@ -55,6 +58,7 @@ export class Camera {
   get minZoom() { return this.#minZoom; }
   get maxZoom() { return this.#maxZoom; }
 
+  // Update viewport dimensions and recalculate dead-zones.
   resize(width, height) {
     this.#width = width;
     this.#height = height;
@@ -62,10 +66,12 @@ export class Camera {
     this.#deadZoneY = Math.floor(height * 0.18);
   }
 
+  // Set zoom level, clamped to allowed range.
   setZoom(zoom) {
     this.#zoom = clamp(zoom, this.#minZoom, this.#maxZoom);
   }
 
+  // Adjust zoom by delta, keeping a world point under the cursor.
   changeZoom(delta, centerX, centerY) {
     const oldZoom = this.#zoom;
     const newZoom = clamp(oldZoom + delta, this.#minZoom, this.#maxZoom);
@@ -88,13 +94,24 @@ export class Camera {
     return this.#zoom;
   }
 
+  // Set world bounds from map size and recalculate min zoom.
   configureBounds(mapWidthTiles, mapHeightTiles, tileSize) {
     this.#worldWidth = Math.max(this.#width, mapWidthTiles * tileSize);
     this.#worldHeight = Math.max(this.#height, mapHeightTiles * tileSize);
+
+    // Ensure minimum zoom never shows more than 60 cols × 40 rows
+    const maxVisibleCols = 60;
+    const maxVisibleRows = 40;
+    const minZoomX = this.#width / (maxVisibleCols * tileSize);
+    const minZoomY = this.#height / (maxVisibleRows * tileSize);
+    this.#minZoom = Math.max(minZoomX, minZoomY);
+    this.#zoom = clamp(this.#zoom, this.#minZoom, this.#maxZoom);
+
     this.#x = clamp(this.#x, 0, Math.max(0, this.#worldWidth - this.#width));
     this.#y = clamp(this.#y, 0, Math.max(0, this.#worldHeight - this.#height));
   }
 
+  // Follow the player with dead-zone and smooth interpolation.
   update(player, deltaTime = 0) {
     const centerX = player.x + player.w / 2;
     const centerY = player.y + player.h / 2;
@@ -132,6 +149,7 @@ export class Camera {
     this.#targetY = targetY;
   }
 
+  // Convert world coordinates to screen coordinates.
   worldToScreen(x, y) {
     return {
       x: (x - this.#x) * this.#zoom,
@@ -139,6 +157,7 @@ export class Camera {
     };
   }
 
+  // Convert screen coordinates to world coordinates.
   screenToWorld(x, y) {
     return {
       x: x / this.#zoom + this.#x,
@@ -146,6 +165,7 @@ export class Camera {
     };
   }
 
+  // Check if a world-space rectangle is within the visible viewport.
   isRectVisible(x, y, w, h, pad = 0) {
     const effectivePad = pad / this.#zoom;
     const effectiveWidth = this.#width / this.#zoom;
@@ -158,6 +178,7 @@ export class Camera {
     );
   }
 
+  // Return the tile-coordinate range currently visible on screen.
   getVisibleTileBounds(tileSize, mapWidth, mapHeight) {
     const effectiveWidth = this.#width / this.#zoom;
     const effectiveHeight = this.#height / this.#zoom;
@@ -166,6 +187,13 @@ export class Camera {
     const endCol = clamp(Math.ceil((this.#x + effectiveWidth) / tileSize) + marginTiles, 0, mapWidth);
     const startRow = clamp(Math.floor(this.#y / tileSize) - marginTiles, 0, Math.max(0, mapHeight - 1));
     const endRow = clamp(Math.ceil((this.#y + effectiveHeight) / tileSize) + marginTiles, 0, mapHeight);
-    return { startCol, endCol, startRow, endRow };
+
+    // Limit to maximum 60 columns and 40 rows visible at any time
+    const MAX_VISIBLE_COLS = 60;
+    const MAX_VISIBLE_ROWS = 40;
+    const limitedEndCol = Math.min(endCol, startCol + MAX_VISIBLE_COLS);
+    const limitedEndRow = Math.min(endRow, startRow + MAX_VISIBLE_ROWS);
+
+    return { startCol, endCol: limitedEndCol, startRow, endRow: limitedEndRow };
   }
 }

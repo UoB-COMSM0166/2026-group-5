@@ -1,10 +1,12 @@
 // Character animation: frame cycling, one-shot triggers, sprite sheet rect lookup.
 const DIRECTIONS = ['down', 'left', 'right', 'up'];
 
+// Clamp a frame index to a valid range (0 to max-1).
 function clampFrame(frame, max) {
   return ((frame % max) + max) % max;
 }
 
+// Guarantee an entity has a valid animation state object.
 export function ensureAnimState(entity, defaults = {}) {
   entity.anim ??= {};
   entity.anim.mode ??= defaults.mode || 'idle';
@@ -21,6 +23,7 @@ export function ensureAnimState(entity, defaults = {}) {
   return entity.anim;
 }
 
+// Start a one-shot animation that auto-reverts after duration.
 export function triggerOneShotAnimation(entity, mode, duration = 0.28, options = {}) {
   const anim = ensureAnimState(entity, options);
   anim.lockedMode = mode;
@@ -31,15 +34,18 @@ export function triggerOneShotAnimation(entity, mode, duration = 0.28, options =
   return anim;
 }
 
+// Map a facing direction string to its sprite-sheet row index.
 export function facingToRow(facing) {
   return Math.max(0, DIRECTIONS.indexOf(facing || 'down'));
 }
 
+// Normalize a visual mode based on movement state.
 function normalizeVisualMode(mode, moving) {
   if (mode === 'return') return moving ? 'walk' : 'idle';
   return mode;
 }
 
+// Advance frame timer and update sprite animation for a humanoid entity.
 export function updateHumanoidAnimation(entity, deltaTime, moving, facing, config = {}) {
   const anim = ensureAnimState(entity, config);
   const walkFrameDuration = config.walkFrameDuration || 0.12;
@@ -98,6 +104,7 @@ export function updateHumanoidAnimation(entity, deltaTime, moving, facing, confi
   return anim;
 }
 
+// Calculate the source rectangle for a specific animation frame on a sprite sheet.
 export function getFrameRect(img, anim, options = {}) {
   if (!img) return null;
   const frameCount = options.frameCount || anim?.frameCount || 4;

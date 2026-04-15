@@ -13,6 +13,7 @@ import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { Camera } from '../systems/cameraSystem.js';
 import { Inventory, collectLoot, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
 
+// Main game controller: owns state, input, audio, overlay, and orchestrates the game loop.
 export class GameCore {
   #state;
   #input;
@@ -21,6 +22,7 @@ export class GameCore {
   #currentLevelId;
   #camera;
 
+  // Bootstrap subsystems and set the starting level.
   constructor({ initialLevel = 'map2' } = {}) {
     this.#state = new GameState();
     this.#input = new InputSystem();
@@ -30,6 +32,7 @@ export class GameCore {
     this.#camera = new Camera(960, 640);
   }
 
+  // Push current state values into the DOM HUD elements.
   #syncHud() {
     const s = this.#state;
     document.getElementById('screenState')?.replaceChildren(document.createTextNode(s.screen));
@@ -56,6 +59,7 @@ export class GameCore {
     this.#state.story.introVariant = 'first';
   }
 
+  // Instantiate a Level from the map registry and reset camera, meta, and inventory.
   #loadLevel(levelId) {
     const config = getMap(levelId);
     if (!config) throw new Error(`Unknown level: ${levelId}`);
@@ -76,6 +80,7 @@ export class GameCore {
     this.#syncHud();
   }
 
+  // Transition to a new screen: reset input, update timers, sync audio.
   #setScreen(screen) {
     this.#input.reset?.();
     const s = this.#state;
@@ -89,6 +94,7 @@ export class GameCore {
     this.#syncHud();
   }
 
+  // Full restart: reload level, clear story selection, return to start screen.
   restartLevel() {
     this.#loadLevel(this.#currentLevelId);
     this.#state.nearestLightButton = null;
@@ -97,6 +103,7 @@ export class GameCore {
     this.#overlay.flash(this.#state, 0.3);
   }
 
+  // Switch to a different level and reset to the start screen.
   switchLevel(levelId) {
     this.#currentLevelId = levelId;
     this.#loadLevel(levelId);
@@ -104,6 +111,7 @@ export class GameCore {
     this.#overlay.flash(this.#state, 0.3);
   }
 
+  // Load a level for story mode without changing the current screen.
   loadStoryLevel(levelId) {
     this.#currentLevelId = levelId;
     this.#loadLevel(levelId);
@@ -111,6 +119,7 @@ export class GameCore {
     this.#overlay.flash(this.#state, 0.3);
   }
 
+  // Restart the current story playthrough, picking the correct map.
   restartCurrentStoryRun() {
     const story = this.#state.story;
 
@@ -138,22 +147,26 @@ export class GameCore {
     this.restartLevel();
   }
 
+  // Unpause and return to the playing screen.
   resumeGame() {
     this.#state.ui.pause.view = 'menu';
     this.#setScreen(SCREEN_STATES.PLAYING);
   }
 
+  // Leave the current game and go back to the title screen.
   exitToTitle() {
     this.#resetStorySelection();
     this.#setScreen(SCREEN_STATES.START);
     this.#setMessage('Returned to title', 1.0);
   }
 
+  // Toggle between playing and paused states.
   #togglePause() {
     if (this.#state.screen === SCREEN_STATES.PLAYING) this.#setScreen(SCREEN_STATES.PAUSE);
     else if (this.#state.screen === SCREEN_STATES.PAUSE) this.resumeGame();
   }
 
+  // Unlock browser audio context if needed and sync track to current screen.
   #ensureAudioReadyForCurrentScreen() {
     const audioState = this.#audio.getState();
     if (audioState.unlocked) return;
@@ -164,6 +177,7 @@ export class GameCore {
     this.#state.audio.muted = this.#audio.getState().muted;
   }
 
+  // Build an API object exposing safe public actions for screen handlers.
   #getApi() {
     return {
       setScreen: s => this.#setScreen(s),
@@ -177,10 +191,12 @@ export class GameCore {
     };
   }
 
+  // Delegate key input to the overlay screen manager for non-playing screens.
   #handleNonPlayingKey(key) {
     return this.#overlay.screenManager.handleKey(this.#state.screen, key, this.#state, this.#getApi());
   }
 
+  // Load all image and audio assets, updating the loading state.
   async loadAssets(p) {
     this.#state.loading.message = 'Loading assets...';
     try { const r = await loadAssetsAsync(p); this.#state.loading.ready = true; this.#state.loading.message = r.failedCount > 0 ? `Loaded with ${r.failedCount} fallback asset(s)` : 'Assets loaded'; }
@@ -188,6 +204,7 @@ export class GameCore {
     this.#syncHud();
   }
 
+  // Bootstrap legacy maps, load the initial level, and show the start screen.
   setup() {
     const v = bootstrapLegacyMaps();
     if (v.length) throw new Error(`Legacy map bootstrap failed: ${v.map(e => `${e.levelId}: ${e.issues.join(', ')}`).join(' | ')}`);
@@ -196,6 +213,7 @@ export class GameCore {
     this.#setMessage('Ready.', 1.2);
   }
 
+  // Main per-frame update: advance screen time, update systems, check win/lose.
   update(deltaTime) {
     const s = this.#state;
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
@@ -253,20 +271,22 @@ export class GameCore {
     this.#syncHud();
   }
 
+  // Render the current frame via the render system.
   render(p) { renderScene(p, this.#state, this.#overlay); }
 
+  // Handle a key-down event: dispatch to screens or input system.
   onKeyPressed(key, keyCode) {
     this.#ensureAudioReadyForCurrentScreen();
     if (this.#handleNonPlayingKey(key)) { const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return; }
     this.#input.onKeyPressed(key, keyCode);
     const l = String(key).toLowerCase(), s = this.#state;
     if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
-    if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
-    if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');
-    if (l === 'b') s.debug.showRooms = !s.debug.showRooms; if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
-    if (l === 'g') s.debug.showCamera = !s.debug.showCamera; if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
-    if (l === 'h' && s.level) { const next = s.level.player.characterVariant === 'default' ? 'stealth' : 'default'; s.level.player.characterVariant = next; this.#setMessage(`Player skin: ${next}`, 1); }
-    if (l === 'm') { s.audio.muted = this.#audio.toggleMute(); this.#setMessage(s.audio.muted ? 'Muted' : 'Unmuted', 1); }
+    // if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
+    // if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');
+    // if (l === 'b') s.debug.showRooms = !s.debug.showRooms; if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
+    // if (l === 'g') s.debug.showCamera = !s.debug.showCamera; if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
+    // if (l === 'h' && s.level) { const next = s.level.player.characterVariant === 'default' ? 'stealth' : 'default'; s.level.player.characterVariant = next; this.#setMessage(`Player skin: ${next}`, 1); }
+    // if (l === 'm') { s.audio.muted = this.#audio.toggleMute(); this.#setMessage(s.audio.muted ? 'Muted' : 'Unmuted', 1); }
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();
   }
 
@@ -275,6 +295,7 @@ export class GameCore {
   onDomKeyDown(key, code) { this.#input.onDomKeyDown?.(key, code); }
   onDomKeyUp(key, code) { this.#input.onDomKeyUp?.(key, code); }
 
+  // Zoom the camera on mouse wheel during gameplay.
   onMouseWheel(delta, mouseX, mouseY) {
     if (this.#state.screen !== SCREEN_STATES.PLAYING || !this.#state.camera) return;
     const zoomDelta = delta > 0 ? -0.1 : 0.1, player = this.#state.level.player;
@@ -283,6 +304,7 @@ export class GameCore {
     this.#state.camera.changeZoom(zoomDelta, (mouseX >= 0 && mouseX <= this.#state.camera.width) ? mouseX : psx, (mouseY >= 0 && mouseY <= this.#state.camera.height) ? mouseY : psy);
   }
 
+  // Forward mouse clicks to the current screen handler.
   onMousePressed(mouseX, mouseY, mouseButton, p) {
     this.#ensureAudioReadyForCurrentScreen();
     if (this.#overlay.screenManager.handleMouse(this.#state.screen, mouseX, mouseY, p, this.#state, this.#getApi())) { this.#syncHud(); }
@@ -290,6 +312,7 @@ export class GameCore {
 
   syncInputSnapshot(snapshot) { this.#input.syncMovementFromSnapshot?.(snapshot); }
 
+  // Reconfigure camera dimensions on canvas resize.
   onResize(width, height) {
     this.#camera.resize(width, height);
     if (this.#state.level) this.#camera.configureBounds(this.#state.level.mapWidth, this.#state.level.mapHeight, this.#state.level.settings.baseTile);
@@ -299,4 +322,5 @@ export class GameCore {
   getState() { return this.#state; }
 }
 
+// Factory wrapper for creating a GameCore instance.
 export function createGameCore(options = {}) { return new GameCore(options); }

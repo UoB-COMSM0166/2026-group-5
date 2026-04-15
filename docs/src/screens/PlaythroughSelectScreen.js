@@ -1,3 +1,4 @@
+// Playthrough select: lets the player choose first or second playthrough after the false ending.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';

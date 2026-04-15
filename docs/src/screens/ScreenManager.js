@@ -1,3 +1,4 @@
+// Screen router: maps screen state names to Screen instances and delegates lifecycle calls.
 import { StartScreen } from './StartScreen.js';
 import { IntroScreen } from './StoryIntroScreen.js';
 import { TutorialScreen } from './StoryTutorialScreen.js';
@@ -11,6 +12,7 @@ import { WinScreen } from './WinScreen.js';
 import { LoseScreen } from './LoseScreen.js';
 import { CreditsScreen } from './CreditsScreen.js';
 
+// Holds all screen instances and forwards update/render/input to the active one.
 export class ScreenManager {
   #screens;
   #currentScreen;
@@ -33,37 +35,44 @@ export class ScreenManager {
     this.#currentScreen = null;
   }
 
+  // Look up a screen instance by its state key.
   getScreen(name) {
     return this.#screens[name] || null;
   }
 
+  // Reset the named screen when transitioning into it.
   reset(screenName, state) {
     const screen = this.#screens[screenName];
     if (screen) screen.reset(state);
   }
 
+  // Tick the active screen's per-frame logic.
   update(screenName, state, deltaTime) {
     const screen = this.#screens[screenName];
     if (screen && screen.update) screen.update(state, deltaTime);
   }
 
+  // Draw the active screen.
   render(screenName, p, state) {
     const screen = this.#screens[screenName];
     if (screen) screen.render(p, state);
   }
 
+  // Forward a key event to the active screen.
   handleKey(screenName, key, state, api) {
     const screen = this.#screens[screenName];
     if (screen && screen.handleKey) return screen.handleKey(key, state, api);
     return false;
   }
 
+  // Forward a mouse event to the active screen.
   handleMouse(screenName, mouseX, mouseY, p, state, api) {
     const screen = this.#screens[screenName];
     if (screen && screen.handleMouse) return screen.handleMouse(mouseX, mouseY, p, state, api);
     return false;
   }
 
+  // Return the prompt text for the active screen.
   getPrompt(screenName) {
     const screen = this.#screens[screenName];
     return screen ? screen.promptText : '';

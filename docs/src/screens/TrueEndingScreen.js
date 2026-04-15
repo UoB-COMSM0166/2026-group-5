@@ -1,3 +1,4 @@
+// True ending: timed cutscene sequence followed by transition to credits.
 import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { SCREEN_STATES } from '../core/gameState.js';

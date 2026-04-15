@@ -10,6 +10,7 @@ export class Entity {
   #characterType;
   #characterVariant;
 
+  // Initialise position, dimensions, and default animation state.
   constructor(x, y, w, h, characterType = 'entity') {
     this.#x = x;
     this.#y = y;
@@ -44,6 +45,7 @@ export class Entity {
   get characterVariant() { return this.#characterVariant; }
   set characterVariant(v) { this.#characterVariant = v; }
 
+  // Computed centre coordinates for collision and rendering.
   get centerX() { return this.#x + this.#w / 2; }
   get centerY() { return this.#y + this.#h / 2; }
 }

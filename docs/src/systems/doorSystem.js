@@ -25,23 +25,28 @@ export const DOOR_STATES = Object.freeze({
 });
 
 
+// Check if a layer's name matches any entry in the set.
 function layerNameMatches(layer, names) {
   return names.has(String(layer.name || '').toLowerCase());
 }
 
+// Read a single tile value from a flat layer data array.
 function getCell(layer, width, x, y) {
   return layer.data[y * width + x] || 0;
 }
 
+// Determine the slide direction for a door (defaults to 'left').
 function resolveSlideDir(source) {
   return source?.slideDir || 'left';
 }
 
+// Decide whether the door has single or double panels based on dimensions.
 function resolvePanels(source, width, height) {
   if (source?.panels) return source.panels;
   return (width >= 2 && height >= 2) ? 'double' : 'single';
 }
 
+// Infer the initial door state from collision data and lock flag.
 function inferInitialState(tiles, collision, sourceLocked) {
   const tilesPassable = Array.isArray(collision) && collision.length
     && tiles.every((t) => collision?.[t.y]?.[t.x] === 0);
@@ -50,6 +55,7 @@ function inferInitialState(tiles, collision, sourceLocked) {
   return DOOR_STATES.LOCKED;
 }
 
+// Set or clear collision tiles occupied by a door.
 function setDoorTilesSolid(door, collision, solid) {
   if (!Array.isArray(collision) || !collision.length || !door?.tiles) return;
   for (const tile of door.tiles) {
@@ -60,6 +66,7 @@ function setDoorTilesSolid(door, collision, solid) {
 }
 
 
+// Check if an entity's bounding box overlaps any of the door's tiles.
 function isEntityOnDoorTiles(entity, door, tileSize) {
   const left  = Math.floor(entity.x / tileSize);
   const right = Math.floor((entity.x + entity.w - 1) / tileSize);
@@ -68,6 +75,7 @@ function isEntityOnDoorTiles(entity, door, tileSize) {
   return door.tiles.some(t => t.x >= left && t.x <= right && t.y >= top && t.y <= bot);
 }
 
+// Push an entity to the nearest free tile when a door closes on them.
 function pushEntityFromDoor(entity, door, tileSize, collision) {
   const ecx = entity.x + entity.w / 2;
   const ecy = entity.y + entity.h / 2;
@@ -108,6 +116,7 @@ const SLIDE_VECTORS = {
 // Double doors always split left / right
 const DOUBLE_SPLIT = { a: { dx: -1, dy: 0 }, b: { dx: 1, dy: 0 } };
 
+// Build a door runtime object with animation and collision fields.
 function makeDoor({ id, x, y, w, h, panels, slideDir, initialState, keyId, tiles, visualOnly }, tileSize) {
   const isOpen = initialState === DOOR_STATES.OPEN;
   return {
@@ -132,6 +141,7 @@ function makeDoor({ id, x, y, w, h, panels, slideDir, initialState, keyId, tiles
 }
 
 
+// Manages all level doors: state transitions, animation, and collision updates.
 export class DoorSystem {
   #doors;
   #tileSize;
@@ -139,6 +149,7 @@ export class DoorSystem {
   #activePushes;
   #PUSH_DURATION = 0.5;
 
+  // Build doors from spec entities or by parsing map tile layers.
   constructor(mapData, tileSize = 16, seededDoors = [], collision = null) {
     this.#tileSize = tileSize;
     this.#collision = collision;
@@ -240,6 +251,7 @@ export class DoorSystem {
 
   get doors() { return this.#doors; }
 
+  // Unlock a locked door with the matching key and clear collision.
   unlock(door, keyId) {
     if (!door || door.visualOnly) return false;
     if (door.state !== DOOR_STATES.LOCKED || door.cooldown > 0) return false;
@@ -251,6 +263,7 @@ export class DoorSystem {
     return true;
   }
 
+  // Open a closed door and clear its collision tiles.
   open(door) {
     if (!door || door.visualOnly) return false;
     if (door.cooldown > 0) return false;
@@ -262,6 +275,7 @@ export class DoorSystem {
     return true;
   }
 
+  // Close an open door and restore its collision tiles.
   close(door) {
     if (!door || door.visualOnly) return false;
     if (door.cooldown > 0) return false;
@@ -273,6 +287,7 @@ export class DoorSystem {
     return true;
   }
 
+  // Return true if a solid door occupies the given tile.
   blocksTile(tx, ty) {
     for (const door of this.#doors) {
       if (!door.solid) continue;
@@ -281,6 +296,7 @@ export class DoorSystem {
     return false;
   }
 
+  // Return true if any non-visual door covers the given tile.
   isDoorTile(tx, ty) {
     for (const door of this.#doors) {
       if (door.visualOnly) continue;
@@ -289,6 +305,7 @@ export class DoorSystem {
     return false;
   }
 
+  // Advance door animations, push overlapping entities, and update slide offsets.
   update(deltaTime, entities) {
     const speed = 4;
     // Process active gradual pushes

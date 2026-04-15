@@ -3,6 +3,7 @@ import { collectTilesetPaths } from '../render/tilesetCatalog.js';
 import { SPRITE_PATHS, collectCharacterPaths } from '../render/spriteCatalog.js';
 import { STORY_SCREEN_ASSET_PATHS } from '../screens/storyAssetCatalog.js';
 
+// Singleton store for all loaded image assets and their load status.
 const assets = {
   images: new Map(),
   requested: new Set(),
@@ -10,6 +11,7 @@ const assets = {
   failed: []
 };
 
+// Gather every image path the game may need (tilesets, sprites, UI, story art).
 function collectPaths() {
   const paths = new Set();
   collectTilesetPaths().forEach((p) => paths.add(p));
@@ -39,6 +41,7 @@ function collectPaths() {
   return Array.from(paths).filter(Boolean);
 }
 
+// Wrap a native Image element to match the p5 image interface.
 function wrapDomImage(img) {
   return {
     elt: img,
@@ -47,6 +50,7 @@ function wrapDomImage(img) {
   };
 }
 
+// Load an image via a DOM Image element, resolving with ok/fail metadata.
 function loadDomImageAsync(path) {
   return new Promise((resolve) => {
     if (typeof Image === 'undefined') {
@@ -61,6 +65,7 @@ function loadDomImageAsync(path) {
   });
 }
 
+// Try loading via p5.loadImage first, fall back to DOM Image on failure/timeout.
 function loadImageAsync(p, path) {
   if (!p || typeof p.loadImage !== 'function') return loadDomImageAsync(path);
 
@@ -95,6 +100,7 @@ function loadImageAsync(p, path) {
   });
 }
 
+// Load all game assets in parallel; populates the singleton asset store.
 export async function loadAssetsAsync(p) {
   const paths = collectPaths();
   assets.failed = [];
@@ -113,14 +119,17 @@ export async function loadAssetsAsync(p) {
   return getAssetState();
 }
 
+// Retrieve a loaded image by its path, or null if unavailable.
 export function getImage(path) {
   return assets.images.get(path) || null;
 }
 
+// Check whether a given image path has been successfully loaded.
 export function hasImage(path) {
   return !!assets.images.get(path);
 }
 
+// Return a summary of asset loading progress and failures.
 export function getAssetState() {
   let loadedCount = 0;
   for (const value of assets.images.values()) {

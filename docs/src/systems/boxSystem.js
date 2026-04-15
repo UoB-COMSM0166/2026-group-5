@@ -3,12 +3,15 @@ function getCell(layer, width, x, y) {
   return layer.data[y * width + x] || 0;
 }
 
+// Manages chests: initialisation from map data, opening, and lid animation.
 export class BoxSystem {
   #boxes;
 
+  // Build chest list from spec entities or by parsing map layers.
   constructor(mapData, existingChests = [], tileSize = 16) {
     this.#boxes = [];
 
+    // Iterate over existing chests to build internal chest list.
     for (const chest of existingChests) {
       const w = chest.w || 1;
       const h = chest.h || 1;
@@ -31,6 +34,7 @@ export class BoxSystem {
       });
     }
 
+    // If no existing chests, try to parse map layers to find chests.
     if (this.#boxes.length) return;
     if (!mapData?.layers) return;
     const layer = mapData.layers.find((entry) => String(entry.name || '').toLowerCase() === 'box' && entry.type === 'tilelayer');
@@ -40,6 +44,7 @@ export class BoxSystem {
     const height = mapData.height || 0;
     const seen = new Set(this.#boxes.map((box) => `${box.x},${box.y}`));
 
+    // Scan map layers to find 2x2 tile patterns that represent chests.
     for (let y = 0; y < height - 1; y += 1) {
       for (let x = 0; x < width - 1; x += 1) {
         if (seen.has(`${x},${y}`)) continue;
@@ -67,6 +72,7 @@ export class BoxSystem {
     }
   }
 
+  // Get the list of chests.
   get boxes() { return this.#boxes; }
 
   open(box) {
@@ -76,6 +82,7 @@ export class BoxSystem {
     return true;
   }
 
+  // Advance lid angle and loot-pulse animations each frame.
   update(deltaTime) {
     for (const box of this.#boxes) {
       const target = box.opened ? 1 : 0;

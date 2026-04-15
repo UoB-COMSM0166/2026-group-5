@@ -107,11 +107,13 @@ for (let i = 0; i < STEERING_NUM_RAYS; i++) {
   STEERING_DIRS.push({ x: Math.cos(angle), y: Math.sin(angle) });
 }
 
+// Register a named movement algorithm for NPC tracking.
 export function registerNpcTracker(name, implementation) {
   if (!name || typeof implementation !== 'function') return;
   TRACKER_ALGORITHMS.set(name, implementation);
 }
 
+// Reset all per-NPC tracker fields to defaults.
 export function clearNpcTrackerState(npc) {
   npc.tracker = {
     profile: npc.tracker?.profile || DEFAULT_TRACKER_PROFILE,
@@ -148,6 +150,7 @@ export function clearNpcTrackerState(npc) {
   };
 }
 
+// Guarantee an NPC has a tracker state object, creating one if missing.
 export function ensureNpcTrackerState(npc) {
   if (npc.tracker) return npc.tracker;
   clearNpcTrackerState(npc);
@@ -174,6 +177,7 @@ function trySetFacing(npc, newFacing) {
   }
 }
 
+// Set the NPC facing direction from a movement vector.
 export function setNpcFacingFromVector(npc, dx, dy) {
   if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return;
   trySetFacing(npc, vectorToFacing(dx, dy));
@@ -201,6 +205,7 @@ function updateFacingSmooth(npc, moveDx, moveDy, targetDx, targetDy, deltaTime) 
   }
 }
 
+// Convert a centre-point target to top-left position for NPC placement.
 export function getNpcWorldCenterTarget(npc, targetX, targetY) {
   return {
     x: targetX - npc.w / 2,
@@ -322,6 +327,7 @@ function findNearbyBlockingDoor(npc, level) {
   return null;
 }
 
+// Find the closest open door within interaction range of an NPC.
 export function findNearbyOpenDoor(npc, level) {
   const tileSize = level?.settings?.baseTile || 16;
   const cx = npc.x + npc.w / 2;
@@ -1084,10 +1090,12 @@ TRACKER_ALGORITHMS.set(DEFAULT_TRACKER_PROFILE, trackPathSmooth);
 TRACKER_ALGORITHMS.set('steering_chase', trackSteeringChase);
 TRACKER_ALGORITHMS.set('patrol_route', trackDirectPatrol);
 
+// Advance the debug frame counter for NPC tracker logging.
 export function debugTickNpcTracker(deltaTime) {
   debugTickSecond(deltaTime);
 }
 
+// Execute the appropriate movement algorithm for an NPC's current request.
 export function runNpcTracker(npc, request, deltaTime, level) {
   const tracker = ensureNpcTrackerState(npc);
   // facingHoldTimer is now decayed inside updateFacingSmooth per-frame;
@@ -1105,6 +1113,7 @@ export function runNpcTracker(npc, request, deltaTime, level) {
   return implementation(npc, request, deltaTime, level);
 }
 
+// Push overlapping NPCs apart to prevent stacking.
 export function applyNpcSeparation(npc, level) {
   const neighbors = level.npcs || [];
   const inPatrolLikeState = npc.state !== 'CHASE';

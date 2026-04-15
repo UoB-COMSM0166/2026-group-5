@@ -1,3 +1,4 @@
+// Map select screen: lets the player choose a level for the second playthrough.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';

@@ -1,3 +1,4 @@
+// Animation and interpolation utilities: clamp, lerp, easing, fade windows.
 export function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }

@@ -1,3 +1,4 @@
+// Story intro: timed cutscene sequence with text and images before the tutorial.
 import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { SCREEN_STATES } from '../core/gameState.js';

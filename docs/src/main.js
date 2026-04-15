@@ -4,13 +4,32 @@ import { createGameCore } from './core/gameCore.js';
 const game = createGameCore({ initialLevel: 'map1' });
 
 function getCanvasSize() {
-  const root = document.getElementById('game-root');
-  const rect = root?.getBoundingClientRect();
-  return {
-    width: Math.max(640, Math.floor(rect?.width || 960)),
-    height: Math.max(480, Math.floor(rect?.height || 640))
-  };
+  return { width: 960, height: 640 };
 }
+
+// Whole-layout scaling - game + HUD + stamina scale as one unit like a PNG
+function updateLayoutScale() {
+  const layout = document.querySelector('.game-layout');
+  const topbar = document.querySelector('.topbar');
+  if (!layout) return;
+
+  // Design dimensions of .game-layout (padding + grid + gap)
+  const designWidth = 16 + 960 + 16 + 260 + 16;   // 1268px
+  const designHeight = 16 + 640 + 16;               // 672px
+
+  const topbarHeight = topbar?.offsetHeight || 52;
+  const availableWidth = window.innerWidth;
+  const availableHeight = window.innerHeight - topbarHeight;
+
+  const scaleX = availableWidth / designWidth;
+  const scaleY = availableHeight / designHeight;
+  const scale = Math.min(scaleX, scaleY);
+
+  layout.style.setProperty('--layout-scale', scale);
+}
+
+window.addEventListener('load', updateLayoutScale);
+window.addEventListener('resize', updateLayoutScale);
 
 new window.p5((p) => {
   p.setup = async () => {
@@ -68,12 +87,6 @@ new window.p5((p) => {
   };
 }, document.getElementById('game-root'));
 
-document.querySelectorAll('[data-level]').forEach((button) => {
-  if (button.dataset.level !== 'restart') {
-    button.addEventListener('click', () => game.switchLevel?.(button.dataset.level));
-  }
-});
-
 window.addEventListener('blur', () => game.onWindowBlur?.());
 document.addEventListener('visibilitychange', () => { if (document.hidden) game.onWindowBlur?.(); });
 
@@ -91,3 +104,61 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keyup', (event) => {
   game.onDomKeyUp?.(event.key, event.code);
 }, { passive: false });
+
+// Tips rotation system
+const TIPS = [
+  "Lights off reduces NPC's field of view.",
+  "NPC slower when opening doors.",
+  "NPC vision blocked by obstacles.",
+  "Try hiding behind obstacles when chased.",
+  "Chests may have keys.",
+  "Chests may hold secret notes.",
+  "NPC runs faster when chasing.",
+  "NPC alert increases with sight time.",
+  "NPC notices lights off and doors closed.",
+  "Fog clears as you explore.",
+  "NPC spots footprints left while sprinting."
+];
+
+let currentTipIndex = 0;
+let tipsInterval = null;
+
+function rotateTips() {
+  const tipsElement = document.getElementById('tips-text');
+  if (!tipsElement) return;
+
+  // Pick a random tip different from current
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * TIPS.length);
+  } while (newIndex === currentTipIndex && TIPS.length > 1);
+
+  currentTipIndex = newIndex;
+  tipsElement.textContent = TIPS[currentTipIndex];
+}
+
+function startTipsRotation() {
+  if (tipsInterval) clearInterval(tipsInterval);
+  tipsInterval = setInterval(rotateTips, 5000);
+}
+
+function stopTipsRotation() {
+  if (tipsInterval) {
+    clearInterval(tipsInterval);
+    tipsInterval = null;
+  }
+}
+
+// Start rotation when page loads
+window.addEventListener('load', () => {
+  startTipsRotation();
+});
+
+// Pause when tab is hidden, resume when visible
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopTipsRotation();
+  } else {
+    startTipsRotation();
+  }
+});

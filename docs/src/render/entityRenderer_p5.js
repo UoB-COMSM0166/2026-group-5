@@ -6,6 +6,7 @@ import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
 
 
+// Draw a sprite image at fixed height, preserving aspect ratio.
 function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH = 32, bob = 0) {
   if (!img) return false;
   const ratio = (img.width && img.height) ? img.width / img.height : 1;
@@ -20,6 +21,7 @@ function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH =
   return true;
 }
 
+// Draw a character using its sprite sheet or directional image.
 function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
   const anim = ensureAnimState(entity, { facing: entity.facing || 'down', frameCount: 4, variant: entity.characterVariant || 'default' });
   const sheet = descriptor?.sheet ? getImage(descriptor.sheet) : null;
@@ -129,27 +131,44 @@ function drawDoubleDoor(p, door, tile) {
   }
 }
 
-function drawChest(p, chest, tile) {
+// Draw a chest with lid-opening animation and loot glow.
+function drawChest(p, chest, tile, level) {
   const rw = (chest.renderW || chest.w) * tile;
   const rh = (chest.renderH || chest.h) * tile;
   const px = chest.x * tile + (chest.renderOffsetX || 0) * tile;
   const py = chest.y * tile + (chest.renderOffsetY || 0) * tile;
+
+  // Check if room is lit - apply darkness if lights are off
+  const roomId = level.roomSystem?.getRoomId(chest.x, chest.y);
+  const isLit = level.roomSystem?.isLit(roomId) ?? true;
 
   // Use closed or open image based on chest state
   const imgPath = chest.opened ? SPRITE_PATHS.chest.open : SPRITE_PATHS.chest.closed;
   const img = getImage(imgPath);
 
   if (img) {
+    if (!isLit) {
+      p.push();
+      p.tint(180, 180, 200, 200); // Apply dark tint when lights are off
+    }
     p.image(img, px, py, rw, rh);
+    if (!isLit) {
+      p.pop();
+    }
   } else {
     // Fallback: simple colored rectangle
     p.noStroke();
-    p.fill(chest.opened ? '#d4b14d' : '#8b5a2b');
+    if (!isLit) {
+      p.fill(chest.opened ? '#6b5a3b' : '#4b3a1b'); // Darker colors when lights off
+    } else {
+      p.fill(chest.opened ? '#d4b14d' : '#8b5a2b');
+    }
     p.rect(px + 1, py + 1, rw - 2, rh - 2, 3);
   }
 }
 
 
+// Draw the pulsing exit beacon when the mission is unlocked.
 function drawExitBeacon(p, missionSystem, tile) {
   const exit = missionSystem?.exit;
   if (!exit) return;
@@ -176,6 +195,7 @@ function drawExitBeacon(p, missionSystem, tile) {
   p.pop();
 }
 
+// Draw a light-switch button with lit/unlit and glow states.
 function renderButton(p, level, button) {
   const lit = level.roomSystem.isLit(button.roomId);
   const glow = button.responseGlow || 0;
@@ -191,6 +211,7 @@ function renderButton(p, level, button) {
   p.circle(button.centerX, button.centerY, 8 + glow * 5);
 }
 
+// Draw a floating question mark at the NPC's search target.
 function renderSearchMarker(p, npc) {
   if (!npc.searchTargetX || !npc.searchTargetY) return;
   p.push();
@@ -202,6 +223,7 @@ function renderSearchMarker(p, npc) {
   p.pop();
 }
 
+// Draw the alert-level bar above an NPC.
 function renderNpcAlertBar(p, npc) {
   const levelValue = Math.max(0, Math.min(1, (npc.alertLevel || 0) / 100));
   const width = Math.max(18, npc.w + 8);
@@ -221,6 +243,7 @@ function renderNpcAlertBar(p, npc) {
   p.pop();
 }
 
+// Draw fading footstep markers left by the player.
 function renderFootsteps(p, level) {
   const footsteps = level.player?.footsteps || [];
   if (!footsteps.length) return;
@@ -256,26 +279,31 @@ export function renderDoorInteractionPrompts(p, level) {
   const y = door.y * tile;
   const w = (door.w || 2) * tile;
   const h = (door.h || 2) * tile;
-  const centerX = x + w / 2;
-  const topY = y - 8; // Slightly above the door
+
+  // Check if on top 2 rows - show prompt on right side instead of top
+  const isTopRows = door.y < 2;
+  const centerX = isTopRows ? x + w + 20 : x + w / 2;
+  const promptY = isTopRows ? y + h / 2 : y - 16;
+  const textAlignY = isTopRows ? promptY : promptY - 4;
 
   p.push();
   // Draw key background
   p.noStroke();
   p.fill(15, 23, 42, 200);
-  p.rect(centerX - 12, topY - 14, 24, 20, 4);
+  p.rect(centerX - 12, promptY - 14, 24, 20, 4);
   // Draw 'E' text
   p.fill(255, 255, 255, 240);
   p.textAlign(p.CENTER, p.CENTER);
   p.textSize(12);
   p.textStyle(p.BOLD);
-  p.text('E', centerX, topY - 4);
-  // Optional: draw action text below
+  p.text('E', centerX, textAlignY);
+  // Optional: draw action text
   p.textStyle(p.NORMAL);
   p.textSize(8);
   p.fill(255, 255, 255, 180);
   const actionText = door.state === 'OPEN' ? 'Close' : door.state === 'LOCKED' ? 'Unlock' : 'Open';
-  p.text(actionText, centerX, topY + 10);
+  const actionY = isTopRows ? promptY + 16 : promptY + 10;
+  p.text(actionText, centerX, actionY);
   p.pop();
 }
 
@@ -287,27 +315,69 @@ export function renderButtonInteractionPrompts(p, level) {
   const button = prompt.entity;
   const tile = level.settings.baseTile;
 
-  const centerX = (button.x + 0.5) * tile;
-  const topY = button.y * tile - 8; // Slightly above the button
+  const buttonX = button.x * tile;
+  const buttonY = button.y * tile;
+
+  // Check if on top 2 rows - show prompt on right side instead of top
+  const isTopRows = button.y < 2;
+  const centerX = isTopRows ? buttonX + tile + 20 : (button.x + 0.5) * tile;
+  const promptY = isTopRows ? buttonY + tile / 2 : buttonY - 16;
 
   p.push();
   // Draw key background
   p.noStroke();
   p.fill(15, 23, 42, 200);
-  p.rect(centerX - 12, topY - 14, 24, 20, 4);
+  p.rect(centerX - 12, promptY - 14, 24, 20, 4);
   // Draw 'E' text
   p.fill(255, 255, 255, 240);
   p.textAlign(p.CENTER, p.CENTER);
   p.textSize(12);
   p.textStyle(p.BOLD);
-  p.text('E', centerX, topY - 4);
-  // Draw action text below
+  p.text('E', centerX, isTopRows ? promptY : promptY - 4);
+  // Draw action text
   p.textStyle(p.NORMAL);
   p.textSize(8);
   p.fill(255, 255, 255, 180);
   const isLit = level.roomSystem.isLit(button.roomId);
   const actionText = isLit ? 'Lights off' : 'Lights on';
-  p.text(actionText, centerX, topY + 10);
+  p.text(actionText, centerX, isTopRows ? promptY + 16 : promptY + 10);
+  p.pop();
+}
+
+// Render E-key interaction hints at chests when player is nearby
+export function renderChestInteractionPrompts(p, level) {
+  const prompt = getInteractionPrompt(level);
+  if (!prompt || prompt.type !== 'box') return;
+
+  const chest = prompt.entity;
+  const tile = level.settings.baseTile;
+
+  const rw = (chest.renderW || chest.w) * tile;
+  const rh = (chest.renderH || chest.h) * tile;
+  const rx = chest.x * tile + (chest.renderOffsetX || 0) * tile;
+  const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
+
+  // Check if on top 2 rows - show prompt on right side instead of top
+  const isTopRows = chest.y < 2;
+  const centerX = isTopRows ? rx + rw + 20 : rx + rw / 2;
+  const promptY = isTopRows ? ry + rh / 2 : ry - 16;
+
+  p.push();
+  // Draw key background
+  p.noStroke();
+  p.fill(15, 23, 42, 200);
+  p.rect(centerX - 12, promptY - 14, 24, 20, 4);
+  // Draw 'E' text
+  p.fill(255, 255, 255, 240);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(12);
+  p.textStyle(p.BOLD);
+  p.text('E', centerX, isTopRows ? promptY : promptY - 4);
+  // Draw action text
+  p.textStyle(p.NORMAL);
+  p.textSize(8);
+  p.fill(255, 255, 255, 180);
+  p.text('Open', centerX, isTopRows ? promptY + 16 : promptY + 10);
   p.pop();
 }
 
@@ -322,6 +392,7 @@ function isActorOnDoorTiles(actor, door, tileSize) {
 
 
 
+// Main entity render pass: doors, chests, NPCs, player, footsteps, HUD.
 export function renderEntities(p, state) {
   const level = state.level;
   if (!level) return;
@@ -388,7 +459,7 @@ export function renderEntities(p, state) {
     const rx = chest.x * tile + (chest.renderOffsetX || 0) * tile;
     const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
     if (!camera.isRectVisible(rx, ry, rw, rh, 24)) continue;
-    drawChest(p, chest, tile);
+    drawChest(p, chest, tile, level);
   }
 
   if (camera.isRectVisible(level.player.x, level.player.y, level.player.w, level.player.h, 64)) {

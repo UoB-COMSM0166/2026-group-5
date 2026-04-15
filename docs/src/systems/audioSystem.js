@@ -1,5 +1,6 @@
 // Audio: track switching per screen state, mute toggle, user-gesture unlock.
 // Track sources and gain values intentionally mirror the reference story audio script.
+// Audio track definitions: file path, volume, and looping flag.
 const TRACK_CONFIG = Object.freeze({
   start: { src: './assets/audio/startScreen.mp3', volume: 0.3, loop: true },
   intro: { src: './assets/audio/intro.mp3', volume: 0.25, loop: true },
@@ -10,6 +11,7 @@ const TRACK_CONFIG = Object.freeze({
   true_ending: { src: './assets/audio/intro.mp3', volume: 0.28, loop: true }
 });
 
+// Mapping from screen state to the track key that should play.
 const SCREEN_TRACK_MAP = Object.freeze({
   start: 'start',
   playthrough_select: 'start',
@@ -25,12 +27,14 @@ const SCREEN_TRACK_MAP = Object.freeze({
   credits: 'true_ending'
 });
 
+// Manages background music playback, muting, and screen-based track switching.
 export class AudioSystem {
   #tracks;
   #currentKey;
   #muted;
   #unlocked;
 
+  // Initialise audio state; tracks are lazily loaded on first play.
   constructor() {
     this.#tracks = new Map();
     this.#currentKey = null;
@@ -46,6 +50,7 @@ export class AudioSystem {
     return SCREEN_TRACK_MAP[screenKey] || screenKey;
   }
 
+  // Lazily create an Audio element for a track key if not yet loaded.
   #ensureTrack(key) {
     if (!TRACK_CONFIG[key]) return null;
     if (this.#tracks.has(key)) return this.#tracks.get(key);
@@ -71,8 +76,10 @@ export class AudioSystem {
     return Math.max(0, Math.min(1, config.volume ?? 1));
   }
 
+  // Resume the browser AudioContext to satisfy autoplay policies.
   unlock() { this.#unlocked = true; }
 
+  // Stop the currently playing track and reset its position.
   stopAll() {
     for (const track of this.#tracks.values()) {
       try {
@@ -84,6 +91,7 @@ export class AudioSystem {
     this.#currentKey = null;
   }
 
+  // Switch to the appropriate track for the given screen state.
   async sync(stateKey) {
     const trackKey = this.#resolveTrackKey(stateKey);
     if (!this.#unlocked || this.#currentKey === trackKey) return;
@@ -108,6 +116,7 @@ export class AudioSystem {
     }
   }
 
+  // Toggle the muted state and update the active track volume.
   toggleMute() {
     this.#muted = !this.#muted;
     if (this.#currentKey) {
@@ -117,6 +126,7 @@ export class AudioSystem {
     return this.#muted;
   }
 
+  // Explicitly set the muted flag and update the active track volume.
   setMuted(value) {
     this.#muted = !!value;
     if (this.#currentKey) {
@@ -125,5 +135,6 @@ export class AudioSystem {
     }
   }
 
+  // Return current audio state snapshot.
   getState() { return { currentKey: this.#currentKey, muted: this.#muted, unlocked: this.#unlocked }; }
 }

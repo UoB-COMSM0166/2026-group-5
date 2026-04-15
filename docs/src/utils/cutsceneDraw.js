@@ -1,3 +1,4 @@
+// Draw an image panel with optional alpha, scale, and offset.
 export function drawPanelImage(p, img, x, y, w, opts = {}) {
   if (!img) return;
 

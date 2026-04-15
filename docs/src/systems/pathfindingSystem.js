@@ -1,6 +1,7 @@
 // A* pathfinding on tile grid with actor-width awareness.
 import { isBlockedByWorld, getEntityCollisionRect } from './collisionSystem.js';
 
+// Binary min-heap used as the open-set priority queue for A*.
 class MinHeap {
   constructor(compare) {
     this.items = [];
@@ -55,14 +56,17 @@ class MinHeap {
   }
 }
 
+// Encode a tile coordinate pair into a unique string key.
 function toKey(tx, ty) {
   return `${tx},${ty}`;
 }
 
+// Manhattan distance heuristic for A*.
 function manhattan(ax, ay, bx, by) {
   return Math.abs(ax - bx) + Math.abs(ay - by);
 }
 
+// Compute all tiles an actor would occupy if placed at tile (tx, ty).
 function getActorTiles(actor, tx, ty, tileSize) {
   const insetX = Math.max(0, actor?.collisionInsetX || 0);
   const insetY = Math.max(0, actor?.collisionInsetY || 0);
@@ -81,6 +85,7 @@ function getActorTiles(actor, tx, ty, tileSize) {
   return tiles;
 }
 
+// Get the tile coordinates of an actor's collision-rect origin.
 export function getActorTilePosition(actor, tileSize) {
   const rect = getEntityCollisionRect(actor, actor.x, actor.y);
   return {
@@ -89,6 +94,7 @@ export function getActorTilePosition(actor, tileSize) {
   };
 }
 
+// Convert a pixel position to tile coordinates.
 export function getPointTilePosition(x, y, tileSize) {
   return {
     tx: Math.floor(x / tileSize),
@@ -96,6 +102,7 @@ export function getPointTilePosition(x, y, tileSize) {
   };
 }
 
+// Check if the actor can stand at tile (tx, ty) without collision.
 export function isTileWalkableForActor(level, actor, tx, ty, tileSize = level?.settings?.baseTile || 16, options = {}) {
   const collision = level?.collision || [];
   if (!collision.length) return false;
@@ -112,6 +119,7 @@ export function isTileWalkableForActor(level, actor, tx, ty, tileSize = level?.s
   return true;
 }
 
+// A* pathfinding: returns an array of tile nodes from start to goal.
 export function findPath(level, actor, startTile, goalTile, options = {}) {
   const tileSize = options.tileSize || level?.settings?.baseTile || 16;
   const maxIterations = options.maxIterations || 5000;
@@ -198,6 +206,7 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
   return [];
 }
 
+// Convert a tile-based path to world-pixel coordinates.
 export function tilePathToWorldPath(path, tileSize) {
   return (path || []).map((node) => ({
     tx: node.tx,

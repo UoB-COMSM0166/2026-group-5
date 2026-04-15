@@ -1,3 +1,4 @@
+// Font family presets for different UI contexts.
 export const FONTS = {
   title: '"Press Start 2P", monospace',
   ui: '"Press Start 2P", monospace',
@@ -5,6 +6,7 @@ export const FONTS = {
   retro: '"Press Start 2P", monospace'
 };
 
+// Apply font family, size, and style to the p5 renderer.
 export function setFont(p, size = 16, family = FONTS.ui, style = 'normal') {
   p.textFont(family);
   p.textSize(size);

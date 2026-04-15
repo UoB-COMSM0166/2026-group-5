@@ -1,3 +1,4 @@
+// Image asset path constants for intro, false ending, and true ending cutscenes.
 export const INTRO_ASSETS = Object.freeze({
   castle: './assets/images/original/drawings/intro/1.png',
   princessWindow: './assets/images/original/drawings/intro/2-1.png',
