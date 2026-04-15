@@ -16,8 +16,6 @@ function getCanvasSize() {
   return { width: DESIGN_W, height: DESIGN_H };
 }
 
-let prevLayoutScale = null;
-
 function updateLayoutScale() {
   const layout = document.querySelector('.game-layout');
   const topbar = document.querySelector('.topbar');
@@ -38,16 +36,14 @@ function updateLayoutScale() {
 
   if (p5Instance) {
     const dpr = window.devicePixelRatio || 1;
-    const density = layoutScale > 1 ? layoutScale * dpr : dpr;
-    const densityChanged = Math.abs(p5Instance.pixelDensity() - density) > 0.01;
-    const firstRun = prevLayoutScale === null;
-
-    if (densityChanged || firstRun) {
+    const density = layoutScale * dpr;
+    if (Math.abs(p5Instance.pixelDensity() - density) > 0.01) {
       p5Instance.pixelDensity(density);
       p5Instance.resizeCanvas(DESIGN_W, DESIGN_H);
+      const cvs = document.querySelector('#game-root canvas');
+      if (cvs) { cvs.style.width = ''; cvs.style.height = ''; }
       p5Instance.noSmooth();
     }
-    prevLayoutScale = layoutScale;
   }
 }
 
@@ -60,9 +56,11 @@ new window.p5((p) => {
     const { width, height } = getCanvasSize();
     const s = getLayoutScale();
     const dpr = window.devicePixelRatio || 1;
-    p.pixelDensity(s > 1 ? s * dpr : dpr);
+    p.pixelDensity(s * dpr);
     const canvas = p.createCanvas(width, height);
     canvas.parent('game-root');
+    canvas.elt.style.width = '';
+    canvas.elt.style.height = '';
     try {
       canvas.elt.tabIndex = 0;
       canvas.elt.setAttribute('aria-label', 'game canvas');
