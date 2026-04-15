@@ -16,6 +16,8 @@ function getCanvasSize() {
   return { width: DESIGN_W, height: DESIGN_H };
 }
 
+let prevLayoutScale = null;
+
 function updateLayoutScale() {
   const layout = document.querySelector('.game-layout');
   const topbar = document.querySelector('.topbar');
@@ -28,18 +30,24 @@ function updateLayoutScale() {
   const availableWidth = window.innerWidth;
   const availableHeight = window.innerHeight - topbarHeight;
 
-  const scaleX = availableWidth / designWidth;
-  const scaleY = availableHeight / designHeight;
-  const scale = Math.min(scaleX, scaleY);
+  const sx = availableWidth / designWidth;
+  const sy = availableHeight / designHeight;
+  const layoutScale = Math.min(sx, sy);
 
-  layout.style.setProperty('--layout-scale', scale);
+  layout.style.setProperty('--layout-scale', layoutScale);
 
   if (p5Instance) {
-    const density = Math.max(1, scale);
-    if (p5Instance.pixelDensity() !== density) {
+    const dpr = window.devicePixelRatio || 1;
+    const density = layoutScale > 1 ? layoutScale * dpr : dpr;
+    const densityChanged = Math.abs(p5Instance.pixelDensity() - density) > 0.01;
+    const firstRun = prevLayoutScale === null;
+
+    if (densityChanged || firstRun) {
       p5Instance.pixelDensity(density);
+      p5Instance.resizeCanvas(DESIGN_W, DESIGN_H);
       p5Instance.noSmooth();
     }
+    prevLayoutScale = layoutScale;
   }
 }
 
@@ -51,7 +59,8 @@ new window.p5((p) => {
     p5Instance = p;
     const { width, height } = getCanvasSize();
     const s = getLayoutScale();
-    p.pixelDensity(Math.max(1, s));
+    const dpr = window.devicePixelRatio || 1;
+    p.pixelDensity(s > 1 ? s * dpr : dpr);
     const canvas = p.createCanvas(width, height);
     canvas.parent('game-root');
     try {
