@@ -248,7 +248,10 @@ export class GameCore {
         this.#setMessage(r.text, 1.2); this.#overlay.flash(s, r.kind === 'light' ? 0.12 : 0.18);
       } else if (r.text) this.#setMessage(r.text, 1);
       if (r.success && r.kind === 'exit') {
-        if (s.story.currentPlaythrough === 1) {
+        if (s.story.normalMode) {
+          this.#setScreen(SCREEN_STATES.WIN);
+          this.#setMessage('Mission complete', 1.4);
+        } else if (s.story.currentPlaythrough === 1) {
           this.#setScreen(SCREEN_STATES.FALSE_ENDING);
           this.#setMessage('A strange ending has been reached', 1.4);
         } else {

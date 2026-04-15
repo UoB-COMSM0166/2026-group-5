@@ -1,19 +1,20 @@
-// Map select screen: lets the player choose a level for the second playthrough.
+// Difficulty select screen: lets the player choose difficulty/map for normal mode.
 import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
-const ROUTE_OPTIONS = Object.freeze([
-  { label: 'LIBRARY (NORMAL)', route: 'library', levelId: 'map2' },
-  { label: 'SALON (HARD)', route: 'salon', levelId: 'map3' }
+const DIFFICULTY_OPTIONS = Object.freeze([
+  { label: 'FOYAR (EASY)', levelId: 'map1' },
+  { label: 'LIBRARY (NORMAL)', levelId: 'map2' },
+  { label: 'SALON (HARD)', levelId: 'map3' }
 ]);
 
-export class MapSelectScreen extends Screen {
+export class DifficultySelectScreen extends Screen {
   #selectedIndex;
 
   constructor() {
-    super('map_select', 'Arrow Up / Down to choose, Enter to confirm');
+    super('difficulty_select', 'Arrow Up / Down to choose, Enter to confirm');
     this.#selectedIndex = 0;
   }
 
@@ -23,24 +24,29 @@ export class MapSelectScreen extends Screen {
 
   handleKey(key, state, api) {
     if (key === 'ArrowUp') {
-      this.#selectedIndex = (this.#selectedIndex - 1 + ROUTE_OPTIONS.length) % ROUTE_OPTIONS.length;
-      api.setMessage?.(ROUTE_OPTIONS[this.#selectedIndex].label, 0.6);
+      this.#selectedIndex = (this.#selectedIndex - 1 + DIFFICULTY_OPTIONS.length) % DIFFICULTY_OPTIONS.length;
+      api.setMessage?.(DIFFICULTY_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
     if (key === 'ArrowDown') {
-      this.#selectedIndex = (this.#selectedIndex + 1) % ROUTE_OPTIONS.length;
-      api.setMessage?.(ROUTE_OPTIONS[this.#selectedIndex].label, 0.6);
+      this.#selectedIndex = (this.#selectedIndex + 1) % DIFFICULTY_OPTIONS.length;
+      api.setMessage?.(DIFFICULTY_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
     if (key === 'Enter') {
-      const option = ROUTE_OPTIONS[this.#selectedIndex];
-      state.story.selectedRoute = option.route;
+      const option = DIFFICULTY_OPTIONS[this.#selectedIndex];
+      state.story.normalMode = true;
       api.loadStoryLevel?.(option.levelId);
       api.markMissionStart?.();
       api.setScreen?.(SCREEN_STATES.PLAYING);
       api.setMessage?.(`${option.label} selected`, 1.0);
+      return true;
+    }
+
+    if (key === 'Escape' || key === 'Backspace') {
+      api.setScreen?.(SCREEN_STATES.START);
       return true;
     }
 
@@ -75,17 +81,17 @@ export class MapSelectScreen extends Screen {
 
     setFont(p, Math.max(16, sx(24, layout)), FONTS.title, 'bold');
     p.fill('#ff4f8d');
-    p.text('SELECT MAP', layout.width / 2 + sx(3, layout), sy(95, layout) + sy(3, layout));
+    p.text('SELECT DIFFICULTY', layout.width / 2 + sx(3, layout), sy(95, layout) + sy(3, layout));
     p.fill('#24327c');
-    p.text('SELECT MAP', layout.width / 2, sy(95, layout));
+    p.text('SELECT DIFFICULTY', layout.width / 2, sy(95, layout));
 
     p.fill('#fff4d6');
     setFont(p, Math.max(10, sx(11, layout)), FONTS.ui);
-    p.text('Choose where the second playthrough will continue.', layout.width / 2, sy(145, layout));
+    p.text('Choose your challenge level.', layout.width / 2, sy(145, layout));
 
     p.fill('#2a1730');
     setFont(p, Math.max(10, sx(10, layout)), FONTS.ui);
-    p.text(state.story?.currentPlaythrough === 2 ? 'Second Playthrough' : 'Story Route', layout.width / 2, sy(175, layout));
+    p.text('Press Escape to return', layout.width / 2, sy(175, layout));
     p.pop();
   }
 
@@ -117,15 +123,15 @@ export class MapSelectScreen extends Screen {
   }
 
   #drawMenuButtons(p, layout) {
-    const w = sx(260, layout);
+    const w = sx(420, layout);
     const h = sy(58, layout);
     const gap = sy(24, layout);
-    const totalH = ROUTE_OPTIONS.length * h + (ROUTE_OPTIONS.length - 1) * gap;
+    const totalH = DIFFICULTY_OPTIONS.length * h + (DIFFICULTY_OPTIONS.length - 1) * gap;
     const startX = layout.offsetX + (layout.width - w) / 2;
     const startY = centerGroupY(0, totalH, layout) + sy(35, layout);
 
-    for (let i = 0; i < ROUTE_OPTIONS.length; i += 1) {
-      const option = ROUTE_OPTIONS[i];
+    for (let i = 0; i < DIFFICULTY_OPTIONS.length; i += 1) {
+      const option = DIFFICULTY_OPTIONS[i];
       const y = startY + i * (h + gap);
       this.#drawButton(p, startX, y, w, h, option.label, i === this.#selectedIndex, layout);
     }

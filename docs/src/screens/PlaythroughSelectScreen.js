@@ -19,6 +19,16 @@ export class PlaythroughSelectScreen extends Screen {
   handleKey(key, state, api) {
     const options = this.#getOptions(state);
 
+    if (key === 'e' || key === 'E') {
+      if (!state.story?.secondPlaythroughUnlocked) {
+        state.story.secondPlaythroughUnlocked = true;
+        api.setMessage?.('Second playthrough unlocked', 1.2);
+      } else {
+        api.setMessage?.('Already unlocked', 0.8);
+      }
+      return true;
+    }
+
     if (key === 'ArrowUp') {
       this.#selectedIndex = (this.#selectedIndex - 1 + options.length) % options.length;
       api.setMessage?.(options[this.#selectedIndex].label, 0.6);
@@ -45,6 +55,21 @@ export class PlaythroughSelectScreen extends Screen {
     return false;
   }
 
+  handleMouse(mouseX, mouseY, p, state, api) {
+    const layout = getLayout(p);
+    const btn = this.#getSkipButtonRect(layout);
+    if (mouseX >= btn.x && mouseX <= btn.x + btn.w && mouseY >= btn.y && mouseY <= btn.y + btn.h) {
+      if (!state.story?.secondPlaythroughUnlocked) {
+        state.story.secondPlaythroughUnlocked = true;
+        api.setMessage?.('Second playthrough unlocked', 1.2);
+      } else {
+        api.setMessage?.('Already unlocked', 0.8);
+      }
+      return true;
+    }
+    return false;
+  }
+
   render(p, state) {
     const t = p.millis() * 0.001;
     const layout = getLayout(p);
@@ -54,6 +79,7 @@ export class PlaythroughSelectScreen extends Screen {
     this.#drawFloatingShapes(p, t, layout);
     this.#drawHeader(p, layout, state);
     this.#drawMenuButtons(p, layout, options);
+    this.#drawSkipButton(p, layout, state);
 
     const selected = options[this.#selectedIndex];
     state.prompt = selected?.enabled
@@ -66,7 +92,7 @@ export class PlaythroughSelectScreen extends Screen {
 
     return [
       {
-        label: 'FIRST PLAYTHROUGH',
+        label: 'FIRST PLAYTHROUGH (EASY)',
         enabled: true,
         action: (storyState, api) => {
           storyState.story.currentPlaythrough = 1;
@@ -151,7 +177,7 @@ export class PlaythroughSelectScreen extends Screen {
   }
 
   #drawMenuButtons(p, layout, options) {
-    const w = sx(320, layout);
+    const w = sx(420, layout);
     const h = sy(58, layout);
     const gap = sy(24, layout);
     const totalH = options.length * h + (options.length - 1) * gap;
@@ -163,6 +189,39 @@ export class PlaythroughSelectScreen extends Screen {
       const y = startY + i * (h + gap);
       this.#drawButton(p, startX, y, w, h, option.label, i === this.#selectedIndex, option.enabled, layout);
     }
+  }
+
+  #getSkipButtonRect(layout) {
+    const w = sx(110, layout);
+    const h = sy(36, layout);
+    const x = layout.offsetX + layout.width - w - sx(80, layout);
+    const y = layout.offsetY + sy(20, layout);
+    return { x, y, w, h };
+  }
+
+  #drawSkipButton(p, layout, state) {
+    const btn = this.#getSkipButtonRect(layout);
+    const unlocked = state.story?.secondPlaythroughUnlocked;
+    p.push();
+    p.noStroke();
+    p.fill('#24152a');
+    p.rect(btn.x + sx(3, layout), btn.y + sy(3, layout), btn.w, btn.h, sx(10, layout));
+    p.fill(unlocked ? '#5c4850' : '#e73b6e');
+    p.rect(btn.x, btn.y, btn.w, btn.h, sx(10, layout));
+    p.noStroke();
+    p.fill(unlocked ? '#ead7c2' : '#fff4d6');
+    p.textAlign(p.CENTER, p.CENTER);
+    setFont(p, Math.max(10, sx(14, layout)), FONTS.ui, 'bold');
+    const text = unlocked ? 'UNLOCKED' : 'SKIP (E)';
+    p.text(text, btn.x + btn.w / 2, btn.y + btn.h / 2 + sy(1, layout));
+
+    // Description below button in faint color
+    if (!unlocked) {
+      p.fill('#8f6b78');
+      setFont(p, Math.max(8, sx(9, layout)), FONTS.ui);
+      p.text('Press if you have played Easy', btn.x + btn.w / 2, btn.y + btn.h + sy(14, layout));
+    }
+    p.pop();
   }
 
   #drawButton(p, x, y, w, h, text, selected, enabled, layout) {

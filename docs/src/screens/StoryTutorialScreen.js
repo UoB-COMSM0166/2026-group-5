@@ -3,6 +3,7 @@ import { Screen } from './Screen.js';
 import { getImage } from '../core/assetLoader.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy } from '../utils/screenLayout.js';
+import { SCREEN_STATES } from '../core/gameState.js';
 
 const TUTORIAL_PAGES = Object.freeze([
   './assets/images/gif/ASDW.gif',
@@ -21,7 +22,7 @@ export class TutorialScreen extends Screen {
   #turning;
 
   constructor() {
-    super('tutorial', 'Press ← → to flip pages, Enter to skip');
+    super('tutorial', 'Press ← → to flip pages');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
@@ -56,15 +57,14 @@ export class TutorialScreen extends Screen {
     if (key === 'ArrowRight') {
       if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
         this.#startTurn(1);
-      } else {
-        api.restartCurrentStoryRun?.();
-        api.setMessage?.('Mission started', 1.2);
       }
       return true;
     }
     if (key === 'Enter') {
-      api.restartCurrentStoryRun?.();
-      api.setMessage?.('Mission started', 1.2);
+      return true;
+    }
+    if (key === 'Escape') {
+      api.setScreen?.(SCREEN_STATES.PAUSE);
       return true;
     }
     return false;
@@ -93,9 +93,6 @@ export class TutorialScreen extends Screen {
       if (x >= rightBtnX && x <= rightBtnX + btnSize) {
         if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
           this.#startTurn(1);
-        } else {
-          api.restartCurrentStoryRun?.();
-          api.setMessage?.('Mission started', 1.2);
         }
         return true;
       }
@@ -142,15 +139,15 @@ export class TutorialScreen extends Screen {
     p.noStroke();
     p.text(
       this.#pageIndex === TUTORIAL_PAGES.length - 1
-        ? 'Press → or Enter to start'
-        : 'Press ← → to flip pages, Enter to skip',
+        ? 'Press ESC to open menu'
+        : 'Press ← → to flip pages',
       layout.width / 2,
       tutorialY + tutorialH + sy(25, layout)
     );
     p.pop();
 
     state.prompt = this.#pageIndex === TUTORIAL_PAGES.length - 1
-      ? 'Press → or Enter to start'
+      ? 'Press ESC to open menu'
       : this.promptText;
   }
 

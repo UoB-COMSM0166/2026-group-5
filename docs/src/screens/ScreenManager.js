@@ -4,6 +4,7 @@ import { IntroScreen } from './StoryIntroScreen.js';
 import { TutorialScreen } from './StoryTutorialScreen.js';
 import { PlaythroughSelectScreen } from './PlaythroughSelectScreen.js';
 import { MapSelectScreen } from './MapSelectScreen.js';
+import { DifficultySelectScreen } from './DifficultySelectScreen.js';
 import { PlayingScreen } from './PlayingScreen.js';
 import { PauseScreen } from './PauseScreen.js';
 import { FalseEndingScreen } from './FalseEndingScreen.js';
@@ -21,6 +22,7 @@ export class ScreenManager {
     this.#screens = {
       start: new StartScreen(),
       playthrough_select: new PlaythroughSelectScreen(),
+      difficulty_select: new DifficultySelectScreen(),
       intro: new IntroScreen(),
       tutorial: new TutorialScreen(),
       map_select: new MapSelectScreen(),

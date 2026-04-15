@@ -5,6 +5,7 @@ import { Inventory } from '../systems/lootTable.js';
 export const SCREEN_STATES = Object.freeze({
   START: 'start',
   PLAYTHROUGH_SELECT: 'playthrough_select',
+  DIFFICULTY_SELECT: 'difficulty_select',
   INTRO: 'intro',
   TUTORIAL: 'tutorial',
   MAP_SELECT: 'map_select',

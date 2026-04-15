@@ -16,6 +16,17 @@ function getCanvasSize() {
   return { width: DESIGN_W, height: DESIGN_H };
 }
 
+let debugScaleInfo = {};
+let showScaleDebug = false;
+
+function applyCanvasDensity(density) {
+  p5Instance.pixelDensity(density);
+  p5Instance.resizeCanvas(DESIGN_W, DESIGN_H);
+  const cvs = document.querySelector('#game-root canvas');
+  if (cvs) { cvs.style.width = ''; cvs.style.height = ''; }
+  p5Instance.noSmooth();
+}
+
 function updateLayoutScale() {
   const layout = document.querySelector('.game-layout');
   const topbar = document.querySelector('.topbar');
@@ -37,12 +48,27 @@ function updateLayoutScale() {
   if (p5Instance) {
     const dpr = window.devicePixelRatio || 1;
     const density = layoutScale * dpr;
-    if (Math.abs(p5Instance.pixelDensity() - density) > 0.01) {
-      p5Instance.pixelDensity(density);
-      p5Instance.resizeCanvas(DESIGN_W, DESIGN_H);
-      const cvs = document.querySelector('#game-root canvas');
-      if (cvs) { cvs.style.width = ''; cvs.style.height = ''; }
-      p5Instance.noSmooth();
+    const cvs = document.querySelector('#game-root canvas');
+    const oldDensity = p5Instance.pixelDensity();
+
+    debugScaleInfo = {
+      layoutScale: layoutScale.toFixed(4),
+      dpr: dpr.toFixed(2),
+      density: density.toFixed(4),
+      oldDensity: oldDensity.toFixed(4),
+      logicalSize: `${p5Instance.width}x${p5Instance.height}`,
+      bufferSize: cvs ? `${cvs.width}x${cvs.height}` : 'N/A',
+      cssSize: cvs ? `${cvs.clientWidth}x${cvs.clientHeight}` : 'N/A',
+      innerWindow: `${window.innerWidth}x${window.innerHeight}`,
+      topbarH: topbarHeight,
+    };
+    console.log('[SCALE DEBUG]', debugScaleInfo);
+
+    if (Math.abs(oldDensity - density) > 0.01) {
+      applyCanvasDensity(density);
+      debugScaleInfo.bufferSize = cvs ? `${cvs.width}x${cvs.height}` : 'N/A';
+      debugScaleInfo.cssSize = cvs ? `${cvs.clientWidth}x${cvs.clientHeight}` : 'N/A';
+      console.log('[SCALE DEBUG] after resize:', debugScaleInfo);
     }
   }
 }
@@ -74,6 +100,20 @@ new window.p5((p) => {
     }
     game.setup();
     game.onResize?.(p.width, p.height);
+
+    // Nudge: force browser reflow/recomposite to fix stale canvas rendering.
+    // Temporarily shift layout scale, wait one frame, then restore.
+    setTimeout(() => {
+      const layout = document.querySelector('.game-layout');
+      if (!layout) return;
+      const real = getLayoutScale();
+      layout.style.setProperty('--layout-scale', real * 0.99);
+      layout.offsetHeight; // force synchronous reflow
+      requestAnimationFrame(() => {
+        layout.style.setProperty('--layout-scale', real);
+        requestAnimationFrame(() => updateLayoutScale());
+      });
+    }, 200);
   };
 
   p.draw = () => {
@@ -81,10 +121,48 @@ new window.p5((p) => {
     const dt = Math.min(0.05, p.deltaTime / 1000 || 0.016);
     game.update(dt);
     game.render(p);
+
+    if (showScaleDebug) {
+      const cvs = document.querySelector('#game-root canvas');
+      const info = [
+        `layoutScale: ${debugScaleInfo.layoutScale}`,
+        `dpr: ${debugScaleInfo.dpr}`,
+        `pixelDensity: ${p.pixelDensity().toFixed(4)}`,
+        `p.width x p.height: ${p.width}x${p.height}`,
+        `buffer (canvas.width x height): ${cvs ? cvs.width : '?'}x${cvs ? cvs.height : '?'}`,
+        `css (clientW x clientH): ${cvs ? cvs.clientWidth : '?'}x${cvs ? cvs.clientHeight : '?'}`,
+        `window.inner: ${window.innerWidth}x${window.innerHeight}`,
+        `expected buffer: ${Math.round(DESIGN_W * p.pixelDensity())}x${Math.round(DESIGN_H * p.pixelDensity())}`,
+        `ratio buf/css: ${cvs ? (cvs.width / cvs.clientWidth).toFixed(3) : '?'}`,
+        `F8 = force refresh | F9 = toggle this`,
+      ];
+      p.push();
+      p.resetMatrix();
+      p.noStroke();
+      p.fill(0, 0, 0, 180);
+      p.rect(4, 4, 380, info.length * 16 + 8, 6);
+      p.fill(0, 255, 100);
+      p.textSize(12);
+      p.textAlign(p.LEFT, p.TOP);
+      p.textFont('monospace');
+      info.forEach((line, i) => p.text(line, 10, 10 + i * 16));
+      p.pop();
+    }
   };
 
   p.keyPressed = (event) => {
     if (event) event.preventDefault?.();
+    if (p.keyCode === 120) { // F9
+      showScaleDebug = !showScaleDebug;
+      return false;
+    }
+    if (p.keyCode === 119) { // F8
+      console.log('[SCALE DEBUG] F8 forced refresh');
+      const dpr2 = window.devicePixelRatio || 1;
+      const s2 = getLayoutScale();
+      applyCanvasDensity(s2 * dpr2);
+      return false;
+    }
     game.onKeyPressed?.(p.key, p.keyCode);
     return false;
   };

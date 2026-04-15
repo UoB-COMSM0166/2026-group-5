@@ -16,7 +16,7 @@ export class StartScreen extends Screen {
     super('start', 'Arrow Up / Down to choose, Enter to confirm');
     this.#menu = {
       selectedIndex: 0,
-      options: ['START GAME', 'LOAD GAME', 'TUTORIAL']
+      options: ['STORY MODE', 'NORMAL MODE', 'TUTORIAL']
     };
   }
 
@@ -40,8 +40,10 @@ export class StartScreen extends Screen {
 
     if (key === 'Enter') {
       const option = this.#menu.options[this.#menu.selectedIndex];
-      if (option === 'START GAME') {
+      if (option === 'STORY MODE') {
         api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+      } else if (option === 'NORMAL MODE') {
+        api.setScreen?.(SCREEN_STATES.DIFFICULTY_SELECT);
       } else if (option === 'TUTORIAL') {
         state.story.currentPlaythrough = 1;
         state.story.selectedRoute = null;
