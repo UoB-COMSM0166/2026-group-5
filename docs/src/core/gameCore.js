@@ -220,7 +220,7 @@ export class GameCore {
     const s = this.#state;
     s.dt = deltaTime;
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
-    this.#overlay.update(s, deltaTime);
+    this.#overlay.update(s, deltaTime, this.#getApi());
     if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
     if (s.screen !== SCREEN_STATES.PLAYING) { this.#syncHud(); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
@@ -302,7 +302,13 @@ export class GameCore {
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();
   }
 
-  onKeyReleased(key, keyCode) { this.#input.onKeyReleased(key, keyCode); }
+  onKeyReleased(key, keyCode) {
+    this.#input.onKeyReleased(key, keyCode);
+    // Forward to screen manager for screens that need key release (e.g., tutorial skip)
+    if (this.#state.screen !== SCREEN_STATES.PLAYING) {
+      this.#overlay.screenManager.handleKeyUp(this.#state.screen, key, this.#state, this.#getApi());
+    }
+  }
   onWindowBlur() { this.#input.reset?.(); if (this.#state.screen === SCREEN_STATES.PLAYING) this.#setMessage('Input reset', 0.6); this.#syncHud(); }
   onDomKeyDown(key, code) { this.#input.onDomKeyDown?.(key, code); }
   onDomKeyUp(key, code) { this.#input.onDomKeyUp?.(key, code); }

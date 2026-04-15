@@ -20,13 +20,18 @@ export class TutorialScreen extends Screen {
   #turnDir;
   #turnT;
   #turning;
+  #eKeyTimer;
+  #eKeyHolding;
+  static SKIP_HOLD_TIME = 0.8; // seconds to hold E to skip
 
   constructor() {
-    super('tutorial', 'Press ← → to flip pages');
+    super('tutorial', 'Press ← → to flip pages, hold E to skip');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
     this.#turning = false;
+    this.#eKeyTimer = 0;
+    this.#eKeyHolding = false;
   }
 
   reset() {
@@ -34,22 +39,51 @@ export class TutorialScreen extends Screen {
     this.#turnDir = 0;
     this.#turnT = 0;
     this.#turning = false;
+    this.#eKeyTimer = 0;
+    this.#eKeyHolding = false;
   }
 
-  update(state, deltaTime) {
-    if (!this.#turning) return;
-    this.#turnT += deltaTime * 4.5;
-    if (this.#turnT >= 1) {
-      this.#turnT = 0;
-      this.#turning = false;
-      this.#pageIndex += this.#turnDir;
-      if (this.#pageIndex < 0) this.#pageIndex = 0;
-      if (this.#pageIndex > TUTORIAL_PAGES.length - 1) this.#pageIndex = TUTORIAL_PAGES.length - 1;
+  update(state, deltaTime, api) {
+    // Handle page turning animation
+    if (this.#turning) {
+      this.#turnT += deltaTime * 4.5;
+      if (this.#turnT >= 1) {
+        this.#turnT = 0;
+        this.#turning = false;
+        this.#pageIndex += this.#turnDir;
+        if (this.#pageIndex < 0) this.#pageIndex = 0;
+        if (this.#pageIndex > TUTORIAL_PAGES.length - 1) this.#pageIndex = TUTORIAL_PAGES.length - 1;
+      }
+      return;
+    }
+
+    // Handle long press E to skip
+    if (this.#eKeyHolding) {
+      this.#eKeyTimer += deltaTime;
+      if (this.#eKeyTimer >= TutorialScreen.SKIP_HOLD_TIME) {
+        // Skip tutorial - directly to playthrough select in story mode
+        this.#eKeyHolding = false;
+        this.#eKeyTimer = 0;
+        if (state.story?.fromStoryMode && api) {
+          state.story.fromStoryMode = false;
+          api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+        }
+      }
     }
   }
 
   handleKey(key, state, api) {
     if (this.#turning) return true;
+
+    // Handle E key press/release for skip (ignore key repeat)
+    if (key === 'e' || key === 'E') {
+      if (!this.#eKeyHolding) {
+        this.#eKeyHolding = true;
+        this.#eKeyTimer = 0;
+      }
+      return true;
+    }
+
     if (key === 'ArrowLeft' && this.#pageIndex > 0) {
       this.#startTurn(-1);
       return true;
@@ -61,6 +95,11 @@ export class TutorialScreen extends Screen {
       return true;
     }
     if (key === 'Enter') {
+      // On last page, Enter goes to playthrough select if from story mode
+      if (this.#pageIndex === TUTORIAL_PAGES.length - 1 && state.story?.fromStoryMode) {
+        state.story.fromStoryMode = false;
+        api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+      }
       return true;
     }
     if (key === 'Escape') {
@@ -68,6 +107,13 @@ export class TutorialScreen extends Screen {
       return true;
     }
     return false;
+  }
+
+  onKeyUp(key, state, api) {
+    if (key === 'e' || key === 'E') {
+      this.#eKeyHolding = false;
+      this.#eKeyTimer = 0;
+    }
   }
 
   handleMouse(mouseX, mouseY, p, state, api) {
@@ -132,23 +178,28 @@ export class TutorialScreen extends Screen {
     this.#drawPageContent(p, pageImg, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawNavButtons(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawPageIndicator(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
+    this.#drawSkipProgress(p, tutorialX, tutorialY, tutorialH, layout);
+
+    // Determine bottom text based on page and mode
+    let bottomText;
+    const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
+    const fromStory = state.story?.fromStoryMode;
+    if (isLastPage && fromStory) {
+      bottomText = 'Press Enter to continue';
+    } else if (isLastPage) {
+      bottomText = 'Press ESC to open menu';
+    } else {
+      bottomText = 'Press ← → to flip pages, hold E to skip';
+    }
 
     p.fill('#a0a0a0');
     setFont(p, Math.max(10, sx(11, layout)), FONTS.ui);
     p.textAlign(p.CENTER, p.CENTER);
     p.noStroke();
-    p.text(
-      this.#pageIndex === TUTORIAL_PAGES.length - 1
-        ? 'Press ESC to open menu'
-        : 'Press ← → to flip pages',
-      layout.width / 2,
-      tutorialY + tutorialH + sy(25, layout)
-    );
+    p.text(bottomText, layout.width / 2, tutorialY + tutorialH + sy(25, layout));
     p.pop();
 
-    state.prompt = this.#pageIndex === TUTORIAL_PAGES.length - 1
-      ? 'Press ESC to open menu'
-      : this.promptText;
+    state.prompt = bottomText;
   }
 
   #drawPageContent(p, pageImg, x, y, w, h, layout) {
@@ -217,5 +268,21 @@ export class TutorialScreen extends Screen {
       p.fill(i === this.#pageIndex ? '#f5c443' : '#4a5568');
       p.circle(startX + i * (dotSize + dotGap) + dotSize / 2, dotY, dotSize);
     }
+  }
+
+  #drawSkipProgress(p, x, y, h, layout) {
+    if (!this.#eKeyHolding || this.#pageIndex === TUTORIAL_PAGES.length - 1) return;
+
+    const progress = Math.min(this.#eKeyTimer / TutorialScreen.SKIP_HOLD_TIME, 1);
+    const barW = sx(120, layout);
+    const barH = sy(4, layout);
+    const barX = x + (sx(760, layout) - barW) / 2;
+    const barY = y + h + sy(8, layout);
+
+    p.noStroke();
+    p.fill('#2d3748');
+    p.rect(barX, barY, barW, barH, 2);
+    p.fill('#e73b6e');
+    p.rect(barX, barY, barW * progress, barH, 2);
   }
 }

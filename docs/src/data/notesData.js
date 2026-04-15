@@ -19,38 +19,25 @@ const BASE_NOTES = Object.freeze([
     id: 'note_4',
     title: 'Burned Letter',
     body: 'If this reaches anyone, do not trust appearances. The rescue story is too neat. Too clean. Something was wrong long before the dragon came.'
+  },
+  {
+    id: 'note_5',
+    title: 'Strange Entry',
+    body: 'A recovered page mentions the throne room power source pulsing whenever the princess is alone with it.'
+  },
+  {
+    id: 'note_6',
+    title: 'Hidden Warning',
+    body: 'This note warns the guards to follow the rescue script exactly and never speak about the chained beast.'
   }
-]);
-
-// Procedurally assigned note bodies for dynamically numbered notes.
-const GENERATED_BODIES = Object.freeze([
-  'A recovered page mentions the throne room power source pulsing whenever the princess is alone with it.',
-  'This note warns the guards to follow the rescue script exactly and never speak about the chained beast.',
-  'Someone scribbled that the dragon looked terrified, not furious, when the alarms began.',
-  'A margin comment reads: If the knight arrives, do not let him see the lower chamber.',
-  'The page describes court officials rehearsing a version of events before anyone went missing.',
-  'A torn memo says the kingdom is safer when the monster remains visible and the machinery remains hidden.'
 ]);
 
 // Fast lookup table for base notes by id.
 const NOTE_LOOKUP = new Map(BASE_NOTES.map((note) => [note.id, note]));
 
-// Create a generated note when the id is not in BASE_NOTES.
-function makeGeneratedNote(noteId) {
-  const match = String(noteId || '').match(/(\d+)$/);
-  const index = match ? Number(match[1]) : 0;
-  if (!index) return null;
-
-  return {
-    id: noteId,
-    title: `Recovered Log ${index}`,
-    body: GENERATED_BODIES[(index - 1) % GENERATED_BODIES.length]
-  };
-}
-
-// Retrieve a single note by id (base or generated).
+// Retrieve a single note by id.
 export function getNoteById(noteId) {
-  return NOTE_LOOKUP.get(noteId) || makeGeneratedNote(noteId);
+  return NOTE_LOOKUP.get(noteId) || null;
 }
 
 // Retrieve multiple notes by an array of ids.

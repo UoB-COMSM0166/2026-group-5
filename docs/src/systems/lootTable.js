@@ -14,7 +14,7 @@ const MAP_LOOT = Object.freeze({
     chest_4: { type: 'key', keyId: 'key_B' },
     chest_5: 'note',
     chest_6: 'note',
-    chest_7: { type: 'key', keyId: 'key_C' },
+    chest_7: 'note',
     chest_8: 'note'
   }),
   map2: Object.freeze({
@@ -50,23 +50,24 @@ const NOTE_IDS_BY_CHEST = Object.freeze({
     chest_3: 'note_2',
     chest_5: 'note_3',
     chest_6: 'note_4',
-    chest_8: 'note_5'
+    chest_7: 'note_5',
+    chest_8: 'note_6'
   }),
   map2: Object.freeze({
-    'chest-2-2': 'note_6',
-    'chest-2-3': 'note_7',
-    'chest-2-5': 'note_8',
-    'chest-2-6': 'note_9',
-    'chest-2-8': 'note_10',
-    'chest-2-10': 'note_11'
+    'chest-2-2': 'note_1',
+    'chest-2-3': 'note_2',
+    'chest-2-5': 'note_3',
+    'chest-2-6': 'note_4',
+    'chest-2-8': 'note_5',
+    'chest-2-10': 'note_6'
   }),
   map3: Object.freeze({
-    'chest-3-1': 'note_12',
-    'chest-3-3': 'note_13',
-    'chest-3-5': 'note_14',
-    'chest-3-6': 'note_15',
-    'chest-3-8': 'note_16',
-    'chest-3-10': 'note_17'
+    'chest-3-1': 'note_1',
+    'chest-3-3': 'note_2',
+    'chest-3-5': 'note_3',
+    'chest-3-6': 'note_4',
+    'chest-3-8': 'note_5',
+    'chest-3-10': 'note_6'
   })
 });
 

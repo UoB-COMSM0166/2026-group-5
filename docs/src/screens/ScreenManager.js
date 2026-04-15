@@ -49,9 +49,9 @@ export class ScreenManager {
   }
 
   // Tick the active screen's per-frame logic.
-  update(screenName, state, deltaTime) {
+  update(screenName, state, deltaTime, api) {
     const screen = this.#screens[screenName];
-    if (screen && screen.update) screen.update(state, deltaTime);
+    if (screen && screen.update) screen.update(state, deltaTime, api);
   }
 
   // Draw the active screen.
@@ -71,6 +71,13 @@ export class ScreenManager {
   handleMouse(screenName, mouseX, mouseY, p, state, api) {
     const screen = this.#screens[screenName];
     if (screen && screen.handleMouse) return screen.handleMouse(mouseX, mouseY, p, state, api);
+    return false;
+  }
+
+  // Forward a key release event to the active screen.
+  handleKeyUp(screenName, key, state, api) {
+    const screen = this.#screens[screenName];
+    if (screen && screen.onKeyUp) return screen.onKeyUp(key, state, api);
     return false;
   }
 

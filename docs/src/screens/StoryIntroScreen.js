@@ -113,8 +113,8 @@ export class IntroScreen extends Screen {
       return;
     }
 
-    api.setScreen?.(SCREEN_STATES.TUTORIAL);
-    api.setMessage?.('Opening tutorial...', 1.0);
+    api.setScreen?.(SCREEN_STATES.PLAYING);
+    api.setMessage?.('Mission start', 1.0);
   }
 }
 

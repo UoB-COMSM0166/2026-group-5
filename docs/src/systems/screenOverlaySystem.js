@@ -14,7 +14,7 @@ export class ScreenOverlaySystem {
   get screenManager() { return this.#screenManager; }
 
   // Advance overlay fade, message timer, flash decay, and delegate to ScreenManager.
-  update(state, deltaTime) {
+  update(state, deltaTime, api) {
     const targetAlpha = state.screen === 'playing' ? 0 : 0.18;
     state.ui.overlayAlpha += (targetAlpha - state.ui.overlayAlpha) * Math.min(1, deltaTime * 6);
     if (state.ui.messageTimer > 0) {
@@ -22,7 +22,7 @@ export class ScreenOverlaySystem {
       if (state.ui.messageTimer === 0) state.ui.message = '';
     }
     state.ui.flashAlpha = Math.max(0, state.ui.flashAlpha - deltaTime * 1.8);
-    this.#screenManager.update(state.screen, state, deltaTime);
+    this.#screenManager.update(state.screen, state, deltaTime, api);
   }
 
   // Trigger a white flash overlay.

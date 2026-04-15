@@ -41,14 +41,13 @@ export class StartScreen extends Screen {
     if (key === 'Enter') {
       const option = this.#menu.options[this.#menu.selectedIndex];
       if (option === 'STORY MODE') {
-        api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+        state.story.fromStoryMode = true;
+        api.setScreen?.(SCREEN_STATES.TUTORIAL);
+        api.setMessage?.('Tutorial opened', 0.8);
       } else if (option === 'NORMAL MODE') {
         api.setScreen?.(SCREEN_STATES.DIFFICULTY_SELECT);
       } else if (option === 'TUTORIAL') {
-        state.story.currentPlaythrough = 1;
-        state.story.selectedRoute = null;
-        state.story.introVariant = 'first';
-        api.loadStoryLevel?.('map1');
+        state.story.fromStoryMode = false;
         api.setScreen?.(SCREEN_STATES.TUTORIAL);
         api.setMessage?.('Tutorial opened', 0.8);
       } else {

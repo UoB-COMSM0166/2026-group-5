@@ -5,7 +5,7 @@ import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
 const DIFFICULTY_OPTIONS = Object.freeze([
-  { label: 'FOYAR (EASY)', levelId: 'map1' },
+  { label: 'FOYER (EASY)', levelId: 'map1' },
   { label: 'LIBRARY (NORMAL)', levelId: 'map2' },
   { label: 'SALON (HARD)', levelId: 'map3' }
 ]);
