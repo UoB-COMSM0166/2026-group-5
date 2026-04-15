@@ -364,6 +364,7 @@ export class PauseScreen extends Screen {
     p.stroke(selected ? '#fff4d6' : '#6b4d37');
     p.strokeWeight(selected ? sx(4, layout) : sx(2, layout));
     p.rect(x, y, w, h, sx(12, layout));
+    p.noStroke();
     p.fill(selected ? '#fff4d6' : '#4b2f24');
     setFont(p, Math.max(10, sx(12, layout)), FONTS.ui, selected ? 'bold' : 'normal');
     p.textAlign(p.LEFT, p.CENTER);
