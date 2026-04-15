@@ -77,13 +77,14 @@ button:hover { filter: brightness(1.08); }
 
 
 .game-layout {
+  --s: var(--layout-scale, 1);
   display: grid;
   grid-template-columns: 960px 260px;
   grid-template-rows: 640px;
   gap: 16px;
   padding: 16px;
   position: relative;
-  transform: scale(var(--layout-scale, 1));
+  transform: scale(var(--s));
   transform-origin: top center;
 }
 
@@ -96,7 +97,11 @@ button:hover { filter: brightness(1.08); }
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.08);
 }
-#game-root canvas { display: block; width: 960px; height: 640px; }
+#game-root canvas {
+  display: block;
+  width: 960px;
+  height: 640px;
+}
 
 .hud-panel {
   position: relative;

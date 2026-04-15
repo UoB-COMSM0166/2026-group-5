@@ -12,6 +12,7 @@ import { AudioSystem } from '../systems/audioSystem.js';
 import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { Camera } from '../systems/cameraSystem.js';
 import { Inventory, collectLoot, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
+import { spawnLootPopup, clearLootPopups } from '../systems/lootPopup.js';
 
 // Main game controller: owns state, input, audio, overlay, and orchestrates the game loop.
 export class GameCore {
@@ -61,6 +62,7 @@ export class GameCore {
 
   // Instantiate a Level from the map registry and reset camera, meta, and inventory.
   #loadLevel(levelId) {
+    clearLootPopups();
     const config = getMap(levelId);
     if (!config) throw new Error(`Unknown level: ${levelId}`);
     const s = this.#state;
@@ -216,6 +218,7 @@ export class GameCore {
   // Main per-frame update: advance screen time, update systems, check win/lose.
   update(deltaTime) {
     const s = this.#state;
+    s.dt = deltaTime;
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
     this.#overlay.update(s, deltaTime);
     if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
@@ -260,7 +263,13 @@ export class GameCore {
       if (r.success && r.kind === 'door') this.#setMessage(r.text, 1);
       if (r.success && r.kind === 'box') {
         const loot = collectLoot(s.inventory, r.entity.id, s.levelId);
-        if (loot) this.#setMessage(`Found: ${loot.label}`, 1.5);
+        if (loot) {
+          const tile = s.level.settings.baseTile;
+          const bx = r.entity.x * tile + ((r.entity.renderOffsetX || 0) + (r.entity.renderW || r.entity.w) / 2) * tile;
+          const by = r.entity.y * tile + (r.entity.renderOffsetY || 0) * tile;
+          spawnLootPopup(loot.id, bx, by, tile);
+          this.#setMessage(`Found: ${loot.label}`, 1.5);
+        }
         s.meta.collected = s.level.boxSystem.boxes.filter(b => b.opened).length;
         if (s.meta.collected >= s.meta.target && s.meta.target > 0 && !s.level.missionSystem.isUnlocked()) {
           s.level.missionSystem.unlock(); s.meta.objective = s.level.missionSystem.getObjectiveText(s.meta.collected, s.meta.target);

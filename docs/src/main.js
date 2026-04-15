@@ -2,20 +2,27 @@
 import { createGameCore } from './core/gameCore.js';
 
 const game = createGameCore({ initialLevel: 'map1' });
+let p5Instance = null;
 
-function getCanvasSize() {
-  return { width: 960, height: 640 };
+const DESIGN_W = 960;
+const DESIGN_H = 640;
+
+function getLayoutScale() {
+  const layout = document.querySelector('.game-layout');
+  return parseFloat(layout?.style.getPropertyValue('--layout-scale')) || 1;
 }
 
-// Whole-layout scaling - game + HUD + stamina scale as one unit like a PNG
+function getCanvasSize() {
+  return { width: DESIGN_W, height: DESIGN_H };
+}
+
 function updateLayoutScale() {
   const layout = document.querySelector('.game-layout');
   const topbar = document.querySelector('.topbar');
   if (!layout) return;
 
-  // Design dimensions of .game-layout (padding + grid + gap)
-  const designWidth = 16 + 960 + 16 + 260 + 16;   // 1268px
-  const designHeight = 16 + 640 + 16;               // 672px
+  const designWidth = 16 + DESIGN_W + 16 + 260 + 16;
+  const designHeight = 16 + DESIGN_H + 16;
 
   const topbarHeight = topbar?.offsetHeight || 52;
   const availableWidth = window.innerWidth;
@@ -26,6 +33,14 @@ function updateLayoutScale() {
   const scale = Math.min(scaleX, scaleY);
 
   layout.style.setProperty('--layout-scale', scale);
+
+  if (p5Instance) {
+    const density = Math.max(1, scale);
+    if (p5Instance.pixelDensity() !== density) {
+      p5Instance.pixelDensity(density);
+      p5Instance.noSmooth();
+    }
+  }
 }
 
 window.addEventListener('load', updateLayoutScale);
@@ -33,7 +48,10 @@ window.addEventListener('resize', updateLayoutScale);
 
 new window.p5((p) => {
   p.setup = async () => {
+    p5Instance = p;
     const { width, height } = getCanvasSize();
+    const s = getLayoutScale();
+    p.pixelDensity(Math.max(1, s));
     const canvas = p.createCanvas(width, height);
     canvas.parent('game-root');
     try {
@@ -71,9 +89,7 @@ new window.p5((p) => {
   };
 
   p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    game.onResize?.(width, height);
+    updateLayoutScale();
   };
 
   p.mouseWheel = (event) => {

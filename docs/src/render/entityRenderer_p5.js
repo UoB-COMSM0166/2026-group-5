@@ -4,6 +4,7 @@ import { SPRITE_PATHS, resolveCharacterSprite } from './spriteCatalog.js';
 import { Camera } from '../systems/cameraSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
+import { updateLootPopups, renderLootPopups } from '../systems/lootPopup.js';
 
 
 // Draw a sprite image at fixed height, preserving aspect ratio.
@@ -466,4 +467,7 @@ export function renderEntities(p, state) {
     const descriptor = resolveCharacterSprite('player', level.player.characterVariant || 'default', level.player.anim?.mode || 'idle', level.player.facing || 'down');
     drawResolvedCharacter(p, descriptor, level.player, level.player.x, level.player.y, level.player.w, level.player.h, level.player.color);
   }
+
+  updateLootPopups(state.dt || 0.016);
+  renderLootPopups(p);
 }
