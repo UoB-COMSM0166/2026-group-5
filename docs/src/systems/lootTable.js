@@ -15,7 +15,7 @@ const MAP_LOOT = Object.freeze({
     chest_5: 'note',
     chest_6: 'note',
     chest_7: 'note',
-    chest_8: 'note'
+    chest_8: { type: 'key', keyId: 'key_C' }
   }),
   map2: Object.freeze({
     'chest-2-1': { type: 'key', keyId: 'key_A' },
@@ -50,8 +50,7 @@ const NOTE_IDS_BY_CHEST = Object.freeze({
     chest_3: 'note_2',
     chest_5: 'note_3',
     chest_6: 'note_4',
-    chest_7: 'note_5',
-    chest_8: 'note_6'
+    chest_7: 'note_5'
   }),
   map2: Object.freeze({
     'chest-2-2': 'note_1',
