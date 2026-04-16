@@ -25,7 +25,7 @@ export class TutorialScreen extends Screen {
   static SKIP_HOLD_TIME = 0.8; // seconds to hold E to skip
 
   constructor() {
-    super('tutorial', 'Press ← → to flip pages, hold E to skip');
+    super('tutorial', 'Press ← → to flip pages');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
@@ -57,16 +57,19 @@ export class TutorialScreen extends Screen {
       return;
     }
 
-    // Handle long press E to skip
+    // Handle long press E: non-last pages jump to last page, last page returns to start
     if (this.#eKeyHolding) {
       this.#eKeyTimer += deltaTime;
       if (this.#eKeyTimer >= TutorialScreen.SKIP_HOLD_TIME) {
-        // Skip tutorial - directly to playthrough select in story mode
         this.#eKeyHolding = false;
         this.#eKeyTimer = 0;
-        if (state.story?.fromStoryMode && api) {
-          state.story.fromStoryMode = false;
-          api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+        const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
+        if (isLastPage) {
+          // Last page: return to start screen
+          api.setScreen?.(SCREEN_STATES.START);
+        } else {
+          // Non-last pages: jump directly to last page
+          this.#pageIndex = TUTORIAL_PAGES.length - 1;
         }
       }
     }
@@ -100,10 +103,6 @@ export class TutorialScreen extends Screen {
         state.story.fromStoryMode = false;
         api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
       }
-      return true;
-    }
-    if (key === 'Escape') {
-      api.setScreen?.(SCREEN_STATES.PAUSE);
       return true;
     }
     return false;
@@ -187,9 +186,9 @@ export class TutorialScreen extends Screen {
     if (isLastPage && fromStory) {
       bottomText = 'Press Enter to continue';
     } else if (isLastPage) {
-      bottomText = 'Press ESC to open menu';
+      bottomText = 'Hold E to return to menu';
     } else {
-      bottomText = 'Press ← → to flip pages, hold E to skip';
+      bottomText = 'Press ← → to flip pages, hold E to end';
     }
 
     p.fill('#a0a0a0');
@@ -271,7 +270,7 @@ export class TutorialScreen extends Screen {
   }
 
   #drawSkipProgress(p, x, y, h, layout) {
-    if (!this.#eKeyHolding || this.#pageIndex === TUTORIAL_PAGES.length - 1) return;
+    if (!this.#eKeyHolding) return;
 
     const progress = Math.min(this.#eKeyTimer / TutorialScreen.SKIP_HOLD_TIME, 1);
     const barW = sx(120, layout);

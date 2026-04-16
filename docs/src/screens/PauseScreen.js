@@ -362,7 +362,7 @@ export class PauseScreen extends Screen {
       this.#drawListScrollCues(p, box, layout, visible.hasAbove, visible.hasBelow);
     }
 
-    this.#drawFooterHint(p, layout, 'UP / DOWN scroll  |  ESC / Backspace return');
+    this.#drawFooterHint(p, layout, 'UP / DOWN scroll  |  ESC / Enter return');
     p.pop();
   }
 
