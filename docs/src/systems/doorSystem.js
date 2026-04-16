@@ -46,13 +46,13 @@ function resolvePanels(source, width, height) {
   return (width >= 2 && height >= 2) ? 'double' : 'single';
 }
 
-// Infer the initial door state from collision data and lock flag.
-function inferInitialState(tiles, collision, sourceLocked) {
-  const tilesPassable = Array.isArray(collision) && collision.length
-    && tiles.every((t) => collision?.[t.y]?.[t.x] === 0);
-  if (tilesPassable) return DOOR_STATES.OPEN;
-  if (sourceLocked === false) return DOOR_STATES.CLOSED;
-  return DOOR_STATES.LOCKED;
+// Infer the initial door state:
+// - Doors with keyId start as LOCKED
+// - Doors without keyId start as CLOSED
+// - All doors start closed/locked regardless of collision data
+function inferInitialState(tiles, collision, sourceLocked, hasKeyId) {
+  if (hasKeyId) return DOOR_STATES.LOCKED;
+  return DOOR_STATES.CLOSED;
 }
 
 // Set or clear collision tiles occupied by a door.
@@ -168,7 +168,7 @@ export class DoorSystem {
       const h = (maxY - minY) + 1;
       const initialState = source.state
         ? source.state
-        : inferInitialState(tiles, collision, source.locked);
+        : inferInitialState(tiles, collision, source.locked, !!source.keyId);
       this.#doors.push(makeDoor({
         id: source.id || `door-${this.#doors.length + 1}`,
         x: minX, y: minY, w, h,
@@ -251,11 +251,14 @@ export class DoorSystem {
 
   get doors() { return this.#doors; }
 
-  // Unlock a locked door with the matching key and clear collision.
+  // Unlock a locked door with the matching key and permanently unlock it.
+  // The door becomes permanently usable (keyId is cleared).
   unlock(door, keyId) {
     if (!door || door.visualOnly) return false;
     if (door.state !== DOOR_STATES.LOCKED || door.cooldown > 0) return false;
     if (door.keyId && keyId !== door.keyId) return false;
+    // Permanently unlock: clear keyId so door functions normally
+    door.keyId = null;
     door.state = DOOR_STATES.OPEN;
     door.cooldown = DOOR_TIMING.MIN_STATE;
     door.solid = false;
@@ -263,11 +266,17 @@ export class DoorSystem {
     return true;
   }
 
-  // Open a closed door and clear its collision tiles.
-  open(door) {
+  // Open a closed/locked door and clear its collision tiles.
+  // NPCs can open locked doors; players must unlock first.
+  open(door, options = {}) {
     if (!door || door.visualOnly) return false;
     if (door.cooldown > 0) return false;
     if (door.state === DOOR_STATES.OPEN) return false;
+    // If door is locked and opened by force (NPC), mark it as forced open
+    // It will re-lock when closed
+    if (door.state === DOOR_STATES.LOCKED) {
+      door._forcedOpen = true;
+    }
     door.state = DOOR_STATES.OPEN;
     door.cooldown = DOOR_TIMING.MIN_STATE;
     door.solid = false;
@@ -276,14 +285,19 @@ export class DoorSystem {
   }
 
   // Close an open door and restore its collision tiles.
+  // If door was forced open (by NPC) and has a keyId, it returns to LOCKED state.
   close(door) {
     if (!door || door.visualOnly) return false;
     if (door.cooldown > 0) return false;
     if (door.state !== DOOR_STATES.OPEN) return false;
-    door.state = DOOR_STATES.CLOSED;
+    // Determine next state: if forced open by NPC and has keyId, re-lock it
+    const nextState = (door._forcedOpen && door.keyId) ? DOOR_STATES.LOCKED : DOOR_STATES.CLOSED;
+    door.state = nextState;
     door.cooldown = DOOR_TIMING.MIN_STATE;
     door.solid = true;
     setDoorTilesSolid(door, this.#collision, true);
+    // Clear forced open flag
+    door._forcedOpen = false;
     return true;
   }
 

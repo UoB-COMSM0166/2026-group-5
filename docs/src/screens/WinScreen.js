@@ -11,8 +11,14 @@ export class WinScreen extends Screen {
 
   handleKey(key, state, api) {
     if (key === 'Enter') {
-      if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
-      else api.restartLevel?.();
+      // Normal mode: return to difficulty selection; Story mode: restart current level
+      if (state.story?.normalMode) {
+        if (api.exitToDifficultySelect) api.exitToDifficultySelect();
+        else api.exitToTitle?.();
+      } else {
+        if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
+        else api.restartLevel?.();
+      }
       return true;
     }
     return false;

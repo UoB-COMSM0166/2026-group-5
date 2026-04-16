@@ -8,14 +8,14 @@ export const LOOT_TYPES = Object.freeze({
 // Per-map loot tables mapping chest IDs to their drop type.
 const MAP_LOOT = Object.freeze({
   map1: Object.freeze({
-    chest_1: { type: 'key', keyId: 'key_A' },
+    chest_1: { type: 'key', keyId: 'key_exit' },
     chest_2: 'note',
     chest_3: 'note',
-    chest_4: { type: 'key', keyId: 'key_B' },
+    chest_4: 'note',
     chest_5: 'note',
     chest_6: 'note',
-    chest_7: 'note',
-    chest_8: { type: 'key', keyId: 'key_C' }
+    chest_7: { type: 'key', keyId: 'key_doorA' },
+    chest_8: 'note'
   }),
   map2: Object.freeze({
     'chest-2-1': { type: 'key', keyId: 'key_A' },
@@ -23,23 +23,25 @@ const MAP_LOOT = Object.freeze({
     'chest-2-3': 'note',
     'chest-2-4': { type: 'key', keyId: 'key_B' },
     'chest-2-5': 'note',
-    'chest-2-6': 'note',
-    'chest-2-7': { type: 'key', keyId: 'key_C' },
+    'chest-2-6': { type: 'key', keyId: 'key_exit' },
+    'chest-2-7': 'note',
     'chest-2-8': 'note',
     'chest-2-9': { type: 'key', keyId: 'key_D' },
-    'chest-2-10': 'note'
+    'chest-2-10': 'note',
+    'chest-2-11': 'note'
   }),
   map3: Object.freeze({
-    'chest-3-1': 'note',
-    'chest-3-2': { type: 'key', keyId: 'key_A' },
-    'chest-3-3': 'note',
-    'chest-3-4': { type: 'key', keyId: 'key_B' },
+    'chest-3-1': { type: 'key', keyId: 'key_exit' },
+    'chest-3-2': 'note',
+    'chest-3-3': { type: 'key', keyId: 'key_A' },
+    'chest-3-4': 'note',
     'chest-3-5': 'note',
     'chest-3-6': 'note',
-    'chest-3-7': { type: 'key', keyId: 'key_C' },
+    'chest-3-7': { type: 'key', keyId: 'key_B' },
     'chest-3-8': 'note',
-    'chest-3-9': { type: 'key', keyId: 'key_D' },
-    'chest-3-10': 'note'
+    'chest-3-9': { type: 'key', keyId: 'key_C' },
+    'chest-3-10': 'note',
+    'chest-3-11': 'note'
   })
 });
 
@@ -50,7 +52,8 @@ const NOTE_IDS_BY_CHEST = Object.freeze({
     chest_3: 'note_2',
     chest_5: 'note_3',
     chest_6: 'note_4',
-    chest_7: 'note_5'
+    chest_7: 'note_5',
+    chest_8: 'note_6'
   }),
   map2: Object.freeze({
     'chest-2-2': 'note_1',

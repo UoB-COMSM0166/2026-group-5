@@ -263,8 +263,48 @@ function renderFootsteps(p, level) {
   p.pop();
 }
 
+// Render E-key interaction hints at chests when player is nearby
+export function renderChestInteractionPrompts(p, level) {
+  const prompt = getInteractionPrompt(level);
+  if (!prompt || prompt.type !== 'box') return;
+
+  const chest = prompt.entity;
+  const tile = level.settings.baseTile;
+
+  const x = chest.x * tile;
+  const y = chest.y * tile;
+  const w = (chest.w || 1) * tile;
+  const h = (chest.h || 1) * tile;
+
+  // Check if on top 2 rows - show prompt on right side instead of top
+  const isTopRows = chest.y < 2;
+  const centerX = isTopRows ? x + w + 20 : x + w / 2;
+  const promptY = isTopRows ? y + h / 2 - 10 : y - 26;
+  const textAlignY = isTopRows ? promptY : promptY - 4;
+
+  p.push();
+  p.noStroke();
+  // Draw key background
+  p.fill(15, 23, 42, 200);
+  p.rect(centerX - 12, promptY - 14, 24, 20, 4);
+  // Draw 'E' text
+  p.fill(255, 255, 255, 240);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(12);
+  p.textStyle(p.BOLD);
+  p.text('E', centerX, textAlignY);
+  // Draw action text
+  p.textStyle(p.NORMAL);
+  p.textSize(8);
+  p.fill(255, 255, 255, 180);
+  const actionText = 'Open';
+  const actionY = isTopRows ? promptY + 16 : promptY + 10;
+  p.text(actionText, centerX, actionY);
+  p.pop();
+}
+
 // Render E-key interaction hints at doors when player is nearby
-export function renderDoorInteractionPrompts(p, level) {
+export function renderDoorInteractionPrompts(p, level, inventory) {
   const prompt = getInteractionPrompt(level);
   if (!prompt || prompt.type !== 'door') return;
 
@@ -288,8 +328,18 @@ export function renderDoorInteractionPrompts(p, level) {
   const textAlignY = isTopRows ? promptY : promptY - 4;
 
   p.push();
-  // Draw key background
   p.noStroke();
+  // Show keyId text above E box for locked doors
+  if (door.state === 'LOCKED' && door.keyId) {
+    const hasKey = inventory?.hasKey?.(door.keyId);
+    p.textAlign(p.CENTER, p.BOTTOM);
+    p.textSize(10);
+    p.textStyle(p.BOLD);
+    p.fill(hasKey ? '#ffd700' : '#ff6b6b');
+    const keyTextY = promptY - 20;
+    p.text(hasKey ? door.keyId : `need ${door.keyId}`, centerX, keyTextY);
+  }
+  // Draw key background
   p.fill(15, 23, 42, 200);
   p.rect(centerX - 12, promptY - 14, 24, 20, 4);
   // Draw 'E' text
@@ -341,44 +391,8 @@ export function renderButtonInteractionPrompts(p, level) {
   p.fill(255, 255, 255, 180);
   const isLit = level.roomSystem.isLit(button.roomId);
   const actionText = isLit ? 'Lights off' : 'Lights on';
-  p.text(actionText, centerX, isTopRows ? promptY + 16 : promptY + 10);
-  p.pop();
-}
-
-// Render E-key interaction hints at chests when player is nearby
-export function renderChestInteractionPrompts(p, level) {
-  const prompt = getInteractionPrompt(level);
-  if (!prompt || prompt.type !== 'box') return;
-
-  const chest = prompt.entity;
-  const tile = level.settings.baseTile;
-
-  const rw = (chest.renderW || chest.w) * tile;
-  const rh = (chest.renderH || chest.h) * tile;
-  const rx = chest.x * tile + (chest.renderOffsetX || 0) * tile;
-  const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
-
-  // Check if on top 2 rows - show prompt on right side instead of top
-  const isTopRows = chest.y < 2;
-  const centerX = isTopRows ? rx + rw + 20 : rx + rw / 2;
-  const promptY = isTopRows ? ry + rh / 2 : ry - 16;
-
-  p.push();
-  // Draw key background
-  p.noStroke();
-  p.fill(15, 23, 42, 200);
-  p.rect(centerX - 12, promptY - 14, 24, 20, 4);
-  // Draw 'E' text
-  p.fill(255, 255, 255, 240);
-  p.textAlign(p.CENTER, p.CENTER);
-  p.textSize(12);
-  p.textStyle(p.BOLD);
-  p.text('E', centerX, isTopRows ? promptY : promptY - 4);
-  // Draw action text
-  p.textStyle(p.NORMAL);
-  p.textSize(8);
-  p.fill(255, 255, 255, 180);
-  p.text('Open', centerX, isTopRows ? promptY + 16 : promptY + 10);
+  const actionY = isTopRows ? promptY + 16 : promptY + 10;
+  p.text(actionText, centerX, actionY);
   p.pop();
 }
 

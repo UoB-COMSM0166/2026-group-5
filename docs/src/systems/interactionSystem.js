@@ -1,6 +1,6 @@
 // Interaction detection: finds nearby doors, chests, buttons, exit and dispatches actions.
 import { DOOR_STATES } from './doorSystem.js';
-import { hasKey, consumeKey } from './lootTable.js';
+import { hasKey } from './lootTable.js';
 
 // Find the closest entity to the player within a tile-based radius.
 export function findNearbyEntity(player, entities, tileSize, maxDistanceTiles = 1.25) {
@@ -98,11 +98,11 @@ export function tryInteract(level, inventory) {
 
     if (door.state === DOOR_STATES.LOCKED) {
       if (inventory && hasKey(inventory, door.keyId)) {
-        consumeKey(inventory, door.keyId);
+        // Keys are not consumed - they persist and can unlock multiple doors
         level.doorSystem.unlock(door, door.keyId);
         return { success: true, text: 'Door unlocked', kind: 'door', entity: door };
       }
-      return { success: false, text: 'Need a key', kind: 'door', entity: door };
+      return { success: false, text: `Need key: ${door.keyId}`, kind: 'door', entity: door };
     }
 
     if (door.state === DOOR_STATES.OPEN) {

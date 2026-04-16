@@ -6,26 +6,45 @@ import { SCREEN_STATES } from '../core/gameState.js';
 
 export class PlaythroughSelectScreen extends Screen {
   #selectedIndex;
+  #eKeyHolding;
+  #eKeyTimer;
+  static SKIP_HOLD_TIME = 1.2; // seconds to hold E to unlock
 
   constructor() {
     super('playthrough_select', 'Arrow Up / Down to choose, Enter to confirm');
     this.#selectedIndex = 0;
+    this.#eKeyHolding = false;
+    this.#eKeyTimer = 0;
   }
 
   reset() {
     this.#selectedIndex = 0;
+    this.#eKeyHolding = false;
+    this.#eKeyTimer = 0;
+  }
+
+  update(state, deltaTime, api) {
+    // Track E key hold for unlock
+    if (this.#eKeyHolding) {
+      this.#eKeyTimer += deltaTime;
+      if (this.#eKeyTimer >= PlaythroughSelectScreen.SKIP_HOLD_TIME) {
+        // Unlock second playthrough
+        this.#eKeyHolding = false;
+        this.#eKeyTimer = 0;
+        if (!state.story?.secondPlaythroughUnlocked) {
+          state.story.secondPlaythroughUnlocked = true;
+          api.setMessage?.('Second playthrough unlocked', 1.2);
+        }
+      }
+    }
   }
 
   handleKey(key, state, api) {
     const options = this.#getOptions(state);
 
     if (key === 'e' || key === 'E') {
-      if (!state.story?.secondPlaythroughUnlocked) {
-        state.story.secondPlaythroughUnlocked = true;
-        api.setMessage?.('Second playthrough unlocked', 1.2);
-      } else {
-        api.setMessage?.('Already unlocked', 0.8);
-      }
+      // Start tracking E key hold for unlock
+      this.#eKeyHolding = true;
       return true;
     }
 
@@ -53,6 +72,13 @@ export class PlaythroughSelectScreen extends Screen {
     }
 
     return false;
+  }
+
+  onKeyUp(key, state, api) {
+    if (key === 'e' || key === 'E') {
+      this.#eKeyHolding = false;
+      this.#eKeyTimer = 0;
+    }
   }
 
   handleMouse(mouseX, mouseY, p, state, api) {
@@ -140,12 +166,6 @@ export class PlaythroughSelectScreen extends Screen {
     setFont(p, Math.max(10, sx(11, layout)), FONTS.ui);
     p.text('Choose which run of the story you want to play.', layout.width / 2, sy(145, layout));
 
-    if (!state.story?.secondPlaythroughUnlocked) {
-      p.fill('#2a1730');
-      setFont(p, Math.max(10, sx(10, layout)), FONTS.ui);
-      p.text('Second playthrough unlocks after reaching the first ending.', layout.width / 2, sy(175, layout));
-    }
-
     p.pop();
   }
 
@@ -192,7 +212,7 @@ export class PlaythroughSelectScreen extends Screen {
   }
 
   #getSkipButtonRect(layout) {
-    const w = sx(110, layout);
+    const w = sx(200, layout);
     const h = sy(36, layout);
     const x = layout.offsetX + layout.width - w - sx(80, layout);
     const y = layout.offsetY + sy(20, layout);
@@ -206,13 +226,13 @@ export class PlaythroughSelectScreen extends Screen {
     p.noStroke();
     p.fill('#24152a');
     p.rect(btn.x + sx(3, layout), btn.y + sy(3, layout), btn.w, btn.h, sx(10, layout));
-    p.fill(unlocked ? '#5c4850' : '#e73b6e');
+    p.fill(unlocked ? '#5c4850' : '#ff7a9a');
     p.rect(btn.x, btn.y, btn.w, btn.h, sx(10, layout));
     p.noStroke();
     p.fill(unlocked ? '#ead7c2' : '#fff4d6');
     p.textAlign(p.CENTER, p.CENTER);
     setFont(p, Math.max(10, sx(14, layout)), FONTS.ui, 'bold');
-    const text = unlocked ? 'UNLOCKED' : 'SKIP (E)';
+    const text = unlocked ? 'UNLOCKED' : 'SKIP (Hold E)';
     p.text(text, btn.x + btn.w / 2, btn.y + btn.h / 2 + sy(1, layout));
 
     // Description below button in faint color

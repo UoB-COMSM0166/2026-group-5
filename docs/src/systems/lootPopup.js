@@ -10,9 +10,10 @@ const ICON_PATHS = {
 const popups = [];
 
 // show floating icon when chest opens
-export function spawnLootPopup(lootType, worldX, worldY, tileSize) {
+export function spawnLootPopup(lootType, worldX, worldY, tileSize, keyId) {
   popups.push({
     type: lootType,
+    keyId: keyId || null,
     x: worldX,
     baseY: worldY - 4,
     timer: POPUP_DURATION,
@@ -76,7 +77,7 @@ export function renderLootPopups(p) {
     }
 
     // text label
-    const label = isKey ? 'KEY' : 'NOTE';
+    const label = isKey && pop.keyId ? pop.keyId : (isKey ? 'KEY' : 'NOTE');
     const fontSize = Math.max(7, iconSize * 0.28);
     p.textAlign(p.CENTER, p.TOP);
     p.textSize(fontSize);

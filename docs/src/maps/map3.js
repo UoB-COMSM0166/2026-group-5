@@ -79,11 +79,11 @@
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 5, 5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 7, 7, 7, 7, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 9, 9, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 9, 9, 1]
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 7, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
   ];
 
   const mapWidth = 60;
@@ -380,17 +380,18 @@
     ],
     entities: {
       doors: [
-        // Bidirectional doors (2x2)
-        { id: 'door_D', tiles: [{ x: 6, y: 15 }, { x: 6, y: 16 }, { x: 7, y: 15 }, { x: 7, y: 16 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        { id: 'door_E', tiles: [{ x: 19, y: 30 }, { x: 19, y: 31 }, { x: 20, y: 30 }, { x: 20, y: 31 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        { id: 'door_F', tiles: [{ x: 23, y: 23 }, { x: 23, y: 24 }, { x: 24, y: 23 }, { x: 24, y: 24 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        { id: 'door_G', tiles: [{ x: 40, y: 30 }, { x: 40, y: 31 }, { x: 41, y: 30 }, { x: 41, y: 31 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        { id: 'door_H', tiles: [{ x: 53, y: 27 }, { x: 53, y: 28 }, { x: 54, y: 27 }, { x: 54, y: 28 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        { id: 'door_I', tiles: [{ x: 33, y: 23 }, { x: 33, y: 24 }, { x: 34, y: 23 }, { x: 34, y: 24 }], slideDir: 'left', locked: false, state: 'CLOSED' },
-        // Unidirectional doors (1x2)
-        { id: 'door_A', tiles: [{ x: 12, y: 19 }, { x: 12, y: 20 }], slideDir: 'up', locked: false, state: 'CLOSED' },
-        { id: 'door_B', tiles: [{ x: 38, y: 7 }, { x: 38, y: 8 }], slideDir: 'up', locked: false, state: 'CLOSED' },
-        { id: 'door_C', tiles: [{ x: 38, y: 17 }, { x: 38, y: 18 }], slideDir: 'up', locked: false, state: 'CLOSED' }
+        // Bidirectional doors (2x2) - default CLOSED, no keyId
+        { id: 'door_D', tiles: [{ x: 6, y: 15 }, { x: 6, y: 16 }, { x: 7, y: 15 }, { x: 7, y: 16 }], slideDir: 'left' },
+        { id: 'door_E', tiles: [{ x: 19, y: 30 }, { x: 19, y: 31 }, { x: 20, y: 30 }, { x: 20, y: 31 }], slideDir: 'left', keyId: 'key_A' },
+        { id: 'door_F', tiles: [{ x: 23, y: 23 }, { x: 23, y: 24 }, { x: 24, y: 23 }, { x: 24, y: 24 }], slideDir: 'left' },
+        { id: 'door_G', tiles: [{ x: 40, y: 30 }, { x: 40, y: 31 }, { x: 41, y: 30 }, { x: 41, y: 31 }], slideDir: 'left' },
+        { id: 'door_H', tiles: [{ x: 53, y: 27 }, { x: 53, y: 28 }, { x: 54, y: 27 }, { x: 54, y: 28 }], slideDir: 'left' },
+        { id: 'door_I', tiles: [{ x: 33, y: 23 }, { x: 33, y: 24 }, { x: 34, y: 23 }, { x: 34, y: 24 }], slideDir: 'left' },
+        // Unidirectional doors (1x2) - default CLOSED, no keyId
+        { id: 'door_A', tiles: [{ x: 12, y: 19 }, { x: 12, y: 20 }], slideDir: 'up', keyId: 'key_C' },
+        { id: 'door_B', tiles: [{ x: 38, y: 7 }, { x: 38, y: 8 }], slideDir: 'up' },
+        { id: 'door_C', tiles: [{ x: 38, y: 17 }, { x: 38, y: 18 }], slideDir: 'up', keyId: 'key_B' },
+        { id: 'door_J', tiles: [{ x: 59, y: 38 }, { x: 59, y: 37 }], slideDir: 'up', keyId: 'key_exit' },
       ],
       chests: [
         { id: 'chest-3-1',  x: 57, y: 2,  w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
@@ -402,7 +403,8 @@
         { id: 'chest-3-7',  x: 33, y: 29, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
         { id: 'chest-3-8',  x: 57, y: 29, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
         { id: 'chest-3-9',  x: 4,  y: 31, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
-        { id: 'chest-3-10', x: 38, y: 36, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 }
+        { id: 'chest-3-10', x: 38, y: 36, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 },
+        { id: 'chest-3-11', x: 33, y: 35, w: 2, h: 1, renderW: 2, renderH: 2, renderOffsetX: 0, renderOffsetY: -0.5 }
       ]
     },
     settings: {

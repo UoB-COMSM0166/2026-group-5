@@ -83,7 +83,8 @@ export class GameState {
       showRooms: false,
       showLayers: false,
       showCamera: false,
-      showExploration: false
+      showExploration: false,
+      showEntityIds: false
     };
     this.#inventory = new Inventory();
     this.#camera = null;

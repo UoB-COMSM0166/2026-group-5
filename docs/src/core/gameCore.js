@@ -121,32 +121,14 @@ export class GameCore {
     this.#overlay.flash(this.#state, 0.3);
   }
 
-  // Restart the current story playthrough, picking the correct map.
+  // Restart the current level (reload without changing the level).
   restartCurrentStoryRun() {
-    const story = this.#state.story;
-
-    if (story.currentPlaythrough === 1) {
-      this.#currentLevelId = 'map1';
-      this.#loadLevel('map1');
-      this.#state.nearestLightButton = null;
-      this.#markMissionStart();
-      this.#setScreen(SCREEN_STATES.PLAYING);
-      this.#overlay.flash(this.#state, 0.3);
-      return;
-    }
-
-    if (story.currentPlaythrough === 2) {
-      const levelId = story.selectedRoute === 'salon' ? 'map3' : 'map2';
-      this.#currentLevelId = levelId;
-      this.#loadLevel(levelId);
-      this.#state.nearestLightButton = null;
-      this.#markMissionStart();
-      this.#setScreen(SCREEN_STATES.PLAYING);
-      this.#overlay.flash(this.#state, 0.3);
-      return;
-    }
-
-    this.restartLevel();
+    // Reload the current level that the player is on
+    this.#loadLevel(this.#currentLevelId);
+    this.#state.nearestLightButton = null;
+    this.#markMissionStart();
+    this.#setScreen(SCREEN_STATES.PLAYING);
+    this.#overlay.flash(this.#state, 0.3);
   }
 
   // Unpause and return to the playing screen.
@@ -160,6 +142,18 @@ export class GameCore {
     this.#resetStorySelection();
     this.#setScreen(SCREEN_STATES.START);
     this.#setMessage('Returned to title', 1.0);
+  }
+
+  // Go back to the playthrough select screen (for normal mode after win).
+  exitToPlaythroughSelect() {
+    this.#setScreen(SCREEN_STATES.PLAYTHROUGH_SELECT);
+    this.#setMessage('Select a level', 1.0);
+  }
+
+  // Go back to the difficulty select screen (for normal mode after win).
+  exitToDifficultySelect() {
+    this.#setScreen(SCREEN_STATES.DIFFICULTY_SELECT);
+    this.#setMessage('Select difficulty', 1.0);
   }
 
   // Toggle between playing and paused states.
@@ -189,6 +183,8 @@ export class GameCore {
       restartCurrentStoryRun: () => this.restartCurrentStoryRun(),
       resumeGame: () => this.resumeGame(),
       exitToTitle: () => this.exitToTitle(),
+      exitToPlaythroughSelect: () => this.exitToPlaythroughSelect(),
+      exitToDifficultySelect: () => this.exitToDifficultySelect(),
       loadStoryLevel: (levelId) => this.loadStoryLevel(levelId)
     };
   }
@@ -263,15 +259,66 @@ export class GameCore {
         return;
       }
       if (r.success && r.kind === 'light') { const roomId = r.entity?.roomId; if (roomId) this.#setMessage(s.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3); }
-      if (r.success && r.kind === 'door') this.#setMessage(r.text, 1);
+      if (r.success && r.kind === 'door') {
+        this.#setMessage(r.text, 1);
+        // Map1 win condition: unlocking door_3 (key_exit) wins the game
+        if (s.levelId === 'map1' && r.entity?.id === 'door_3') {
+          if (s.story.normalMode) {
+            this.#setScreen(SCREEN_STATES.WIN);
+            this.#setMessage('Mission complete', 1.4);
+          } else if (s.story.currentPlaythrough === 1) {
+            this.#setScreen(SCREEN_STATES.FALSE_ENDING);
+            this.#setMessage('A strange ending has been reached', 1.4);
+          } else {
+            this.#setScreen(SCREEN_STATES.TRUE_ENDING);
+            this.#setMessage('The real ending is unfolding', 1.4);
+          }
+          this.#overlay.flash(s, 0.28);
+          this.#syncHud();
+          return;
+        }
+        // Map2 win condition: unlocking door_K (key_exit) wins the game
+        if (s.levelId === 'map2' && r.entity?.id === 'door_K') {
+          if (s.story.normalMode) {
+            this.#setScreen(SCREEN_STATES.WIN);
+            this.#setMessage('Mission complete', 1.4);
+          } else if (s.story.currentPlaythrough === 1) {
+            this.#setScreen(SCREEN_STATES.FALSE_ENDING);
+            this.#setMessage('A strange ending has been reached', 1.4);
+          } else {
+            this.#setScreen(SCREEN_STATES.TRUE_ENDING);
+            this.#setMessage('The real ending is unfolding', 1.4);
+          }
+          this.#overlay.flash(s, 0.28);
+          this.#syncHud();
+          return;
+        }
+        // Map3 win condition: unlocking door_J (key_exit) wins the game
+        if (s.levelId === 'map3' && r.entity?.id === 'door_J') {
+          if (s.story.normalMode) {
+            this.#setScreen(SCREEN_STATES.WIN);
+            this.#setMessage('Mission complete', 1.4);
+          } else if (s.story.currentPlaythrough === 1) {
+            this.#setScreen(SCREEN_STATES.FALSE_ENDING);
+            this.#setMessage('A strange ending has been reached', 1.4);
+          } else {
+            this.#setScreen(SCREEN_STATES.TRUE_ENDING);
+            this.#setMessage('The real ending is unfolding', 1.4);
+          }
+          this.#overlay.flash(s, 0.28);
+          this.#syncHud();
+          return;
+        }
+      }
       if (r.success && r.kind === 'box') {
         const loot = collectLoot(s.inventory, r.entity.id, s.levelId);
         if (loot) {
           const tile = s.level.settings.baseTile;
           const bx = r.entity.x * tile + ((r.entity.renderOffsetX || 0) + (r.entity.renderW || r.entity.w) / 2) * tile;
           const by = r.entity.y * tile + (r.entity.renderOffsetY || 0) * tile;
-          spawnLootPopup(loot.id, bx, by, tile);
-          this.#setMessage(`Found: ${loot.label}`, 1.5);
+          spawnLootPopup(loot.id, bx, by, tile, loot.keyId);
+          const lootText = loot.keyId ? `${loot.label} (${loot.keyId})` : loot.label;
+          this.#setMessage(`Found: ${lootText}`, 1.5);
         }
         s.meta.collected = s.level.boxSystem.boxes.filter(b => b.opened).length;
         if (s.meta.collected >= s.meta.target && s.meta.target > 0 && !s.level.missionSystem.isUnlocked()) {
@@ -295,8 +342,11 @@ export class GameCore {
     if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
     // if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
     // if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');
-    // if (l === 'b') s.debug.showRooms = !s.debug.showRooms; if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
-    // if (l === 'g') s.debug.showCamera = !s.debug.showCamera; if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
+    if (l === 'b') s.debug.showRooms = !s.debug.showRooms;
+    if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
+    if (l === 'g') s.debug.showCamera = !s.debug.showCamera;
+    if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
+    if (l === 'i') { s.debug.showEntityIds = !s.debug.showEntityIds; this.#setMessage(s.debug.showEntityIds ? 'Entity IDs: ON' : 'Entity IDs: OFF', 1); }
     // if (l === 'h' && s.level) { const next = s.level.player.characterVariant === 'default' ? 'stealth' : 'default'; s.level.player.characterVariant = next; this.#setMessage(`Player skin: ${next}`, 1); }
     // if (l === 'm') { s.audio.muted = this.#audio.toggleMute(); this.#setMessage(s.audio.muted ? 'Muted' : 'Unmuted', 1); }
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();

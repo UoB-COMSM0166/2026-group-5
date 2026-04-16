@@ -152,10 +152,10 @@ const Map1Config = {
   // Entity definitions
   entities: {
     doors: [
-      { id: 'door_1', tiles: [{ x: 24, y: 10 }, { x: 24, y: 11 }, { x: 25, y: 11 }, { x: 25, y: 10 }], slideDir: 'left', keyId: 'key_A' },
-      { id: 'door_2', tiles: [{ x: 31, y: 10 }, { x: 31, y: 11 }, { x: 32, y: 11 }, { x: 32, y: 10 }], slideDir: 'left', keyId: 'key_B' },
-      { id: 'door_3', tiles: [{ x: 54, y: 10 }, { x: 54, y: 11 }, { x: 55, y: 11 }, { x: 55, y: 10 }], slideDir: 'left', keyId: 'key_C' },
-      { id: 'door_4', tiles: [{ x: 29, y: 30 }, { x: 29, y: 31 }], slideDir: 'up', locked: false, state: 'CLOSED' },
+      { id: 'door_1', tiles: [{ x: 24, y: 10 }, { x: 24, y: 11 }, { x: 25, y: 11 }, { x: 25, y: 10 }], slideDir: 'left' },
+      { id: 'door_2', tiles: [{ x: 31, y: 10 }, { x: 31, y: 11 }, { x: 32, y: 11 }, { x: 32, y: 10 }], slideDir: 'left' },
+      { id: 'door_3', tiles: [{ x: 54, y: 10 }, { x: 54, y: 11 }, { x: 55, y: 11 }, { x: 55, y: 10 }], slideDir: 'left', keyId: 'key_exit' },
+      { id: 'door_4', tiles: [{ x: 29, y: 30 }, { x: 29, y: 31 }], slideDir: 'up', keyId: 'key_doorA' },
       { id: 'door_5', tiles: [{ x: 29, y: 37 }, { x: 29, y: 38 }], slideDir: 'up', locked: false, state: 'CLOSED', visualOnly: true }
     ],
     chests: [
