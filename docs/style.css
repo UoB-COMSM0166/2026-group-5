@@ -141,8 +141,8 @@ button:hover { filter: brightness(1.08); }
 }
 
 .hud-panel > div.guide-title {
-  margin-top: calc(150px * var(--s, 1));
-  margin-bottom: calc(10px * var(--s, 1));
+  /*margin-top: calc(150px * var(--s, 1));*/
+  /*margin-bottom: calc(10px * var(--s, 1));*/
   font-size: calc(12px * var(--s, 1));
   color: #29157a;
 }
@@ -221,26 +221,32 @@ button:hover { filter: brightness(1.08); }
 }
 
 .keyboardPC-icon{
-  width: calc(18px * var(--s, 1));
-  height: calc(18px * var(--s, 1));
+  width: calc(20px * var(--s, 1));
+  height: calc(20px * var(--s, 1));
   image-rendering: pixelated;
 }
 
 .keyboardMove-icon{
-  width: calc(120px * var(--s, 1));
-  height: calc(30px * var(--s, 1));
+  width: calc(130px * var(--s, 1));
+  height: calc(36px * var(--s, 1));
   image-rendering: pixelated;
 }
 
 .keyboard2keys-icon{
-  width: calc(36px * var(--s, 1));
-  height: calc(18px * var(--s, 1));
+  width: calc(40px * var(--s, 1));
+  height: calc(20px * var(--s, 1));
+  image-rendering: pixelated;
+}
+
+.keyboard3keys-icon{
+  width: calc(66px * var(--s, 1));
+  height: calc(20px * var(--s, 1));
   image-rendering: pixelated;
 }
 
 .mousePC-icon{
-  width: calc(18px * var(--s, 1));
-  height: calc(27px * var(--s, 1));
+  width: calc(20px * var(--s, 1));
+  height: calc(32px * var(--s, 1));
   image-rendering: pixelated;
 }
 
