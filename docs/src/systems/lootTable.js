@@ -50,26 +50,28 @@ const NOTE_IDS_BY_CHEST = Object.freeze({
   map1: Object.freeze({
     chest_2: 'note_1',
     chest_3: 'note_2',
-    chest_5: 'note_3',
-    chest_6: 'note_4',
-    chest_7: 'note_5',
+    chest_4: 'note_3',
+    chest_5: 'note_4',
+    chest_6: 'note_5',
     chest_8: 'note_6'
   }),
   map2: Object.freeze({
     'chest-2-2': 'note_1',
     'chest-2-3': 'note_2',
     'chest-2-5': 'note_3',
-    'chest-2-6': 'note_4',
+    'chest-2-7': 'note_4',
     'chest-2-8': 'note_5',
-    'chest-2-10': 'note_6'
+    'chest-2-10': 'note_6',
+    'chest-2-11': 'note_7'
   }),
   map3: Object.freeze({
-    'chest-3-1': 'note_1',
-    'chest-3-3': 'note_2',
+    'chest-3-2': 'note_1',
+    'chest-3-4': 'note_2',
     'chest-3-5': 'note_3',
     'chest-3-6': 'note_4',
     'chest-3-8': 'note_5',
-    'chest-3-10': 'note_6'
+    'chest-3-10': 'note_6',
+    'chest-3-11': 'note_7'
   })
 });
 
