@@ -38,6 +38,19 @@ export const CHARACTER_ASSET_RULES = {
   supportedFacings: ['down', 'left', 'right', 'up']
 };
 
+function directionalFacingPath(character, variant, facing) {
+  return `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}.png`;
+}
+
+function walkingDirectionalCycle(character, variant, facing) {
+  return [
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-1.png`,
+    directionalFacingPath(character, variant, facing),
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-3.png`,
+    directionalFacingPath(character, variant, facing)
+  ];
+}
+
 // Per-character, per-variant sprite pack definitions.
 export const CHARACTER_PACKS = {
   player: {
@@ -45,12 +58,21 @@ export const CHARACTER_PACKS = {
       fallbackSingle: SPRITE_PATHS.player,
       fallbackSheet: SPRITE_PATHS.playerSheet,
       directional: {
-        up: `${CHARACTER_ASSET_RULES.baseDir}/player/default/up.png`,
-        down: `${CHARACTER_ASSET_RULES.baseDir}/player/default/down.png`,
-        left: `${CHARACTER_ASSET_RULES.baseDir}/player/default/left.png`,
-        right: `${CHARACTER_ASSET_RULES.baseDir}/player/default/right.png`
+        up: directionalFacingPath('player', 'default', 'up'),
+        down: directionalFacingPath('player', 'default', 'down'),
+        left: directionalFacingPath('player', 'default', 'left'),
+        right: directionalFacingPath('player', 'default', 'right')
       },
-      modes: {}
+      modes: {
+        walk: {
+          directionalFrames: {
+            up: walkingDirectionalCycle('player', 'default', 'up'),
+            down: walkingDirectionalCycle('player', 'default', 'down'),
+            left: walkingDirectionalCycle('player', 'default', 'left'),
+            right: walkingDirectionalCycle('player', 'default', 'right')
+          }
+        }
+      }
     }
   },
   npc: {
@@ -85,6 +107,14 @@ export function collectCharacterPaths() {
       if (pack.fallbackSheet) paths.add(pack.fallbackSheet);
       for (const modeEntry of Object.values(pack.modes || {})) {
         if (modeEntry.sheet) paths.add(modeEntry.sheet);
+        for (const path of Object.values(modeEntry.directional || {})) {
+          if (path) paths.add(path);
+        }
+        for (const frames of Object.values(modeEntry.directionalFrames || {})) {
+          for (const path of frames || []) {
+            if (path) paths.add(path);
+          }
+        }
       }
       for (const path of Object.values(pack.directional || {})) {
         if (path) paths.add(path);
@@ -107,9 +137,10 @@ export function resolveCharacterSprite(character, variant = 'default', mode = 'i
   if (!pack) return { sheet: null, directional: null, fallbackSingle: null, fallbackSheet: null };
   const normalizedMode = normalizeMode(mode);
   const modeEntry = pack.modes?.[normalizedMode] || pack.modes?.idle || {};
-  const directional = pack.directional || directionalPaths(character, variant, normalizedMode);
+  const directional = modeEntry.directional || pack.directional || directionalPaths(character, variant, normalizedMode);
   return {
     sheet: modeEntry.sheet || null,
+    directionalFrames: modeEntry.directionalFrames || null,
     directional,
     fallbackSingle: pack.fallbackSingle || null,
     fallbackSheet: pack.fallbackSheet || null,

@@ -53,7 +53,7 @@ export function updateHumanoidAnimation(entity, deltaTime, moving, facing, confi
   const interactFrameDuration = config.interactFrameDuration || 0.09;
   const alertFrameDuration = config.alertFrameDuration || 0.1;
   const bobSpeed = config.bobSpeed || 10;
-  const bobAmount = config.bobAmount || 1.5;
+  const bobAmount = config.bobAmount ?? 1.5;
   const frameCount = config.frameCount || 4;
 
   if (facing) anim.facing = facing;

@@ -202,7 +202,7 @@ export function updatePlayer(player, input, level, deltaTime) {
     idleFrameDuration: 0.34,
     interactFrameDuration: 0.085,
     alertFrameDuration: 0.1,
-    bobAmount: sprinting ? 2.2 : 1.5,
+    bobAmount: 0,
     walkFrames: [0, 1, 2, 1],
     idleFrames: [0, 0, 3, 0],
     interactFrames: [0, 1, 2, 3],

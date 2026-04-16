@@ -22,6 +22,19 @@ function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH =
   return true;
 }
 
+function resolveDirectionalImage(descriptor, anim) {
+  const facing = anim.facing || descriptor?.facing || 'down';
+  const directionalFrames = descriptor?.directionalFrames?.[facing];
+  if (Array.isArray(directionalFrames) && directionalFrames.length) {
+    const framePath = directionalFrames[anim.frame] || directionalFrames[0];
+    const frameImage = framePath ? getImage(framePath) : null;
+    if (frameImage) return frameImage;
+  }
+
+  const directionalPath = descriptor?.directional?.[facing];
+  return directionalPath ? getImage(directionalPath) : null;
+}
+
 // Draw a character using its sprite sheet or directional image.
 function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
   const anim = ensureAnimState(entity, { facing: entity.facing || 'down', frameCount: 4, variant: entity.characterVariant || 'default' });
@@ -35,7 +48,7 @@ function drawResolvedCharacter(p, descriptor, entity, x, y, w, h, fillColor) {
     return true;
   }
 
-  const directional = descriptor?.directional?.[anim.facing || 'down'] ? getImage(descriptor.directional[anim.facing || 'down']) : null;
+  const directional = resolveDirectionalImage(descriptor, anim);
   if (directional) {
     return drawDirectionalWithFixedHeight(p, directional, x, y, w, h, 32, anim.bob || 0);
   }
