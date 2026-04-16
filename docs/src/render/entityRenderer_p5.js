@@ -276,6 +276,41 @@ function renderFootsteps(p, level) {
   p.pop();
 }
 
+function renderPortals(p, level, camera, tile) {
+  const portals = level.portalSystem?.getPortals?.() || [];
+  if (!portals.length) return;
+
+  const visualScale = 2;
+  const drawSize = tile * visualScale;
+  const drawOffset = (drawSize - tile) / 2;
+
+  for (let i = 0; i < portals.length; i += 1) {
+    const portal = portals[i];
+    const x = portal.tx * tile;
+    const y = portal.ty * tile;
+    const drawX = x - drawOffset;
+    const drawY = y - drawOffset;
+    if (!camera.isRectVisible(drawX, drawY, drawSize, drawSize, 20)) continue;
+
+    const portalColor = portal.color === 'red' ? 'red' : (portal.color === 'blue' ? 'blue' : (i === 0 ? 'blue' : 'red'));
+    const imagePath = portalColor === 'red' ? SPRITE_PATHS.portal.red : SPRITE_PATHS.portal.blue;
+    const img = getImage(imagePath);
+    if (img) {
+      p.image(img, drawX, drawY, drawSize, drawSize);
+      continue;
+    }
+
+    p.push();
+    p.noStroke();
+    if (portalColor === 'blue') p.fill(96, 165, 250, 180);
+    else p.fill(248, 113, 113, 180);
+    p.circle(x + tile * 0.5, y + tile * 0.5, tile * 1.8);
+    p.fill(15, 23, 42, 200);
+    p.circle(x + tile * 0.5, y + tile * 0.5, tile * 0.92);
+    p.pop();
+  }
+}
+
 // Render E-key interaction hints at chests when player is nearby
 export function renderChestInteractionPrompts(p, level) {
   const prompt = getInteractionPrompt(level);
@@ -448,6 +483,7 @@ export function renderEntities(p, state) {
     renderButton(p, level, button);
   }
 
+  renderPortals(p, level, camera, tile);
   renderFootsteps(p, level);
 
   for (const npc of level.npcs) {

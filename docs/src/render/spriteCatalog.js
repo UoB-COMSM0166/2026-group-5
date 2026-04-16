@@ -26,6 +26,10 @@ export const SPRITE_PATHS = {
   button: {
     on: './assets/images/sprites/button_on.png',
     off: './assets/images/sprites/button_off.png'
+  },
+  portal: {
+    blue: './assets/images/adapted/interactives/portal_blue3232.png',
+    red: './assets/images/adapted/interactives/portal_red3232.png'
   }
 };
 

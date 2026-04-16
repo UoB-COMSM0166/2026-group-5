@@ -221,6 +221,10 @@ export class GameCore {
     if (s.screen !== SCREEN_STATES.PLAYING) { this.#syncHud(); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
     updatePlayer(s.level.player, this.#input.getMovement(), s.level, deltaTime);
+    if (this.#input.consumePortalPlace()) {
+      s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
+    }
+    s.level.portalSystem?.updatePlayerTeleport?.(s.level.player, s.level, deltaTime);
     if (s.camera) s.camera.update(s.level.player, deltaTime);
     const roomSystem = s.level.roomSystem;
     if (roomSystem.getActorRoomId(s.level.player) > 1) roomSystem.explorePlayerRoom(s.level.player);
