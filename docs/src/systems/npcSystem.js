@@ -12,7 +12,9 @@ import {
   shouldEnterChase,
   shouldExitChaseToSearch,
   canStateTransition,
-  getNpcStateLabel
+  getNpcStateLabel,
+  NPC_SEARCH_REASON_PORTAL_CONFUSED,
+  NPC_PORTAL_CONFUSION_DURATION
 } from './npcStateMachine.js';
 import {
   ensureNpcTrackerState,
@@ -65,6 +67,41 @@ function getPlayerCenter(player) {
 // Compute the pixel-centre of an NPC entity.
 function getNpcCenter(npc) {
   return { x: npc.x + npc.w / 2, y: npc.y + npc.h / 2 };
+}
+
+function getPortalConfusionAnchor(teleportResult, npc) {
+  const originX = teleportResult?.originX;
+  const originY = teleportResult?.originY;
+  if (Number.isFinite(originX) && Number.isFinite(originY)) {
+    return { x: originX, y: originY };
+  }
+  return getNpcCenter(npc);
+}
+
+function clearChaseTrackerState(npc) {
+  const tracker = npc.tracker;
+  if (!tracker) return;
+  tracker.path = [];
+  tracker.pathIndex = 0;
+  tracker.pathTargetKey = '';
+  tracker.pathReplanCooldown = 0;
+  tracker.pathGoalX = undefined;
+  tracker.pathGoalY = undefined;
+  tracker.edgeFollowTimer = 0;
+  tracker.edgeFollowDirX = 0;
+  tracker.edgeFollowDirY = 0;
+  tracker.edgeFacing = '';
+  tracker.steeringTurnTimer = 0;
+  tracker.lastMoveX = 0;
+  tracker.lastMoveY = 0;
+  tracker.slideAxis = 0;
+  tracker.slideCommitTimer = 0;
+  tracker.blockedTimer = 0;
+  tracker.stuckTimer = 0;
+  tracker.stuckCheckTimer = 0;
+  tracker.stuckOriginX = npc.x;
+  tracker.stuckOriginY = npc.y;
+  tracker.stuckRecoveryLevel = 0;
 }
 
 // Pick a random point around the NPC's search target.
@@ -333,6 +370,24 @@ function updateSearchScan(npc, deltaTime, level) {
   }, deltaTime, level);
 }
 
+export function handlePlayerPortalTeleport(level, teleportResult) {
+  if (!level || !Array.isArray(level.npcs) || !teleportResult?.teleported) return 0;
+  let affectedCount = 0;
+  for (const npc of level.npcs) {
+    ensureNpcRuntimeState(npc);
+    if (npc.state !== NPC_STATES.CHASE) continue;
+    const anchor = getPortalConfusionAnchor(teleportResult, npc);
+    beginSearchState(npc, anchor.x, anchor.y, NPC_SEARCH_REASON_PORTAL_CONFUSED, level, {
+      searchBaseX: anchor.x,
+      searchBaseY: anchor.y
+    });
+    npc.searchTimer = NPC_PORTAL_CONFUSION_DURATION;
+    clearChaseTrackerState(npc);
+    affectedCount += 1;
+  }
+  return affectedCount;
+}
+
 // Per-frame update for all NPCs: vision, alert, state transitions, movement.
 export function updateNpcs(level, deltaTime) {
   debugTickNpcTracker(deltaTime);
@@ -382,7 +437,11 @@ export function updateNpcs(level, deltaTime) {
       }
     }
 
-    if (canStateTransition(npc, now) && shouldEnterChase(npc, seesPlayer)) {
+    const inPortalConfusion = npc.state === NPC_STATES.SEARCH
+      && npc.searchReason === NPC_SEARCH_REASON_PORTAL_CONFUSED
+      && (npc.searchTimer || 0) > 0;
+    const canAttemptChase = canStateTransition(npc, now) || (inPortalConfusion && seesPlayer);
+    if (canAttemptChase && shouldEnterChase(npc, seesPlayer)) {
       if (npc.state !== NPC_STATES.CHASE) {
         console.log(`%c[DEBUG STATE] NPC=${npc.id} ${npc.state}→CHASE seesPlayer=${seesPlayer} pos=(${npc.x.toFixed(1)},${npc.y.toFixed(1)})`, 'color: #f44336; font-weight: bold');
         setNpcState(npc, NPC_STATES.CHASE);

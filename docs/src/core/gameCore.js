@@ -6,7 +6,7 @@ import { bootstrapLegacyMaps, getMap } from '../maps/mapManager.js';
 import { Level } from '../maps/mapFactory.js';
 import { updatePlayer, triggerPlayerAction } from '../systems/playerSystem.js';
 import { getInteractionPrompt, tryInteract } from '../systems/interactionSystem.js';
-import { updateNpcs } from '../systems/npcSystem.js';
+import { updateNpcs, handlePlayerPortalTeleport } from '../systems/npcSystem.js';
 import { renderScene } from '../render/renderSystem.js';
 import { AudioSystem } from '../systems/audioSystem.js';
 import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
@@ -221,6 +221,13 @@ export class GameCore {
     if (s.screen !== SCREEN_STATES.PLAYING) { this.#syncHud(); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
     updatePlayer(s.level.player, this.#input.getMovement(), s.level, deltaTime);
+    if (this.#input.consumePortalPlace()) {
+      s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
+    }
+    const teleportResult = s.level.portalSystem?.updatePlayerTeleport?.(s.level.player, s.level, deltaTime);
+    if (teleportResult?.teleported) {
+      handlePlayerPortalTeleport(s.level, teleportResult);
+    }
     if (s.camera) s.camera.update(s.level.player, deltaTime);
     const roomSystem = s.level.roomSystem;
     if (roomSystem.getActorRoomId(s.level.player) > 1) roomSystem.explorePlayerRoom(s.level.player);

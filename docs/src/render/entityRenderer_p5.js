@@ -5,6 +5,7 @@ import { Camera } from '../systems/cameraSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
 import { updateLootPopups, renderLootPopups } from '../systems/lootPopup.js';
+import { NPC_SEARCH_REASON_PORTAL_CONFUSED } from '../systems/npcStateMachine.js';
 
 
 // Draw a sprite image at fixed height, preserving aspect ratio.
@@ -227,13 +228,16 @@ function renderButton(p, level, button) {
 
 // Draw a floating question mark at the NPC's search target.
 function renderSearchMarker(p, npc) {
-  if (!npc.searchTargetX || !npc.searchTargetY) return;
+  const isPortalConfused = npc.searchReason === NPC_SEARCH_REASON_PORTAL_CONFUSED;
+  const markerX = isPortalConfused ? (npc.x + npc.w / 2) : npc.searchTargetX;
+  const markerY = isPortalConfused ? (npc.y - 9) : (npc.searchTargetY - 1);
+  if (!Number.isFinite(markerX) || !Number.isFinite(markerY)) return;
   p.push();
   p.noStroke();
   p.fill(245, 158, 11, 210);
   p.textAlign(p.CENTER, p.CENTER);
   p.textSize(14);
-  p.text('?', npc.searchTargetX, npc.searchTargetY - 1);
+  p.text('?', markerX, markerY);
   p.pop();
 }
 
@@ -274,6 +278,41 @@ function renderFootsteps(p, level) {
     p.circle(footstep.x, footstep.y, size * 2);
   }
   p.pop();
+}
+
+function renderPortals(p, level, camera, tile) {
+  const portals = level.portalSystem?.getPortals?.() || [];
+  if (!portals.length) return;
+
+  const visualScale = 2;
+  const drawSize = tile * visualScale;
+  const drawOffset = (drawSize - tile) / 2;
+
+  for (let i = 0; i < portals.length; i += 1) {
+    const portal = portals[i];
+    const x = portal.tx * tile;
+    const y = portal.ty * tile;
+    const drawX = x - drawOffset;
+    const drawY = y - drawOffset;
+    if (!camera.isRectVisible(drawX, drawY, drawSize, drawSize, 20)) continue;
+
+    const portalColor = portal.color === 'red' ? 'red' : (portal.color === 'blue' ? 'blue' : (i === 0 ? 'blue' : 'red'));
+    const imagePath = portalColor === 'red' ? SPRITE_PATHS.portal.red : SPRITE_PATHS.portal.blue;
+    const img = getImage(imagePath);
+    if (img) {
+      p.image(img, drawX, drawY, drawSize, drawSize);
+      continue;
+    }
+
+    p.push();
+    p.noStroke();
+    if (portalColor === 'blue') p.fill(96, 165, 250, 180);
+    else p.fill(248, 113, 113, 180);
+    p.circle(x + tile * 0.5, y + tile * 0.5, tile * 1.8);
+    p.fill(15, 23, 42, 200);
+    p.circle(x + tile * 0.5, y + tile * 0.5, tile * 0.92);
+    p.pop();
+  }
 }
 
 // Render E-key interaction hints at chests when player is nearby
@@ -448,6 +487,7 @@ export function renderEntities(p, state) {
     renderButton(p, level, button);
   }
 
+  renderPortals(p, level, camera, tile);
   renderFootsteps(p, level);
 
   for (const npc of level.npcs) {

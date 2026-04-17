@@ -3,6 +3,7 @@ import { DoorSystem } from '../systems/doorSystem.js';
 import { BoxSystem } from '../systems/boxSystem.js';
 import { RoomSystem } from '../systems/roomSystem.js';
 import { MissionSystem } from '../systems/missionSystem.js';
+import { PortalSystem } from '../systems/portalSystem.js';
 import { Player } from '../entities/Player.js';
 import { NPC } from '../entities/NPC.js';
 
@@ -23,6 +24,7 @@ export class Level {
   #boxSystem;
   #roomSystem;
   #missionSystem;
+  #portalSystem;
 
   constructor(levelId, spec) {
     this.#id = levelId;
@@ -60,6 +62,7 @@ export class Level {
     this.#roomSystem.attachNpcs(this.#npcs);
 
     this.#missionSystem = new MissionSystem(this.#collision, this.#settings.baseTile, spawnTile, this.#boxSystem.boxes.length, spec?.objective || {});
+    this.#portalSystem = new PortalSystem({ tileSize: this.#settings.baseTile });
 
     this.#source = spec?.source || spec;
     this.#spec = spec;
@@ -82,6 +85,7 @@ export class Level {
   get boxSystem() { return this.#boxSystem; }
   get roomSystem() { return this.#roomSystem; }
   get missionSystem() { return this.#missionSystem; }
+  get portalSystem() { return this.#portalSystem; }
 
   // Private helper methods
   #clone(value) {

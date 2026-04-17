@@ -3,6 +3,8 @@ export class InputSystem {
   #pressed;
   #interactPressed;
   #confirmPressed;
+  #portalPlacePressed;
+  #spaceHeld;
   #LEFT_CODES;
   #RIGHT_CODES;
   #UP_CODES;
@@ -14,6 +16,8 @@ export class InputSystem {
     this.#pressed = new Map();
     this.#interactPressed = false;
     this.#confirmPressed = false;
+    this.#portalPlacePressed = false;
+    this.#spaceHeld = false;
     this.#LEFT_CODES = new Set(['KeyA', 'ArrowLeft']);
     this.#RIGHT_CODES = new Set(['KeyD', 'ArrowRight']);
     this.#UP_CODES = new Set(['KeyW', 'ArrowUp']);
@@ -58,12 +62,19 @@ export class InputSystem {
   onDomKeyDown(key, code = '') {
     this.#setPressed(code || key, true);
     const k = String(key || '').toLowerCase();
+    const isSpace = code === 'Space' || key === ' ' || k === 'spacebar';
+    if (isSpace && !this.#spaceHeld) {
+      this.#portalPlacePressed = true;
+      this.#spaceHeld = true;
+    }
     if (k === 'e') this.#interactPressed = true;
-    if (k === 'enter' || key === ' ') this.#confirmPressed = true;
+    if (k === 'enter' || isSpace) this.#confirmPressed = true;
   }
 
   onDomKeyUp(key, code = '') {
     this.#setPressed(code || key, false);
+    const k = String(key || '').toLowerCase();
+    if (code === 'Space' || key === ' ' || k === 'spacebar') this.#spaceHeld = false;
   }
 
   // Return current movement vector {x, y} and sprint flag.
@@ -89,11 +100,20 @@ export class InputSystem {
     return value;
   }
 
+  // Read and clear the one-shot portal placement flag (Space).
+  consumePortalPlace() {
+    const value = this.#portalPlacePressed;
+    this.#portalPlacePressed = false;
+    return value;
+  }
+
   // Clear all tracked key state (used on window blur).
   reset() {
     this.#pressed.clear();
     this.#interactPressed = false;
     this.#confirmPressed = false;
+    this.#portalPlacePressed = false;
+    this.#spaceHeld = false;
   }
 
   debugPressed() {
