@@ -32,7 +32,7 @@ function getTilesetInfo(levelId, gid) {
   return { firstgid, config: tilesetConfig[firstgid], localId: base - firstgid, resolvedGid: base };
 }
 
-// Draw collision tiles as semi-transparent red rectangles (debug).
+// Draw collision tiles as semi-transparent red rectangles (fallback when no map data).
 function drawFallbackCollision(p, level, camera) {
   const tile = level.settings.baseTile;
   const bounds = camera.getVisibleTileBounds(tile, level.collision[0]?.length || 0, level.collision.length || 0);
@@ -122,7 +122,7 @@ function drawLayer(p, level, layer, camera) {
   }
 }
 
-// Main entry: render all visible map layers and optional debug overlays.
+// Main entry: render all visible map layers.
 export function renderMap(p, state) {
   const level = state.level;
   if (!level) return;

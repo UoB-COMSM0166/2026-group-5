@@ -88,7 +88,7 @@ function loadImageAsync(p, path) {
     // probe so bad optional assets don't block startup.
     timeoutId = setTimeout(() => {
       loadDomImageAsync(path).then(finish);
-    }, 2500);
+    }, 800);
 
     try {
       p.loadImage(
@@ -104,23 +104,51 @@ function loadImageAsync(p, path) {
   });
 }
 
-// Load all game assets in parallel; populates the singleton asset store.
+// Load all game assets in batches to prevent overwhelming the browser.
+// Critical assets load first, then non-critical in parallel batches.
 export async function loadAssetsAsync(p) {
   const paths = collectPaths();
   assets.failed = [];
-  const pending = [];
-  for (const path of paths) {
-    if (assets.requested.has(path)) continue;
-    assets.requested.add(path);
-    pending.push(loadImageAsync(p, path));
-  }
-  const results = await Promise.all(pending);
-  for (const result of results) {
-    assets.images.set(result.path, result.ok ? result.img : null);
-    if (!result.ok) assets.failed.push(result.path);
-  }
+
+  // Critical UI assets that must load first for basic display
+  const criticalPaths = paths.filter(p =>
+    p.includes('start_bg') ||
+    p.includes('title_logo') ||
+    p.includes('key3232') ||
+    p.includes('note') ||
+    p.includes('tutorial')
+  );
+
+  // Load critical assets first
+  await loadBatch(p, criticalPaths, 8);
+
+  // Load remaining assets in parallel batches
+  const remainingPaths = paths.filter(p => !assets.requested.has(p));
+  await loadBatch(p, remainingPaths, 16);
+
   assets.ready = true;
   return getAssetState();
+}
+
+// Load a batch of assets with concurrency limit
+async function loadBatch(p, paths, concurrency) {
+  for (let i = 0; i < paths.length; i += concurrency) {
+    const batch = paths.slice(i, i + concurrency);
+    const promises = batch.map(path => {
+      if (assets.requested.has(path)) return Promise.resolve({ path, ok: true });
+      assets.requested.add(path);
+      return loadImageAsync(p, path);
+    });
+    const results = await Promise.all(promises);
+    for (const result of results) {
+      if (result.ok && result.img) {
+        assets.images.set(result.path, result.img);
+      } else if (!result.ok) {
+        assets.failed.push(result.path);
+        assets.images.set(result.path, null);
+      }
+    }
+  }
 }
 
 // Retrieve a loaded image by its path, or null if unavailable.

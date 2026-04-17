@@ -129,16 +129,8 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
   const allowDoors = !!options.allowDoors;
   const walkOpts = allowDoors ? { allowDoors: true } : {};
 
-  const isChaseNpc = actor?.state === 'CHASE';
-  if (isChaseNpc) {
-    const startWalkable = isTileWalkableForActor(level, actor, start.tx, start.ty, tileSize, walkOpts);
-    const goalWalkable = isTileWalkableForActor(level, actor, goal.tx, goal.ty, tileSize, walkOpts);
-    console.log(`[DEBUG findPath] NPC=${actor.id} start=(${start.tx},${start.ty},walk=${startWalkable}) goal=(${goal.tx},${goal.ty},walk=${goalWalkable}) actorPos=(${actor.x?.toFixed(2)},${actor.y?.toFixed(2)}) w=${actor.w} h=${actor.h} insetX=${actor.collisionInsetX} insetY=${actor.collisionInsetY}`);
-  }
-
   if (start.tx === goal.tx && start.ty === goal.ty) return [start];
   if (!isTileWalkableForActor(level, actor, goal.tx, goal.ty, tileSize, walkOpts)) {
-    if (isChaseNpc) console.log(`[DEBUG findPath] GOAL NOT WALKABLE NPC=${actor.id} goal=(${goal.tx},${goal.ty})`);
     return [];
   }
 
@@ -172,9 +164,6 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
         walkKey = toKey(prev.tx, prev.ty);
       }
       path.reverse();
-      if (isChaseNpc) {
-        console.log(`[DEBUG findPath] FOUND NPC=${actor.id} pathLen=${path.length} iterations=${iterations} path=[${path.map(n=>`(${n.tx},${n.ty})`).join('→')}]`);
-      }
       return path;
     }
 
@@ -200,9 +189,6 @@ export function findPath(level, actor, startTile, goalTile, options = {}) {
     }
   }
 
-  if (isChaseNpc) {
-    console.log(`[DEBUG findPath] NO PATH FOUND NPC=${actor.id} iterations=${iterations} closedNodes=${closed.size}`);
-  }
   return [];
 }
 

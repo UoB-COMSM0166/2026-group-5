@@ -113,6 +113,9 @@ export class IntroScreen extends Screen {
       return;
     }
 
+    // First playthrough: always load map1
+    api.loadStoryLevel?.('map1');
+    api.markMissionStart?.();
     api.setScreen?.(SCREEN_STATES.PLAYING);
     api.setMessage?.('Mission start', 1.0);
   }

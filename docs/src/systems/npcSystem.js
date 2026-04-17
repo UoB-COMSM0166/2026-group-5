@@ -22,8 +22,7 @@ import {
   runNpcTracker,
   getNpcWorldCenterTarget,
   applyNpcSeparation,
-  findNearbyOpenDoor,
-  debugTickNpcTracker
+  findNearbyOpenDoor
 } from './npcTrackerSystem.js';
 import { DOOR_STATES, DOOR_TIMING } from './doorSystem.js';
 
@@ -390,7 +389,6 @@ export function handlePlayerPortalTeleport(level, teleportResult) {
 
 // Per-frame update for all NPCs: vision, alert, state transitions, movement.
 export function updateNpcs(level, deltaTime) {
-  debugTickNpcTracker(deltaTime);
   let detectedBy = null;
   const now = Date.now();
   for (const npc of level.npcs) {
@@ -406,7 +404,6 @@ export function updateNpcs(level, deltaTime) {
     }
 
     if (canStateTransition(npc, now) && shouldExitChaseToSearch(npc, seesPlayer) && npc.lastSeenX && npc.lastSeenY) {
-      console.log(`%c[DEBUG STATE] NPC=${npc.id} CHASE→SEARCH (lost sight) pos=(${npc.x.toFixed(1)},${npc.y.toFixed(1)}) lastSeen=(${npc.lastSeenX.toFixed(1)},${npc.lastSeenY.toFixed(1)})`, 'color: #e91e63; font-weight: bold');
       beginSearchState(npc, npc.lastSeenX, npc.lastSeenY, 'PLAYER_LAST_SEEN', level);
       clearNpcTrackerState(npc);
     }
@@ -443,7 +440,6 @@ export function updateNpcs(level, deltaTime) {
     const canAttemptChase = canStateTransition(npc, now) || (inPortalConfusion && seesPlayer);
     if (canAttemptChase && shouldEnterChase(npc, seesPlayer)) {
       if (npc.state !== NPC_STATES.CHASE) {
-        console.log(`%c[DEBUG STATE] NPC=${npc.id} ${npc.state}→CHASE seesPlayer=${seesPlayer} pos=(${npc.x.toFixed(1)},${npc.y.toFixed(1)})`, 'color: #f44336; font-weight: bold');
         setNpcState(npc, NPC_STATES.CHASE);
         clearNpcTrackerState(npc);
         npc.roomLightResponse = null;
@@ -453,11 +449,6 @@ export function updateNpcs(level, deltaTime) {
     if (npc.state === NPC_STATES.CHASE) {
       const playerCenter = getPlayerCenter(level.player);
       const chaseTarget = getNpcWorldCenterTarget(npc, playerCenter.x, playerCenter.y);
-      if (!npc._dbgChaseFrame) npc._dbgChaseFrame = 0;
-      npc._dbgChaseFrame++;
-      if (npc._dbgChaseFrame % 3 === 0) {
-        console.log(`[DEBUG CHASE TARGET] NPC=${npc.id} playerCenter=(${playerCenter.x.toFixed(2)},${playerCenter.y.toFixed(2)}) chaseTarget=(${chaseTarget.x.toFixed(2)},${chaseTarget.y.toFixed(2)}) playerPos=(${level.player.x.toFixed(2)},${level.player.y.toFixed(2)}) npcPos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) npcW=${npc.w} npcH=${npc.h} insetX=${npc.collisionInsetX} insetY=${npc.collisionInsetY}`);
-      }
       runNpcTracker(npc, {
         profile: 'steering_chase',
         targetX: chaseTarget.x,
