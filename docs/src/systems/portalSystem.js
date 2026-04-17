@@ -27,14 +27,17 @@ export class PortalSystem {
         this.#lastTouchedPortalId = null;
     }
 
+    // return a copy of current portals
     getPortals() {
         return this.#portals.map((portal) => ({ ...portal }));
     }
 
+    // resets all portals
     clear() {
         this.#portals = [];
     }
 
+    // attempt to place a portal in front of the player
     tryPlaceInFront(player, level) {
         if (!player || !level) {
             return { success: false, reason: 'missing_context', placedPortal: null, removedPortal: null };
@@ -49,7 +52,7 @@ export class PortalSystem {
         if (this.#portals.some((portal) => portal.tx === tx && portal.ty === ty)) {
             return { success: false, reason: 'occupied_portal', placedPortal: null, removedPortal: null };
         }
-        
+
         let removedPortal = null;
         if (this.#portals.length >= this.#maxPortals) {
             removedPortal = this.#portals.shift();
@@ -68,6 +71,7 @@ export class PortalSystem {
         return { success: true, reason: '', placedPortal: { ...placedPortal }, removedPortal: removedPortal ? { ...removedPortal } : null };
     }
 
+    // create a portal object
     #createPortal(tx, ty, id = null, color = 'blue') {
         const portalId = id == null ? this.#nextPortalId : id;
         const cx = (tx + 0.5) * this.#tileSize;
@@ -76,6 +80,7 @@ export class PortalSystem {
         return { id: portalId, tx, ty, cx, cy, color };
     }
 
+    // scan forward from the player for a valid portal placement tile
     #findPlacementTileInFront(player, level) {
         const dir = this.#getFacingDirection(player);
         const start = this.#getFrontTile(player);
@@ -109,11 +114,13 @@ export class PortalSystem {
         return { success: false, reason: hadNonOverlappingCandidate ? 'invalid_tile' : 'no_non_overlapping_tile' };
     }
 
+    // test whether the portal trigger at a given tile overlaps with a rectangle
     #portalTriggerOverlapsRect(rect, tx, ty) {
         const triggerRect = this.#getPortalTriggerRect(tx, ty);
         return this.#rectsOverlap(rect, triggerRect);
     }
 
+    // checks if two rectangles overlap
     #rectsOverlap(a, b) {
         return !(
             a.x + a.w <= b.x ||
@@ -123,6 +130,7 @@ export class PortalSystem {
         );
     }
 
+    // computes the portal's trigger rectangle based on its tile coordinates
     #getPortalTriggerRect(tx, ty) {
         const triggerSize = this.#tileSize * this.#triggerScale;
         const triggerOffset = (triggerSize - this.#tileSize) / 2;
@@ -135,12 +143,14 @@ export class PortalSystem {
         };
     }
 
+    // alternates portal colors and returns the next one to use
     #consumeNextPortalColor() {
         const color = this.#nextPortalColor;
         this.#nextPortalColor = color === 'blue' ? 'red' : 'blue';
         return color;
     }
 
+    // computes the tile directly in front of the player based on their direction
     #getFrontTile(player) {
         const dir = this.#getFacingDirection(player);
         const baseTx = Math.floor((player.x + player.w / 2) / this.#tileSize);
@@ -149,6 +159,7 @@ export class PortalSystem {
         return { tx: baseTx + dir.x, ty: baseTy + dir.y };
     }
 
+    // converts player's facing direction into a unit vector
     #getFacingDirection(player) {
         const facing = String(player.facing || 'down').toLowerCase();
 
@@ -165,10 +176,12 @@ export class PortalSystem {
         return { x: 0, y: 1 };
     }
 
+    // checks if the player can occupy a given position without colliding with the world
     #canPlayerOccupy(player, x, y, level) {
         return canMoveToRect(player, x, y, level.collision, this.#tileSize, level);
     }
 
+    // handles portal touch detection and teleportation logic
     updatePlayerTeleport(player, level, deltaTime) {
         this.#teleportCooldown = Math.max(0, this.#teleportCooldown - (deltaTime || 0));
 
@@ -210,6 +223,7 @@ export class PortalSystem {
         return { teleported: true, reason: '', fromPortalId: touched.id, toPortalId: destination.id };
     }
 
+    // finds the portal the player is currently touching
     #getTouchedPortal(player) {
         if (!player || !this.#portals.length) {
             return null;
@@ -237,6 +251,7 @@ export class PortalSystem {
         return best;
     }
 
+    // chooses a safe teleport destination near the destination portal
     #resolveDestinationPosition(player, sourcePortal, destinationPortal, level) {
         const baseX = destinationPortal.cx - player.w / 2;
         const baseY = destinationPortal.cy - player.h / 2;
@@ -254,6 +269,7 @@ export class PortalSystem {
         return null;
     }
 
+    // computes an exit offset direction and distance
     #buildExitOffset(sourcePortal, destinationPortal, player) {
         let dx = destinationPortal.cx - sourcePortal.cx;
         let dy = destinationPortal.cy - sourcePortal.cy;
