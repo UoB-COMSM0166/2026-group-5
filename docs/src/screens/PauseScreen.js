@@ -133,11 +133,12 @@ export class PauseScreen extends Screen {
     const notes = this.#getCollectedNotes(state);
 
     if (!notes.length) {
-      if (key === 'Enter') {
+      // No notes: only allow Escape/Backspace to return to menu, ignore other keys
+      if (key === 'Escape' || key === 'Backspace') {
         pause.view = PAUSE_VIEWS.MENU;
         return true;
       }
-      return false;
+      return true;
     }
 
     if (key === 'ArrowUp') {

@@ -198,13 +198,13 @@ export function updatePlayer(player, input, level, deltaTime) {
   player.characterVariant ||= 'default';
   updateHumanoidAnimation(player, deltaTime, moved, player.facing, {
     frameCount: 4,
-    walkFrameDuration: sprinting ? 0.09 : 0.12,
-    idleFrameDuration: 0.34,
+    walkFrameDuration: sprinting ? 0.15 : 0.20,
+    idleFrameDuration: 0.25,
     interactFrameDuration: 0.085,
     alertFrameDuration: 0.1,
     bobAmount: 0,
-    walkFrames: [0, 1, 2, 1],
-    idleFrames: [0, 0, 3, 0],
+    walkFrames: [0, 1, 2, 3],
+    idleFrames: [0, 1, 2, 3],
     interactFrames: [0, 1, 2, 3],
     alertFrames: [3, 2, 3, 1],
     variant: player.characterVariant

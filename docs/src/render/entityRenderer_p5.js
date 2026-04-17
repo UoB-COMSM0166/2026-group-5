@@ -6,6 +6,7 @@ import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
 import { updateLootPopups, renderLootPopups } from '../systems/lootPopup.js';
 import { NPC_SEARCH_REASON_PORTAL_CONFUSED } from '../systems/npcStateMachine.js';
+import { setFont, FONTS } from '../utils/fonts.js';
 
 
 // Draw a sprite image at fixed height, preserving aspect ratio.
@@ -185,29 +186,8 @@ function drawChest(p, chest, tile, level) {
 
 // Draw the pulsing exit beacon when the mission is unlocked.
 function drawExitBeacon(p, missionSystem, tile) {
-  const exit = missionSystem?.exit;
-  if (!exit) return;
-  const cx = exit.x + exit.w / 2;
-  const cy = exit.y + exit.h / 2;
-  const pulse = (Math.sin(exit.pulse || 0) + 1) * 0.5;
-  const size = tile * (exit.unlocked ? 0.78 : 0.58);
-  p.push();
-  p.translate(cx, cy);
-  p.noStroke();
-  p.fill(exit.unlocked ? 34 : 71, exit.unlocked ? 197 : 85, exit.unlocked ? 94 : 105, exit.unlocked ? 110 + pulse * 70 : 60);
-  p.circle(0, 0, size + pulse * (exit.unlocked ? 10 : 4));
-  p.rotate((exit.pulse || 0) * 0.6);
-  p.fill(exit.unlocked ? '#86efac' : '#94a3b8');
-  p.quad(0, -size * 0.55, size * 0.55, 0, 0, size * 0.55, -size * 0.55, 0);
-  if (exit.unlocked) {
-    p.fill(255, 255, 255, 180);
-    p.rect(-2, -size * 0.62 - 8, 4, 12, 2);
-    p.triangle(0, -size * 0.62 - 16, -6, -size * 0.62 - 6, 6, -size * 0.62 - 6);
-  } else {
-    p.fill(15, 23, 42, 220);
-    p.rect(-5, -4, 10, 10, 2);
-  }
-  p.pop();
+  // Exit beacon rendering removed as requested
+  // (No pulsing circles or arrows)
 }
 
 // Draw a light-switch button with lit/unlit and glow states.
@@ -475,6 +455,45 @@ export function renderEntities(p, state) {
     if (!camera.isRectVisible(worldX, worldY, worldW, worldH, 48)) continue;
     if (door.panels === 'double') drawDoubleDoor(p, door, tile);
     else drawSingleDoor(p, door, tile);
+
+    // Render EXIT label and glow for exit doors (doorJ, door_3, door_K)
+    if (door.keyId === 'key_exit') {
+      const hasExitKey = state.inventory?.hasKey?.('key_exit');
+      const cx = worldX + worldW / 2;
+      const cy = worldY + worldH / 2;
+      const pulse = (Math.sin(performance.now() * 0.003) + 1) * 0.5;
+      p.push();
+      p.noStroke();
+      // Glow effect behind the door
+      const glowW = worldW * 0.8 + pulse * 3;
+      const glowH = worldH * 0.8 + pulse * 3;
+      const glowAlpha = hasExitKey ? 50 + pulse * 30 : 25 + pulse * 15;
+      const gr = hasExitKey ? 34 : 180;
+      const gg = hasExitKey ? 197 : 180;
+      const gb = hasExitKey ? 94 : 180;
+      p.fill(gr, gg, gb, glowAlpha);
+      p.ellipse(cx, cy, glowW * 2, glowH * 2);
+      p.fill(gr, gg, gb, glowAlpha * 0.5);
+      p.ellipse(cx, cy, glowW * 2.5, glowH * 2.5);
+      // EXIT text with tip font style
+      setFont(p, 7, FONTS.ui, 'bold');
+      p.fill(hasExitKey ? '#22c55e' : '#9ca3af');
+      if ((door.w || 2) <= 1) {
+        // Vertical layout for narrow doors
+        p.textAlign(p.CENTER, p.BOTTOM);
+        const chars = ['E','X','I','T'];
+        const lineH = 9;
+        const startY = worldY - 12 - (chars.length - 1) * lineH;
+        for (let i = 0; i < chars.length; i++) {
+          p.text(chars[i], cx, startY + i * lineH + lineH);
+        }
+      } else {
+        // Horizontal layout for wide doors
+        p.textAlign(p.CENTER, p.BOTTOM);
+        p.text('EXIT', cx, worldY - 4);
+      }
+      p.pop();
+    }
   }
 
   if (level.missionSystem?.exit) {

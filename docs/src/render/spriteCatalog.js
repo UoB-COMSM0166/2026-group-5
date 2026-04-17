@@ -48,10 +48,19 @@ function directionalFacingPath(character, variant, facing) {
 
 function walkingDirectionalCycle(character, variant, facing) {
   return [
-    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-1.png`,
-    directionalFacingPath(character, variant, facing),
-    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-3.png`,
-    directionalFacingPath(character, variant, facing)
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-walk-0.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-walk-1.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-walk-2.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-walk-3.png`
+  ];
+}
+
+function idleDirectionalCycle(character, variant, facing) {
+  return [
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-idle-0.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-idle-1.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-idle-2.png`,
+    `${CHARACTER_ASSET_RULES.baseDir}/${character}/${variant}/${facing}-idle-3.png`
   ];
 }
 
@@ -59,8 +68,6 @@ function walkingDirectionalCycle(character, variant, facing) {
 export const CHARACTER_PACKS = {
   player: {
     default: {
-      fallbackSingle: SPRITE_PATHS.player,
-      fallbackSheet: SPRITE_PATHS.playerSheet,
       directional: {
         up: directionalFacingPath('player', 'default', 'up'),
         down: directionalFacingPath('player', 'default', 'down'),
@@ -74,6 +81,11 @@ export const CHARACTER_PACKS = {
             down: walkingDirectionalCycle('player', 'default', 'down'),
             left: walkingDirectionalCycle('player', 'default', 'left'),
             right: walkingDirectionalCycle('player', 'default', 'right')
+          }
+        },
+        idle: {
+          directionalFrames: {
+            down: idleDirectionalCycle('player', 'default', 'down')
           }
         }
       }

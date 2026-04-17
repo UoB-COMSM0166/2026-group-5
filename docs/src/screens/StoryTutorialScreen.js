@@ -45,33 +45,27 @@ export class TutorialScreen extends Screen {
   }
 
   update(state, deltaTime, api) {
-    // Handle page turning animation
+    // Instant page switch (no animation)
     if (this.#turning) {
-      this.#turnT += deltaTime * 4.5;
-      if (this.#turnT >= 1) {
-        this.#turnT = 0;
-        this.#turning = false;
-        this.#pageIndex += this.#turnDir;
-        if (this.#pageIndex < 0) this.#pageIndex = 0;
-        if (this.#pageIndex > TUTORIAL_PAGES.length - 1) this.#pageIndex = TUTORIAL_PAGES.length - 1;
-      }
+      this.#turning = false;
+      this.#pageIndex += this.#turnDir;
+      if (this.#pageIndex < 0) this.#pageIndex = 0;
+      if (this.#pageIndex > TUTORIAL_PAGES.length - 1) this.#pageIndex = TUTORIAL_PAGES.length - 1;
       return;
     }
 
-    // Handle long press E: non-last pages jump to last page, last page returns to start
+    // Handle long press E: non-last pages jump to last page (last page does nothing)
     if (this.#eKeyHolding) {
       this.#eKeyTimer += deltaTime;
       if (this.#eKeyTimer >= TutorialScreen.SKIP_HOLD_TIME) {
         this.#eKeyHolding = false;
         this.#eKeyTimer = 0;
         const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
-        if (isLastPage) {
-          // Last page: return to start screen
-          api.setScreen?.(SCREEN_STATES.START);
-        } else {
+        if (!isLastPage) {
           // Non-last pages: jump directly to last page
           this.#pageIndex = TUTORIAL_PAGES.length - 1;
         }
+        // Last page: no action (Enter key handles continue)
       }
     }
   }
@@ -99,10 +93,14 @@ export class TutorialScreen extends Screen {
       return true;
     }
     if (key === 'Enter') {
-      // On last page, Enter goes to playthrough select if from story mode
-      if (this.#pageIndex === TUTORIAL_PAGES.length - 1 && state.story?.fromStoryMode) {
-        state.story.fromStoryMode = false;
-        api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+      // On last page: Story Mode continues, non-story returns to START
+      if (this.#pageIndex === TUTORIAL_PAGES.length - 1) {
+        if (state.story?.fromStoryMode) {
+          state.story.fromStoryMode = false;
+          api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+        } else {
+          api.setScreen?.(SCREEN_STATES.START);
+        }
       }
       return true;
     }
@@ -175,19 +173,23 @@ export class TutorialScreen extends Screen {
     p.fill(20, 24, 35, 250);
     p.rect(tutorialX, tutorialY, tutorialW, tutorialH, 12);
 
+    // Draw current page only (no transition)
     this.#drawPageContent(p, pageImg, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawNavButtons(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawPageIndicator(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
-    this.#drawSkipProgress(p, tutorialX, tutorialY, tutorialH, layout);
+    // Only show skip progress on non-last pages (long-press E does nothing on last page)
+    const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
+    if (!isLastPage) {
+      this.#drawSkipProgress(p, tutorialX, tutorialY, tutorialH, layout);
+    }
 
     // Determine bottom text based on page and mode
     let bottomText;
-    const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
     const fromStory = state.story?.fromStoryMode;
     if (isLastPage && fromStory) {
       bottomText = 'Press Enter to continue';
     } else if (isLastPage) {
-      bottomText = 'Hold E to return to menu';
+      bottomText = 'Press Enter to return';
     } else {
       bottomText = 'Press ← → to flip pages, hold E to end';
     }
@@ -202,20 +204,11 @@ export class TutorialScreen extends Screen {
     state.prompt = bottomText;
   }
 
+  // Draw page content - simple centered image without animation
   #drawPageContent(p, pageImg, x, y, w, h, layout) {
-    const contentPadding = sx(10, layout);
+    const contentPadding = sx(20, layout);
     const imgMaxW = w - contentPadding * 2;
     const imgMaxH = h - contentPadding * 2;
-
-    if (this.#turning) {
-      const progress = this.#turnT;
-      const scale = 1 - Math.sin(progress * Math.PI) * 0.1;
-      const alpha = 255 * (1 - Math.sin(progress * Math.PI));
-      p.push();
-      p.translate(x + w / 2, y + h / 2);
-      p.scale(scale);
-      p.tint(255, alpha);
-    }
 
     if (pageImg && pageImg.width > 0) {
       const scale = Math.min(imgMaxW / pageImg.width, imgMaxH / pageImg.height, 1);
@@ -228,13 +221,11 @@ export class TutorialScreen extends Screen {
       p.fill('#606060');
       p.noStroke();
       p.rect(x + contentPadding, y + contentPadding, w - contentPadding * 2, h - contentPadding * 2, 8);
-      p.fill('#a0a0a0');
+      p.fill('#a0a0c0');
       setFont(p, Math.max(12, sx(14, layout)), FONTS.ui);
       p.textAlign(p.CENTER, p.CENTER);
       p.text(`Tutorial Page ${this.#pageIndex + 1}`, x + w / 2, y + h / 2);
     }
-
-    if (this.#turning) p.pop();
   }
 
   #drawNavButtons(p, x, y, w, h, layout) {

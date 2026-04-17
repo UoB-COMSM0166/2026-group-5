@@ -22,6 +22,7 @@ export class GameCore {
   #overlay;
   #currentLevelId;
   #camera;
+  #introAnimation;
 
   // Bootstrap subsystems and set the starting level.
   constructor({ initialLevel = 'map2' } = {}) {
@@ -31,6 +32,7 @@ export class GameCore {
     this.#overlay = new ScreenOverlaySystem();
     this.#currentLevelId = initialLevel;
     this.#camera = new Camera(960, 640);
+    this.#introAnimation = null; // { active, startX, startY, endY, tileSize, speed, progress }
   }
 
   // Push current state values into the DOM HUD elements.
@@ -86,6 +88,7 @@ export class GameCore {
   #setScreen(screen) {
     this.#input.reset?.();
     const s = this.#state;
+    const wasPlaying = s.screen === SCREEN_STATES.PLAYING;
     s.previousScreen = s.screen; s.screen = screen; s.screenEnteredAt = performance.now(); s.screenTimeMs = 0;
     s.prompt = this.#overlay.screenManager.getPrompt(screen);
     this.#overlay.screenManager.reset(screen, s);
@@ -93,6 +96,10 @@ export class GameCore {
     const audioState = this.#audio.getState();
     s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen, s.levelId);
     s.audio.muted = audioState.muted;
+    // Start intro animation when entering PLAYING from non-PLAYING screen (initial start)
+    if (screen === SCREEN_STATES.PLAYING && !wasPlaying) {
+      this.#startIntroAnimation();
+    }
     this.#syncHud();
   }
 
@@ -127,8 +134,70 @@ export class GameCore {
     this.#loadLevel(this.#currentLevelId);
     this.#state.nearestLightButton = null;
     this.#markMissionStart();
+    this.#startIntroAnimation();
     this.#setScreen(SCREEN_STATES.PLAYING);
     this.#overlay.flash(this.#state, 0.3);
+  }
+
+  // Start intro animation for map2 and map3: player walks from col 3 row 1 to row 3
+  #startIntroAnimation() {
+    const levelId = this.#currentLevelId;
+    if (levelId !== 'map2' && levelId !== 'map3') {
+      this.#introAnimation = null;
+      return;
+    }
+    const tileSize = this.#state.level.settings.baseTile;
+    // Column 3 (0-indexed: 2), Row 1 (0-indexed: 0) to Row 3 (0-indexed: 2)
+    const startCol = 2;
+    const startRow = 0;
+    const endRow = 2;
+    this.#introAnimation = {
+      active: true,
+      startX: startCol * tileSize,
+      startY: startRow * tileSize,
+      endY: endRow * tileSize,
+      tileSize,
+      speed: 64, // pixels per second (32px / 0.5s = 64px/s)
+      progress: 0
+    };
+    // Force player to starting position immediately
+    const player = this.#state.level.player;
+    player.x = this.#introAnimation.startX;
+    player.y = this.#introAnimation.startY;
+    player.facing = 'down';
+    player.moving = false;
+  }
+
+  // Update intro animation, return true if still animating
+  #updateIntroAnimation(deltaTime) {
+    if (!this.#introAnimation?.active) return false;
+    const anim = this.#introAnimation;
+    const player = this.#state.level.player;
+    const distance = anim.endY - anim.startY;
+    anim.progress += anim.speed * deltaTime;
+    if (anim.progress >= Math.abs(distance)) {
+      // Animation complete
+      player.y = anim.endY;
+      player.moving = false;
+      this.#introAnimation = null;
+      return false;
+    }
+    // Still animating
+    player.y = anim.startY + (distance > 0 ? anim.progress : -anim.progress);
+    player.facing = 'down';
+    player.moving = true;
+    player.characterType = 'player';
+    // Force animation frame for walking
+    const walkFrame = Math.floor((Date.now() % 400) / 100) % 4;
+    player.anim = {
+      mode: 'walk',
+      facing: 'down',
+      frame: walkFrame,
+      modeTimer: 0,
+      variant: player.characterVariant || 'default',
+      bob: 0
+    };
+    return true;
   }
 
   // Unpause and return to the playing screen.
@@ -220,7 +289,11 @@ export class GameCore {
     if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
     if (s.screen !== SCREEN_STATES.PLAYING) { this.#syncHud(); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
-    updatePlayer(s.level.player, this.#input.getMovement(), s.level, deltaTime);
+    // Handle intro animation (blocks player input during animation)
+    const isInIntro = this.#updateIntroAnimation(deltaTime);
+    if (!isInIntro) {
+      updatePlayer(s.level.player, this.#input.getMovement(), s.level, deltaTime);
+    }
     if (this.#input.consumePortalPlace()) {
       s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
     }
