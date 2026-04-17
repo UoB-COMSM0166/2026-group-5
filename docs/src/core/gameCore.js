@@ -14,6 +14,18 @@ import { Camera } from '../systems/cameraSystem.js';
 import { Inventory, collectLoot, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
 import { spawnLootPopup, clearLootPopups } from '../systems/lootPopup.js';
 
+const MENU_NAV_SCREENS = new Set([
+  SCREEN_STATES.START,
+  SCREEN_STATES.PLAYTHROUGH_SELECT,
+  SCREEN_STATES.DIFFICULTY_SELECT,
+  SCREEN_STATES.MAP_SELECT,
+  SCREEN_STATES.PAUSE
+]);
+const DOOR_STATE_OPEN = 'OPEN';
+const DOOR_STATE_CLOSED = 'CLOSED';
+const DOOR_STATE_LOCKED = 'LOCKED';
+const TELEPORT_OUT_DELAY_MS = 80;
+
 // Main game controller: owns state, input, audio, overlay, and orchestrates the game loop.
 export class GameCore {
   #state;
@@ -22,7 +34,7 @@ export class GameCore {
   #overlay;
   #currentLevelId;
   #camera;
-  #introAnimation;
+  #lastChasingNpcIds;
 
   // Bootstrap subsystems and set the starting level.
   constructor({ initialLevel = 'map2' } = {}) {
@@ -32,7 +44,7 @@ export class GameCore {
     this.#overlay = new ScreenOverlaySystem();
     this.#currentLevelId = initialLevel;
     this.#camera = new Camera(960, 640);
-    this.#introAnimation = null; // { active, startX, startY, endY, tileSize, speed, progress }
+    this.#lastChasingNpcIds = new Set();
   }
 
   // Push current state values into the DOM HUD elements.
@@ -81,14 +93,18 @@ export class GameCore {
     s.meta.exitDistanceText = s.level.missionSystem.isUnlocked() ? `${s.level.missionSystem.getDistanceToExit(s.level.player).toFixed(0)} px` : 'locked';
     s.inventory = new Inventory();
     s.prompt = 'Arrow Up / Down to choose, Enter to confirm';
+    this.#lastChasingNpcIds.clear();
     this.#syncHud();
   }
 
   // Transition to a new screen: reset input, update timers, sync audio.
   #setScreen(screen) {
     this.#input.reset?.();
+    if (screen !== SCREEN_STATES.PLAYING) {
+      this.#audio.setLoopingSfx('running', false);
+      this.#lastChasingNpcIds.clear();
+    }
     const s = this.#state;
-    const wasPlaying = s.screen === SCREEN_STATES.PLAYING;
     s.previousScreen = s.screen; s.screen = screen; s.screenEnteredAt = performance.now(); s.screenTimeMs = 0;
     s.prompt = this.#overlay.screenManager.getPrompt(screen);
     this.#overlay.screenManager.reset(screen, s);
@@ -96,10 +112,6 @@ export class GameCore {
     const audioState = this.#audio.getState();
     s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen, s.levelId);
     s.audio.muted = audioState.muted;
-    // Start intro animation when entering PLAYING from non-PLAYING screen (initial start)
-    if (screen === SCREEN_STATES.PLAYING && !wasPlaying) {
-      this.#startIntroAnimation();
-    }
     this.#syncHud();
   }
 
@@ -134,70 +146,8 @@ export class GameCore {
     this.#loadLevel(this.#currentLevelId);
     this.#state.nearestLightButton = null;
     this.#markMissionStart();
-    this.#startIntroAnimation();
     this.#setScreen(SCREEN_STATES.PLAYING);
     this.#overlay.flash(this.#state, 0.3);
-  }
-
-  // Start intro animation for map2 and map3: player walks from col 3 row 1 to row 3
-  #startIntroAnimation() {
-    const levelId = this.#currentLevelId;
-    if (levelId !== 'map2' && levelId !== 'map3') {
-      this.#introAnimation = null;
-      return;
-    }
-    const tileSize = this.#state.level.settings.baseTile;
-    // Column 3 (0-indexed: 2), Row 1 (0-indexed: 0) to Row 3 (0-indexed: 2)
-    const startCol = 2;
-    const startRow = 0;
-    const endRow = 2;
-    this.#introAnimation = {
-      active: true,
-      startX: startCol * tileSize,
-      startY: startRow * tileSize,
-      endY: endRow * tileSize,
-      tileSize,
-      speed: 64, // pixels per second (32px / 0.5s = 64px/s)
-      progress: 0
-    };
-    // Force player to starting position immediately
-    const player = this.#state.level.player;
-    player.x = this.#introAnimation.startX;
-    player.y = this.#introAnimation.startY;
-    player.facing = 'down';
-    player.moving = false;
-  }
-
-  // Update intro animation, return true if still animating
-  #updateIntroAnimation(deltaTime) {
-    if (!this.#introAnimation?.active) return false;
-    const anim = this.#introAnimation;
-    const player = this.#state.level.player;
-    const distance = anim.endY - anim.startY;
-    anim.progress += anim.speed * deltaTime;
-    if (anim.progress >= Math.abs(distance)) {
-      // Animation complete
-      player.y = anim.endY;
-      player.moving = false;
-      this.#introAnimation = null;
-      return false;
-    }
-    // Still animating
-    player.y = anim.startY + (distance > 0 ? anim.progress : -anim.progress);
-    player.facing = 'down';
-    player.moving = true;
-    player.characterType = 'player';
-    // Force animation frame for walking
-    const walkFrame = Math.floor((Date.now() % 400) / 100) % 4;
-    player.anim = {
-      mode: 'walk',
-      facing: 'down',
-      frame: walkFrame,
-      modeTimer: 0,
-      variant: player.characterVariant || 'default',
-      bob: 0
-    };
-    return true;
   }
 
   // Unpause and return to the playing screen.
@@ -263,6 +213,131 @@ export class GameCore {
     return this.#overlay.screenManager.handleKey(this.#state.screen, key, this.#state, this.#getApi());
   }
 
+  // play SFX for menu navigation and non-playing screen interactions
+  #playNonPlayingKeySfx(key, screen) {
+    if ((key === 'ArrowUp' || key === 'ArrowDown') && MENU_NAV_SCREENS.has(screen)) {
+      this.#audio.playSfx('cursor');
+      return;
+    }
+    if (key === 'Enter') this.#audio.playSfx('select');
+  }
+
+  // maps player interactions to SFX
+  #playInteractionSfx(result) {
+    if (!result) return;
+    if (result.kind === 'box' && result.success) {
+      this.#audio.playSfx('treasure');
+      return;
+    }
+    if (result.kind === 'light' && result.success) {
+      this.#audio.playSfx('lightSwitch');
+      return;
+    }
+    if (result.kind !== 'door') return;
+    if (result.success) {
+      if (result.text === 'Door closed') this.#audio.playSfx('doorClose');
+      else this.#audio.playSfx('doorOpen');
+      return;
+    }
+    if (String(result.text || '').startsWith('Need key')) this.#audio.playSfx('doorLocked');
+  }
+
+  // get a key used to match door before/after states
+  #getDoorSnapshotKey(door, index) {
+    return `${door?.id || 'door'}#${index}`;
+  }
+
+  // capture the open/closed state of all doors in the level
+  #snapshotDoorStates(level) {
+    const snapshot = new Map();
+    const doors = level?.doorSystem?.doors || [];
+    for (let i = 0; i < doors.length; i += 1) {
+      const door = doors[i];
+      snapshot.set(this.#getDoorSnapshotKey(door, i), door?.state);
+    }
+    return snapshot;
+  }
+
+  // capture room light boolean states in the level
+  #snapshotRoomLightStates(level) {
+    const snapshot = new Map();
+    const rooms = level?.roomSystem?.rooms;
+    if (!rooms || typeof rooms.entries !== 'function') return snapshot;
+    for (const [roomId, room] of rooms.entries()) {
+      snapshot.set(roomId, !!room?.lightOn);
+    }
+    return snapshot;
+  }
+
+  // compares pre/post snapshots after NPC update and plays enemy-triggered SFX
+  #playEnemyWorldInteractionSfx(level, doorBefore, roomLightBefore) {
+    let shouldPlayDoorOpen = false;
+    let shouldPlayDoorClose = false;
+    let shouldPlayLightSwitch = false;
+
+    const doors = level?.doorSystem?.doors || [];
+    for (let i = 0; i < doors.length; i += 1) {
+      const door = doors[i];
+      const key = this.#getDoorSnapshotKey(door, i);
+      const prevState = doorBefore.get(key);
+      const nextState = door?.state;
+      if (!prevState || prevState === nextState) continue;
+      if (prevState !== DOOR_STATE_OPEN && nextState === DOOR_STATE_OPEN) shouldPlayDoorOpen = true;
+      if (prevState === DOOR_STATE_OPEN && (nextState === DOOR_STATE_CLOSED || nextState === DOOR_STATE_LOCKED)) shouldPlayDoorClose = true;
+    }
+
+    const rooms = level?.roomSystem?.rooms;
+    if (rooms && typeof rooms.entries === 'function') {
+      for (const [roomId, room] of rooms.entries()) {
+        if (!roomLightBefore.has(roomId)) continue;
+        const prevLightOn = roomLightBefore.get(roomId);
+        const nextLightOn = !!room?.lightOn;
+        if (prevLightOn !== nextLightOn) {
+          shouldPlayLightSwitch = true;
+          break;
+        }
+      }
+    }
+
+    if (shouldPlayDoorOpen) this.#audio.playSfx('doorOpen');
+    if (shouldPlayDoorClose) this.#audio.playSfx('doorClose');
+    if (shouldPlayLightSwitch) this.#audio.playSfx('lightSwitch');
+  }
+
+  // update running-loop SFX based on current movement/sprint conditions
+  #syncRunningSfx(movement, player) {
+    const hasMoveInput = Math.abs(movement?.x || 0) > 0.001 || Math.abs(movement?.y || 0) > 0.001;
+    const isRunningActive = Boolean(
+      movement?.sprint
+      && hasMoveInput
+      && player?.moving
+      && (player?.stamina || 0) > 0
+    );
+    this.#audio.setLoopingSfx('running', isRunningActive);
+  }
+
+  #getCurrentChasingNpcIds(level) {
+    const ids = new Set();
+    for (const npc of level?.npcs || []) {
+      if (npc?.state !== 'CHASE') continue;
+      ids.add(String(npc.id || ''));
+    }
+    return ids;
+  }
+
+  #playAlertOnNewNpcChase(level) {
+    const currentChasingNpcIds = this.#getCurrentChasingNpcIds(level);
+    let hasNewChaser = false;
+    for (const id of currentChasingNpcIds) {
+      if (!this.#lastChasingNpcIds.has(id)) {
+        hasNewChaser = true;
+        break;
+      }
+    }
+    if (hasNewChaser) this.#audio.playSfx('alert');
+    this.#lastChasingNpcIds = currentChasingNpcIds;
+  }
+
   // Load all image and audio assets, updating the loading state.
   async loadAssets(p) {
     this.#state.loading.message = 'Loading assets...';
@@ -287,18 +362,19 @@ export class GameCore {
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
     this.#overlay.update(s, deltaTime, this.#getApi());
     if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
-    if (s.screen !== SCREEN_STATES.PLAYING) { this.#syncHud(); return; }
+    if (s.screen !== SCREEN_STATES.PLAYING) { this.#audio.setLoopingSfx('running', false); this.#syncHud(); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
-    // Handle intro animation (blocks player input during animation)
-    const isInIntro = this.#updateIntroAnimation(deltaTime);
-    if (!isInIntro) {
-      updatePlayer(s.level.player, this.#input.getMovement(), s.level, deltaTime);
-    }
+    const movement = this.#input.getMovement();
+    updatePlayer(s.level.player, movement, s.level, deltaTime);
+    this.#syncRunningSfx(movement, s.level.player);
     if (this.#input.consumePortalPlace()) {
-      s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
+      const placement = s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
+      if (placement?.success) this.#audio.playSfx('portal');
     }
     const teleportResult = s.level.portalSystem?.updatePlayerTeleport?.(s.level.player, s.level, deltaTime);
     if (teleportResult?.teleported) {
+      this.#audio.playSfx('teleportIn');
+      this.#audio.playSfxDelayed('teleportOut', TELEPORT_OUT_DELAY_MS);
       handlePlayerPortalTeleport(s.level, teleportResult);
     }
     if (s.camera) s.camera.update(s.level.player, deltaTime);
@@ -306,7 +382,11 @@ export class GameCore {
     if (roomSystem.getActorRoomId(s.level.player) > 1) roomSystem.explorePlayerRoom(s.level.player);
     s.level.doorSystem.update(deltaTime, [s.level.player, ...(s.level.npcs || [])]);
     s.level.boxSystem.update(deltaTime); s.level.roomSystem.update(deltaTime); s.level.missionSystem.update(deltaTime);
+    const npcDoorStatesBefore = this.#snapshotDoorStates(s.level);
+    const npcRoomLightsBefore = this.#snapshotRoomLightStates(s.level);
     const detectedBy = updateNpcs(s.level, deltaTime);
+    this.#playAlertOnNewNpcChase(s.level);
+    this.#playEnemyWorldInteractionSfx(s.level, npcDoorStatesBefore, npcRoomLightsBefore);
     if (detectedBy) {
       triggerPlayerAction(s.level.player, 'alert', 0.32); s.meta.detectedBy = detectedBy;
       this.#setScreen(SCREEN_STATES.LOSE); this.#overlay.flash(s, 0.45); this.#setMessage('You were spotted', 2);
@@ -319,6 +399,7 @@ export class GameCore {
     s.prompt = prompt?.text || (s.level.missionSystem.isUnlocked() ? 'Head to extraction' : 'Find the chests');
     if (this.#input.consumeInteract()) {
       const r = tryInteract(s.level, s.inventory);
+      this.#playInteractionSfx(r);
       if (r.success) {
         triggerPlayerAction(s.level.player, r.kind === 'light' ? 'alert' : 'interact', r.kind === 'light' ? 0.22 : 0.28);
         this.#setMessage(r.text, 1.2); this.#overlay.flash(s, r.kind === 'light' ? 0.12 : 0.18);
@@ -416,9 +497,13 @@ export class GameCore {
   // Handle a key-down event: dispatch to screens or input system.
   onKeyPressed(key, keyCode) {
     this.#ensureAudioReadyForCurrentScreen();
-    if (this.#handleNonPlayingKey(key)) { const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return; }
+    const s = this.#state;
+    if (this.#handleNonPlayingKey(key)) {
+      this.#playNonPlayingKeySfx(key, s.screen);
+      const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return;
+    }
     this.#input.onKeyPressed(key, keyCode);
-    const l = String(key).toLowerCase(), s = this.#state;
+    const l = String(key).toLowerCase();
     if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
     // if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
     // if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');

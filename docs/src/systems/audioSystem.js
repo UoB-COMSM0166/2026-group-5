@@ -14,6 +14,22 @@ const TRACK_CONFIG = Object.freeze({
   true_ending: { src: './assets/audio/intro.mp3', volume: 0.28, loop: true }
 });
 
+// Sound effects.
+const SFX_CONFIG = Object.freeze({
+  cursor: { src: './assets/audio/sfxCursor.wav', volume: 1, cooldownMs: 85 },
+  select: { src: './assets/audio/sfxSelect.wav', volume: 1, cooldownMs: 120 },
+  portal: { src: './assets/audio/sfxPortal.mp3', volume: 1, cooldownMs: 180 },
+  treasure: { src: './assets/audio/sfxTreasure.mp3', volume: 1, cooldownMs: 200 },
+  doorOpen: { src: './assets/audio/sfxDoorOpen.mp3', volume: 1, cooldownMs: 120 },
+  doorClose: { src: './assets/audio/sfxDoorClose.mp3', volume: 1, cooldownMs: 120 },
+  doorLocked: { src: './assets/audio/sfxDoorLocked.wav', volume: 1, cooldownMs: 160 },
+  lightSwitch: { src: './assets/audio/sfxLightSwitch.wav', volume: 1, cooldownMs: 120 },
+  alert: { src: './assets/audio/sfxAlert.mp3', volume: 1, cooldownMs: 220 },
+  running: { src: './assets/audio/sfxRunning.mp3', volume: 0.9, cooldownMs: 0, loop: true },
+  teleportIn: { src: './assets/audio/sfxTeleportIn.mp3', volume: 1, cooldownMs: 120 },
+  teleportOut: { src: './assets/audio/sfxTeleportOut.mp3', volume: 1, cooldownMs: 120 }
+});
+
 // Mapping from screen state to the track key that should play.
 const SCREEN_TRACK_MAP = Object.freeze({
   start: 'start',
@@ -39,6 +55,9 @@ const PLAYING_LEVEL_TRACK_MAP = Object.freeze({
 // Manages background music playback, muting, and screen-based track switching.
 export class AudioSystem {
   #tracks;
+  #sfx;
+  #lastSfxAt;
+  #activeLoopingSfx;
   #currentKey;
   #muted;
   #unlocked;
@@ -46,18 +65,25 @@ export class AudioSystem {
   // Initialise audio state; tracks are lazily loaded on first play.
   constructor() {
     this.#tracks = new Map();
+    this.#sfx = new Map();
+    this.#lastSfxAt = new Map();
+    this.#activeLoopingSfx = new Set();
     this.#currentKey = null;
     this.#muted = false;
     this.#unlocked = false;
   }
 
+  // returns the track key for a screen
   getTrackKeyForScreen(screenKey, levelId = null) {
     return this.#resolveTrackKey(screenKey, levelId);
   }
 
+  // Resolve the track key to play for a given screen state
   #resolveTrackKey(screenKey, levelId = null) {
     const baseKey = SCREEN_TRACK_MAP[screenKey] || screenKey;
-    if (baseKey !== 'playing') return baseKey;
+    if (baseKey !== 'playing') {
+      return baseKey;
+    }
     const mapKey = String(levelId || '').toLowerCase();
     return PLAYING_LEVEL_TRACK_MAP[mapKey] || 'playing';
   }
@@ -84,8 +110,40 @@ export class AudioSystem {
 
   #targetVolume(key) {
     const config = TRACK_CONFIG[key];
-    if (!config || this.#muted) return 0;
+    if (!config || this.#muted) {
+      return 0;
+    }
     return Math.max(0, Math.min(1, config.volume ?? 1));
+  }
+
+  // computes SFX volume
+  #targetSfxVolume(key) {
+    const config = SFX_CONFIG[key];
+    if (!config || this.#muted) {
+      return 0;
+    }
+    return Math.max(0, Math.min(1, config.volume ?? 1));
+  }
+
+  // create an audio element for an SFX key if not loaded
+  #ensureSfx(key) {
+    if (!SFX_CONFIG[key]) {
+      return null;
+    }
+    if (this.#sfx.has(key)) {
+      return this.#sfx.get(key);
+    }
+    try {
+      const cfg = SFX_CONFIG[key];
+      const audio = new Audio(cfg.src);
+      audio.loop = !!cfg.loop;
+      audio.preload = 'auto';
+      audio.volume = 0;
+      this.#sfx.set(key, audio);
+      return audio;
+    } catch {
+      return null;
+    }
   }
 
   // Resume the browser AudioContext to satisfy autoplay policies.
@@ -100,7 +158,95 @@ export class AudioSystem {
         track.volume = 0;
       } catch {}
     }
+    for (const clip of this.#sfx.values()) {
+      try {
+        clip.pause();
+        clip.currentTime = 0;
+        clip.volume = 0;
+      } catch {}
+    }
+    this.#activeLoopingSfx.clear();
     this.#currentKey = null;
+  }
+
+  // play a one-shot sound effect by key with built-in anti-spam throttling
+  playSfx(key, options = {}) {
+    if (!this.#unlocked) {
+      return false;
+    }
+    const cfg = SFX_CONFIG[key];
+    if (!cfg) {
+      return false;
+    }
+    const now = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+    const cooldownMs = Math.max(0, options.cooldownMs ?? cfg.cooldownMs ?? 0);
+    const lastAt = this.#lastSfxAt.get(key) ?? -Infinity;
+    if (now - lastAt < cooldownMs) {
+      return false;
+    }
+    const clip = this.#ensureSfx(key);
+    if (!clip) {
+      return false;
+    }
+    this.#lastSfxAt.set(key, now);
+    try {
+      clip.pause();
+      clip.currentTime = 0;
+      clip.volume = this.#targetSfxVolume(key);
+      const playback = clip.play();
+      if (playback && typeof playback.catch === 'function') {
+        playback.catch(() => {});
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // play a one-shot SFX after a delay
+  playSfxDelayed(key, delayMs = 0, options = {}) {
+    const waitMs = Math.max(0, delayMs | 0);
+    if (waitMs === 0) return this.playSfx(key, options);
+    if (typeof setTimeout !== 'function') return this.playSfx(key, options);
+    setTimeout(() => {
+      this.playSfx(key, options);
+    }, waitMs);
+    return true;
+  }
+
+  // start/stop a looping SFX clip (used for continuous sounds like running)
+  setLoopingSfx(key, active) {
+    const cfg = SFX_CONFIG[key];
+    if (!cfg) return false;
+    const clip = this.#ensureSfx(key);
+    if (!clip) return false;
+    const shouldPlay = !!active && this.#unlocked;
+    if (!shouldPlay) {
+      this.#activeLoopingSfx.delete(key);
+      try {
+        clip.pause();
+        clip.currentTime = 0;
+        clip.loop = !!cfg.loop;
+        clip.volume = this.#targetSfxVolume(key);
+      } catch {}
+      return true;
+    }
+
+    clip.loop = true;
+    clip.volume = this.#targetSfxVolume(key);
+    if (this.#activeLoopingSfx.has(key)) return true;
+    this.#activeLoopingSfx.add(key);
+    try {
+      clip.currentTime = 0;
+      const playback = clip.play();
+      if (playback && typeof playback.catch === 'function') playback.catch(() => {
+        this.#activeLoopingSfx.delete(key);
+      });
+      return true;
+    } catch {
+      this.#activeLoopingSfx.delete(key);
+      return false;
+    }
   }
 
   // Switch to the appropriate track for the given screen state.
@@ -135,6 +281,9 @@ export class AudioSystem {
       const track = this.#ensureTrack(this.#currentKey);
       if (track) track.volume = this.#targetVolume(this.#currentKey);
     }
+    for (const [key, clip] of this.#sfx.entries()) {
+      try { clip.volume = this.#targetSfxVolume(key); } catch {}
+    }
     return this.#muted;
   }
 
@@ -144,6 +293,9 @@ export class AudioSystem {
     if (this.#currentKey) {
       const track = this.#ensureTrack(this.#currentKey);
       if (track) track.volume = this.#targetVolume(this.#currentKey);
+    }
+    for (const [key, clip] of this.#sfx.entries()) {
+      try { clip.volume = this.#targetSfxVolume(key); } catch {}
     }
   }
 
