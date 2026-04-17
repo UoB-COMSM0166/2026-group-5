@@ -3,9 +3,9 @@ import { DoorSystem } from '../systems/doorSystem.js';
 import { BoxSystem } from '../systems/boxSystem.js';
 import { RoomSystem } from '../systems/roomSystem.js';
 import { MissionSystem } from '../systems/missionSystem.js';
+import { PortalSystem } from '../systems/portalSystem.js';
 import { Player } from '../entities/Player.js';
 import { NPC } from '../entities/NPC.js';
-import { PortalSystem } from '../systems/portalSystem.js';
 
 export class Level {
   #id;
@@ -86,7 +86,7 @@ export class Level {
   get roomSystem() { return this.#roomSystem; }
   get missionSystem() { return this.#missionSystem; }
   get portalSystem() { return this.#portalSystem; }
-  
+
   // Private helper methods
   #clone(value) {
     return JSON.parse(JSON.stringify(value));

@@ -5,6 +5,7 @@ import { Camera } from '../systems/cameraSystem.js';
 import { ensureAnimState, getFrameRect } from '../systems/animationSystem.js';
 import { getInteractionPrompt } from '../systems/interactionSystem.js';
 import { updateLootPopups, renderLootPopups } from '../systems/lootPopup.js';
+import { NPC_SEARCH_REASON_PORTAL_CONFUSED } from '../systems/npcStateMachine.js';
 
 
 // Draw a sprite image at fixed height, preserving aspect ratio.
@@ -227,13 +228,16 @@ function renderButton(p, level, button) {
 
 // Draw a floating question mark at the NPC's search target.
 function renderSearchMarker(p, npc) {
-  if (!npc.searchTargetX || !npc.searchTargetY) return;
+  const isPortalConfused = npc.searchReason === NPC_SEARCH_REASON_PORTAL_CONFUSED;
+  const markerX = isPortalConfused ? (npc.x + npc.w / 2) : npc.searchTargetX;
+  const markerY = isPortalConfused ? (npc.y - 9) : (npc.searchTargetY - 1);
+  if (!Number.isFinite(markerX) || !Number.isFinite(markerY)) return;
   p.push();
   p.noStroke();
   p.fill(245, 158, 11, 210);
   p.textAlign(p.CENTER, p.CENTER);
   p.textSize(14);
-  p.text('?', npc.searchTargetX, npc.searchTargetY - 1);
+  p.text('?', markerX, markerY);
   p.pop();
 }
 

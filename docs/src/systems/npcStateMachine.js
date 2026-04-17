@@ -11,6 +11,8 @@ export const ALERT_CHASE_THRESHOLD = 20;
 export const ALERT_SEARCH_THRESHOLD = 10; 
 export const SEARCH_ALERT_BONUS = 5;
 export const MIN_STATE_HOLD_MS = 1000;
+export const NPC_SEARCH_REASON_PORTAL_CONFUSED = 'PORTAL_CONFUSED';
+export const NPC_PORTAL_CONFUSION_DURATION = 1.1;
 
 // Guarantee an NPC has all runtime state fields initialised.
 export function ensureNpcRuntimeState(npc, now = Date.now()) {
