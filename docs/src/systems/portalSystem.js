@@ -5,9 +5,12 @@ export class PortalSystem {
     #maxPortals;
     #placementScanExtraTiles;
     #triggerScale;
+    #teleportCooldownDuration;
+    #exitOffsetTiles;
     #portals;
     #nextPortalId;
     #nextPortalColor;
+    #teleportCooldown;
     #lastTouchedPortalId;
 
     constructor({ tileSize = 16, maxPortals = 2, placementScanExtraTiles = 2, triggerScale = 1.5, teleportCooldown = 0.2, exitOffsetTiles = 0.45 } = {}) {
@@ -15,9 +18,12 @@ export class PortalSystem {
         this.#maxPortals = maxPortals;
         this.#placementScanExtraTiles = Math.max(0, placementScanExtraTiles | 0);
         this.#triggerScale = Math.max(1, triggerScale);
+        this.#teleportCooldownDuration = teleportCooldown;
+        this.#exitOffsetTiles = exitOffsetTiles;
         this.#portals = [];
         this.#nextPortalId = 1;
         this.#nextPortalColor = 'blue';
+        this.#teleportCooldown = 0;
         this.#lastTouchedPortalId = null;
     }
 
@@ -157,5 +163,115 @@ export class PortalSystem {
 
     #canPlayerOccupy(player, x, y, level) {
         return canMoveToRect(player, x, y, level.collision, this.#tileSize, level);
+    }
+
+    updatePlayerTeleport(player, level, deltaTime) {
+        this.#teleportCooldown = Math.max(0, this.#teleportCooldown - (deltaTime || 0));
+
+        const touched = this.#getTouchedPortal(player);
+        if (this.#portals.length < 2) {
+            this.#lastTouchedPortalId = touched ? touched.id : null;
+            return { teleported: false, reason: 'not_ready' };
+        }
+        if (!touched) {
+            this.#lastTouchedPortalId = null;
+            return { teleported: false, reason: 'not_in_portal' };
+        }
+        if (this.#teleportCooldown > 0) {
+            this.#lastTouchedPortalId = touched.id;
+            return { teleported: false, reason: 'cooldown' };
+        }
+        if (this.#lastTouchedPortalId === touched.id) {
+            return { teleported: false, reason: 'already_inside' };
+        }
+
+        const destination = this.#portals.find((portal) => portal.id !== touched.id);
+        if (!destination) {
+            this.#lastTouchedPortalId = touched.id;
+            return { teleported: false, reason: 'missing_pair' };
+        }
+
+        const target = this.#resolveDestinationPosition(player, touched, destination, level);
+        if (!target) {
+            this.#lastTouchedPortalId = touched.id;
+            return { teleported: false, reason: 'invalid_destination' };
+        }
+
+        player.x = target.x;
+        player.y = target.y;
+        this.#teleportCooldown = this.#teleportCooldownDuration;
+
+        const touchedAfter = this.#getTouchedPortal(player);
+        this.#lastTouchedPortalId = touchedAfter ? touchedAfter.id : destination.id;
+        return { teleported: true, reason: '', fromPortalId: touched.id, toPortalId: destination.id };
+    }
+
+    #getTouchedPortal(player) {
+        if (!player || !this.#portals.length) {
+            return null;
+        }
+        const rect = getEntityCollisionRect(player);
+        if (!rect) {
+            return null;
+        }
+        const centerX = rect.x + rect.w / 2;
+        const centerY = rect.y + rect.h / 2;
+
+        let best = null;
+        let bestDist = Infinity;
+        for (const portal of this.#portals) {
+            if (!this.#portalTriggerOverlapsRect(rect, portal.tx, portal.ty)) {
+                continue;
+            }
+
+            const dist = Math.hypot(centerX - portal.cx, centerY - portal.cy);
+            if (dist < bestDist) {
+                bestDist = dist;
+                best = portal;
+            }
+        }
+        return best;
+    }
+
+    #resolveDestinationPosition(player, sourcePortal, destinationPortal, level) {
+        const baseX = destinationPortal.cx - player.w / 2;
+        const baseY = destinationPortal.cy - player.h / 2;
+        const offset = this.#buildExitOffset(sourcePortal, destinationPortal, player);
+        const preferredX = baseX + offset.x;
+        const preferredY = baseY + offset.y;
+
+        if (this.#canPlayerOccupy(player, preferredX, preferredY, level)) {
+            return { x: preferredX, y: preferredY };
+        }
+        if ((Math.abs(offset.x) > 0.001 || Math.abs(offset.y) > 0.001) && this.#canPlayerOccupy(player, baseX, baseY, level)) {
+            return { x: baseX, y: baseY };
+        }
+
+        return null;
+    }
+
+    #buildExitOffset(sourcePortal, destinationPortal, player) {
+        let dx = destinationPortal.cx - sourcePortal.cx;
+        let dy = destinationPortal.cy - sourcePortal.cy;
+        const len = Math.hypot(dx, dy);
+
+        if (len < 0.001) {
+            const facing = String(player.facing || 'down').toLowerCase();
+            if (facing === 'left') {
+                { dx = -1; dy = 0; }
+            } else if (facing === 'right') {
+                { dx = 1; dy = 0; }
+            } else if (facing === 'up') {
+                { dx = 0; dy = -1; }
+            } else {
+                { dx = 0; dy = 1; }
+            }
+        } else {
+            dx /= len;
+            dy /= len;
+        }
+
+        const distance = this.#exitOffsetTiles * this.#tileSize;
+        return { x: dx * distance, y: dy * distance };
     }
 }
