@@ -1,4 +1,4 @@
-import { canMoveToRect, getEntityCollisionRect } from './collisionSystem.js';
+import { canMoveToRect, getEntityCollisionRect, isBlockedByWorld } from './collisionSystem.js';
 
 export class PortalSystem {
     #tileSize;
@@ -85,6 +85,10 @@ export class PortalSystem {
         for (let i = 0; i <= this.#placementScanExtraTiles; i += 1) {
             const tx = start.tx + dir.x * i;
             const ty = start.ty + dir.y * i;
+
+            if (isBlockedByWorld(level, tx, ty, this.#tileSize)) {
+                return { success: false, reason: 'invalid_tile' };
+            }
 
             if (this.#portalTriggerOverlapsRect(playerRect, tx, ty)) {
                 continue;
