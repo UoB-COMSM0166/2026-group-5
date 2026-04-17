@@ -46,11 +46,11 @@ export class PortalSystem {
         }
         const { tx, ty } = candidate;
 
-        let removedPortal = null;
-        const existingIndex = this.#portals.findIndex((portal) => portal.tx === tx && portal.ty === ty);
-        if (existingIndex >= 0) {
-            removedPortal = this.#portals.splice(existingIndex, 1)[0];
+        if (this.#portals.some((portal) => portal.tx === tx && portal.ty === ty)) {
+            return { success: false, reason: 'occupied_portal', placedPortal: null, removedPortal: null };
         }
+        
+        let removedPortal = null;
         if (this.#portals.length >= this.#maxPortals) {
             removedPortal = this.#portals.shift();
         }
