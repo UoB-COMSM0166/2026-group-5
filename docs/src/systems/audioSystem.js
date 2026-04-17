@@ -5,6 +5,9 @@ const TRACK_CONFIG = Object.freeze({
   start: { src: './assets/audio/startScreen.mp3', volume: 0.3, loop: true },
   intro: { src: './assets/audio/intro.mp3', volume: 0.25, loop: true },
   playing: { src: './assets/audio/gameplay.mp3', fallback: './assets/audio/gameplay.wav', volume: 0.2, loop: true },
+  playing_map1: { src: './assets/audio/mapFoyer.mp3', volume: 0.2, loop: true },
+  playing_map2: { src: './assets/audio/mapLibrary.mp3', volume: 0.2, loop: true },
+  playing_map3: { src: './assets/audio/mapSalon.mp3', volume: 0.2, loop: true },
   win: { src: './assets/audio/winScreen.mp3', fallback: './assets/audio/winScreen.wav', volume: 0.28, loop: true },
   lose: { src: './assets/audio/loseScreen.mp3', volume: 0.3, loop: true },
   false_ending: { src: './assets/audio/intro.mp3', volume: 0.24, loop: true },
@@ -27,6 +30,12 @@ const SCREEN_TRACK_MAP = Object.freeze({
   credits: 'true_ending'
 });
 
+const PLAYING_LEVEL_TRACK_MAP = Object.freeze({
+  map1: 'playing_map1',
+  map2: 'playing_map2',
+  map3: 'playing_map3'
+});
+
 // Manages background music playback, muting, and screen-based track switching.
 export class AudioSystem {
   #tracks;
@@ -42,12 +51,15 @@ export class AudioSystem {
     this.#unlocked = false;
   }
 
-  getTrackKeyForScreen(screenKey) {
-    return this.#resolveTrackKey(screenKey);
+  getTrackKeyForScreen(screenKey, levelId = null) {
+    return this.#resolveTrackKey(screenKey, levelId);
   }
 
-  #resolveTrackKey(screenKey) {
-    return SCREEN_TRACK_MAP[screenKey] || screenKey;
+  #resolveTrackKey(screenKey, levelId = null) {
+    const baseKey = SCREEN_TRACK_MAP[screenKey] || screenKey;
+    if (baseKey !== 'playing') return baseKey;
+    const mapKey = String(levelId || '').toLowerCase();
+    return PLAYING_LEVEL_TRACK_MAP[mapKey] || 'playing';
   }
 
   // Lazily create an Audio element for a track key if not yet loaded.
@@ -92,8 +104,8 @@ export class AudioSystem {
   }
 
   // Switch to the appropriate track for the given screen state.
-  async sync(stateKey) {
-    const trackKey = this.#resolveTrackKey(stateKey);
+  async sync(stateKey, levelId = null) {
+    const trackKey = this.#resolveTrackKey(stateKey, levelId);
     if (!this.#unlocked || this.#currentKey === trackKey) return;
     const next = this.#ensureTrack(trackKey);
     if (!next) {

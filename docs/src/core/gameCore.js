@@ -89,9 +89,9 @@ export class GameCore {
     s.previousScreen = s.screen; s.screen = screen; s.screenEnteredAt = performance.now(); s.screenTimeMs = 0;
     s.prompt = this.#overlay.screenManager.getPrompt(screen);
     this.#overlay.screenManager.reset(screen, s);
-    this.#audio.sync(screen);
+    this.#audio.sync(screen, s.levelId);
     const audioState = this.#audio.getState();
-    s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen);
+    s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen, s.levelId);
     s.audio.muted = audioState.muted;
     this.#syncHud();
   }
@@ -168,8 +168,8 @@ export class GameCore {
     if (audioState.unlocked) return;
 
     this.#audio.unlock();
-    this.#audio.sync(this.#state.screen);
-    this.#state.audio.currentTrack = this.#audio.getTrackKeyForScreen(this.#state.screen);
+    this.#audio.sync(this.#state.screen, this.#state.levelId);
+    this.#state.audio.currentTrack = this.#audio.getTrackKeyForScreen(this.#state.screen, this.#state.levelId);
     this.#state.audio.muted = this.#audio.getState().muted;
   }
 
