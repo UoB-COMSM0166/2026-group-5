@@ -18,7 +18,7 @@ export const SCREEN_STATES = Object.freeze({
   CREDITS: 'credits'
 });
 
-// Centralised game state: tracks screen, level, inventory, UI, audio, debug, and story progress.
+// Centralised game state: tracks screen, level, inventory, UI, audio, and story progress.
 export class GameState {
   #screen;
   #previousScreen;
@@ -28,7 +28,6 @@ export class GameState {
   #meta;
   #ui;
   #audio;
-  #debug;
   #inventory;
   #camera;
   #loading;
@@ -78,14 +77,6 @@ export class GameState {
       unlocked: false,
       currentTrack: null
     };
-    this.#debug = {
-      showCollision: false,
-      showRooms: false,
-      showLayers: false,
-      showCamera: false,
-      showExploration: false,
-      showEntityIds: false
-    };
     this.#inventory = new Inventory();
     this.#camera = null;
     this.#loading = {
@@ -120,8 +111,6 @@ export class GameState {
   set ui(v) { this.#ui = v; }
   get audio() { return this.#audio; }
   set audio(v) { this.#audio = v; }
-  get debug() { return this.#debug; }
-  set debug(v) { this.#debug = v; }
   get inventory() { return this.#inventory; }
   set inventory(v) { this.#inventory = v; }
   get camera() { return this.#camera; }

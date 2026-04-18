@@ -34,7 +34,12 @@ export class GameCore {
   #overlay;
   #currentLevelId;
   #camera;
+  #introAnimation;
+  #hudSyncTimer;
+  #frameCount;
+  #lastFpsTime;
   #lastChasingNpcIds;
+  #levelDirty;
 
   // Bootstrap subsystems and set the starting level.
   constructor({ initialLevel = 'map2' } = {}) {
@@ -44,11 +49,21 @@ export class GameCore {
     this.#overlay = new ScreenOverlaySystem();
     this.#currentLevelId = initialLevel;
     this.#camera = new Camera(960, 640);
+    this.#introAnimation = null; // { active, startX, startY, endY, tileSize, speed, progress }
+    this.#hudSyncTimer = 0;
+    this.#frameCount = 0;
+    this.#lastFpsTime = 0;
     this.#lastChasingNpcIds = new Set();
+    this.#levelDirty = false;
   }
 
-  // Push current state values into the DOM HUD elements.
-  #syncHud() {
+  // Push current state values into the DOM HUD elements (throttled to reduce DOM operations).
+  #syncHud(deltaTime = 0) {
+    // Only sync HUD every 100ms (10 times per second) to reduce DOM operations
+    this.#hudSyncTimer -= deltaTime;
+    if (this.#hudSyncTimer > 0) return;
+    this.#hudSyncTimer = 0.1; // 100ms throttle
+
     const s = this.#state;
     document.getElementById('screenState')?.replaceChildren(document.createTextNode(s.screen));
     document.getElementById('levelName')?.replaceChildren(document.createTextNode(s.levelId || '-'));
@@ -105,6 +120,20 @@ export class GameCore {
       this.#lastChasingNpcIds.clear();
     }
     const s = this.#state;
+    const wasPlaying = s.screen === SCREEN_STATES.PLAYING;
+    const wasPause = s.screen === SCREEN_STATES.PAUSE;
+    // Mark level dirty when leaving PLAYING/PAUSE for a non-game screen (win/lose/exit/endings)
+    if (wasPlaying && screen !== SCREEN_STATES.PAUSE) {
+      this.#levelDirty = true;
+    }
+    if (wasPause && screen !== SCREEN_STATES.PLAYING) {
+      this.#levelDirty = true;
+    }
+    // Auto-reload level when entering PLAYING from a dirty state (not a resume from pause)
+    if (screen === SCREEN_STATES.PLAYING && !wasPause && this.#levelDirty) {
+      this.#loadLevel(this.#currentLevelId);
+      this.#levelDirty = false;
+    }
     s.previousScreen = s.screen; s.screen = screen; s.screenEnteredAt = performance.now(); s.screenTimeMs = 0;
     s.prompt = this.#overlay.screenManager.getPrompt(screen);
     this.#overlay.screenManager.reset(screen, s);
@@ -112,6 +141,11 @@ export class GameCore {
     const audioState = this.#audio.getState();
     s.audio.currentTrack = this.#audio.getTrackKeyForScreen(screen, s.levelId);
     s.audio.muted = audioState.muted;
+    // Start intro animation when entering PLAYING from non-PLAYING screen (initial start)
+    // Skip animation when resuming from pause (wasPause)
+    if (screen === SCREEN_STATES.PLAYING && !wasPlaying && !wasPause) {
+      this.#startIntroAnimation();
+    }
     this.#syncHud();
   }
 
@@ -137,6 +171,7 @@ export class GameCore {
     this.#currentLevelId = levelId;
     this.#loadLevel(levelId);
     this.#state.nearestLightButton = null;
+    this.#resetStorySelection();
     this.#overlay.flash(this.#state, 0.3);
   }
 
@@ -146,8 +181,70 @@ export class GameCore {
     this.#loadLevel(this.#currentLevelId);
     this.#state.nearestLightButton = null;
     this.#markMissionStart();
+    this.#startIntroAnimation();
     this.#setScreen(SCREEN_STATES.PLAYING);
     this.#overlay.flash(this.#state, 0.3);
+  }
+
+  // Start intro animation for map2 and map3: player walks from col 3 row 1 to row 3
+  #startIntroAnimation() {
+    const levelId = this.#currentLevelId;
+    if (levelId !== 'map2' && levelId !== 'map3') {
+      this.#introAnimation = null;
+      return;
+    }
+    const tileSize = this.#state.level.settings.baseTile;
+    // Column 3 (0-indexed: 2), Row 1 (0-indexed: 0) to Row 3 (0-indexed: 2)
+    const startCol = 2;
+    const startRow = 0;
+    const endRow = 2;
+    this.#introAnimation = {
+      active: true,
+      startX: startCol * tileSize,
+      startY: startRow * tileSize,
+      endY: endRow * tileSize,
+      tileSize,
+      speed: 64, // pixels per second (32px / 0.5s = 64px/s)
+      progress: 0
+    };
+    // Force player to starting position immediately
+    const player = this.#state.level.player;
+    player.x = this.#introAnimation.startX;
+    player.y = this.#introAnimation.startY;
+    player.facing = 'down';
+    player.moving = false;
+  }
+
+  // Update intro animation, return true if still animating
+  #updateIntroAnimation(deltaTime) {
+    if (!this.#introAnimation?.active) return false;
+    const anim = this.#introAnimation;
+    const player = this.#state.level.player;
+    const distance = anim.endY - anim.startY;
+    anim.progress += anim.speed * deltaTime;
+    if (anim.progress >= Math.abs(distance)) {
+      // Animation complete
+      player.y = anim.endY;
+      player.moving = false;
+      this.#introAnimation = null;
+      return false;
+    }
+    // Still animating
+    player.y = anim.startY + (distance > 0 ? anim.progress : -anim.progress);
+    player.facing = 'down';
+    player.moving = true;
+    player.characterType = 'player';
+    // Force animation frame for walking
+    const walkFrame = Math.floor((Date.now() % 400) / 100) % 4;
+    player.anim = {
+      mode: 'walk',
+      facing: 'down',
+      frame: walkFrame,
+      modeTimer: 0,
+      variant: player.characterVariant || 'default',
+      bob: 0
+    };
+    return true;
   }
 
   // Unpause and return to the playing screen.
@@ -190,27 +287,6 @@ export class GameCore {
     this.#audio.sync(this.#state.screen, this.#state.levelId);
     this.#state.audio.currentTrack = this.#audio.getTrackKeyForScreen(this.#state.screen, this.#state.levelId);
     this.#state.audio.muted = this.#audio.getState().muted;
-  }
-
-  // Build an API object exposing safe public actions for screen handlers.
-  #getApi() {
-    return {
-      setScreen: s => this.#setScreen(s),
-      setMessage: (t, s) => this.#setMessage(t, s),
-      markMissionStart: () => this.#markMissionStart(),
-      restartLevel: () => this.restartLevel(),
-      restartCurrentStoryRun: () => this.restartCurrentStoryRun(),
-      resumeGame: () => this.resumeGame(),
-      exitToTitle: () => this.exitToTitle(),
-      exitToPlaythroughSelect: () => this.exitToPlaythroughSelect(),
-      exitToDifficultySelect: () => this.exitToDifficultySelect(),
-      loadStoryLevel: (levelId) => this.loadStoryLevel(levelId)
-    };
-  }
-
-  // Delegate key input to the overlay screen manager for non-playing screens.
-  #handleNonPlayingKey(key) {
-    return this.#overlay.screenManager.handleKey(this.#state.screen, key, this.#state, this.#getApi());
   }
 
   // play SFX for menu navigation and non-playing screen interactions
@@ -338,6 +414,27 @@ export class GameCore {
     this.#lastChasingNpcIds = currentChasingNpcIds;
   }
 
+  // Build an API object exposing safe public actions for screen handlers.
+  #getApi() {
+    return {
+      setScreen: s => this.#setScreen(s),
+      setMessage: (t, s) => this.#setMessage(t, s),
+      markMissionStart: () => this.#markMissionStart(),
+      restartLevel: () => this.restartLevel(),
+      restartCurrentStoryRun: () => this.restartCurrentStoryRun(),
+      resumeGame: () => this.resumeGame(),
+      exitToTitle: () => this.exitToTitle(),
+      exitToPlaythroughSelect: () => this.exitToPlaythroughSelect(),
+      exitToDifficultySelect: () => this.exitToDifficultySelect(),
+      loadStoryLevel: (levelId) => this.loadStoryLevel(levelId)
+    };
+  }
+
+  // Delegate key input to the overlay screen manager for non-playing screens.
+  #handleNonPlayingKey(key) {
+    return this.#overlay.screenManager.handleKey(this.#state.screen, key, this.#state, this.#getApi());
+  }
+
   // Load all image and audio assets, updating the loading state.
   async loadAssets(p) {
     this.#state.loading.message = 'Loading assets...';
@@ -362,10 +459,14 @@ export class GameCore {
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
     this.#overlay.update(s, deltaTime, this.#getApi());
     if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
-    if (s.screen !== SCREEN_STATES.PLAYING) { this.#audio.setLoopingSfx('running', false); this.#syncHud(); return; }
+    if (s.screen !== SCREEN_STATES.PLAYING) { this.#audio.setLoopingSfx('running', false); this.#syncHud(deltaTime); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
+    // Handle intro animation (blocks player input during animation)
+    const isInIntro = this.#updateIntroAnimation(deltaTime);
     const movement = this.#input.getMovement();
-    updatePlayer(s.level.player, movement, s.level, deltaTime);
+    if (!isInIntro) {
+      updatePlayer(s.level.player, movement, s.level, deltaTime);
+    }
     this.#syncRunningSfx(movement, s.level.player);
     if (this.#input.consumePortalPlace()) {
       const placement = s.level.portalSystem?.tryPlaceInFront?.(s.level.player, s.level);
@@ -390,7 +491,7 @@ export class GameCore {
     if (detectedBy) {
       triggerPlayerAction(s.level.player, 'alert', 0.32); s.meta.detectedBy = detectedBy;
       this.#setScreen(SCREEN_STATES.LOSE); this.#overlay.flash(s, 0.45); this.#setMessage('You were spotted', 2);
-      this.#syncHud(); return;
+      this.#syncHud(deltaTime); return;
     }
     s.meta.objective = s.level.missionSystem.getObjectiveText(s.meta.collected, s.meta.target);
     s.meta.exitDistanceText = s.level.missionSystem.isUnlocked() ? `${s.level.missionSystem.getDistanceToExit(s.level.player).toFixed(0)} px` : 'locked';
@@ -408,15 +509,17 @@ export class GameCore {
         if (s.story.normalMode) {
           this.#setScreen(SCREEN_STATES.WIN);
           this.#setMessage('Mission complete', 1.4);
-        } else if (s.story.currentPlaythrough === 1) {
+        } else if (s.levelId === 'map1') {
+          // Map1 story mode ends with false ending (leads to second playthrough)
           this.#setScreen(SCREEN_STATES.FALSE_ENDING);
           this.#setMessage('A strange ending has been reached', 1.4);
         } else {
+          // Map2 and Map3 story mode end with true ending
           this.#setScreen(SCREEN_STATES.TRUE_ENDING);
           this.#setMessage('The real ending is unfolding', 1.4);
         }
         this.#overlay.flash(s, 0.28);
-        this.#syncHud();
+        this.#syncHud(deltaTime);
         return;
       }
       if (r.success && r.kind === 'light') { const roomId = r.entity?.roomId; if (roomId) this.#setMessage(s.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3); }
@@ -427,15 +530,13 @@ export class GameCore {
           if (s.story.normalMode) {
             this.#setScreen(SCREEN_STATES.WIN);
             this.#setMessage('Mission complete', 1.4);
-          } else if (s.story.currentPlaythrough === 1) {
+          } else {
+            // Map1 story mode always ends with false ending (leads to second playthrough)
             this.#setScreen(SCREEN_STATES.FALSE_ENDING);
             this.#setMessage('A strange ending has been reached', 1.4);
-          } else {
-            this.#setScreen(SCREEN_STATES.TRUE_ENDING);
-            this.#setMessage('The real ending is unfolding', 1.4);
           }
           this.#overlay.flash(s, 0.28);
-          this.#syncHud();
+          this.#syncHud(deltaTime);
           return;
         }
         // Map2 win condition: unlocking door_K (key_exit) wins the game
@@ -443,15 +544,13 @@ export class GameCore {
           if (s.story.normalMode) {
             this.#setScreen(SCREEN_STATES.WIN);
             this.#setMessage('Mission complete', 1.4);
-          } else if (s.story.currentPlaythrough === 1) {
-            this.#setScreen(SCREEN_STATES.FALSE_ENDING);
-            this.#setMessage('A strange ending has been reached', 1.4);
           } else {
+            // Map2 in story mode always ends with true ending
             this.#setScreen(SCREEN_STATES.TRUE_ENDING);
             this.#setMessage('The real ending is unfolding', 1.4);
           }
           this.#overlay.flash(s, 0.28);
-          this.#syncHud();
+          this.#syncHud(deltaTime);
           return;
         }
         // Map3 win condition: unlocking door_J (key_exit) wins the game
@@ -459,15 +558,13 @@ export class GameCore {
           if (s.story.normalMode) {
             this.#setScreen(SCREEN_STATES.WIN);
             this.#setMessage('Mission complete', 1.4);
-          } else if (s.story.currentPlaythrough === 1) {
-            this.#setScreen(SCREEN_STATES.FALSE_ENDING);
-            this.#setMessage('A strange ending has been reached', 1.4);
           } else {
+            // Map3 in story mode always ends with true ending
             this.#setScreen(SCREEN_STATES.TRUE_ENDING);
             this.#setMessage('The real ending is unfolding', 1.4);
           }
           this.#overlay.flash(s, 0.28);
-          this.#syncHud();
+          this.#syncHud(deltaTime);
           return;
         }
       }
@@ -488,7 +585,7 @@ export class GameCore {
         }
       }
     }
-    this.#syncHud();
+    this.#syncHud(deltaTime);
   }
 
   // Render the current frame via the render system.
@@ -503,17 +600,7 @@ export class GameCore {
       const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return;
     }
     this.#input.onKeyPressed(key, keyCode);
-    const l = String(key).toLowerCase();
     if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
-    // if (l === 'r' && s.screen === SCREEN_STATES.PLAYING) { this.restartCurrentStoryRun(); return; }
-    // if (l === '1') this.switchLevel('map1'); if (l === '2') this.switchLevel('map2'); if (l === '3') this.switchLevel('map3');
-    if (l === 'b') s.debug.showRooms = !s.debug.showRooms;
-    if (l === 'c') s.debug.showCollision = !s.debug.showCollision;
-    if (l === 'g') s.debug.showCamera = !s.debug.showCamera;
-    if (l === 'v') s.debug.showExploration = !s.debug.showExploration;
-    if (l === 'i') { s.debug.showEntityIds = !s.debug.showEntityIds; this.#setMessage(s.debug.showEntityIds ? 'Entity IDs: ON' : 'Entity IDs: OFF', 1); }
-    // if (l === 'h' && s.level) { const next = s.level.player.characterVariant === 'default' ? 'stealth' : 'default'; s.level.player.characterVariant = next; this.#setMessage(`Player skin: ${next}`, 1); }
-    // if (l === 'm') { s.audio.muted = this.#audio.toggleMute(); this.#setMessage(s.audio.muted ? 'Muted' : 'Unmuted', 1); }
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();
   }
 

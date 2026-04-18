@@ -134,10 +134,6 @@ Changes made:
 
 We employed the System Usability Scale (SUS), a quick and reliable standardized questionnaire developed by John Brooke in 1986 for measuring the perceived usability of a system through 10 Likert-scale items, as a quantitative method. Upon completion, we exchanged reflections with the participants to ensure the effectiveness of the data analysis.
 
-Tools:
-- Raw & processed data, https://docs.google.com/forms/d/1GqH0NWsb81bZ2JY0xRhIRTU0-smSZ5enyeTCZHE76fw/edit
-- Charts, https://jupyter.org/try-jupyter/lab/
-
 Procedure：
 - Group A, 5 people, P1–P5: L1→L2
 - Group B, 5 people, P6–P10: L2→L1
@@ -166,13 +162,15 @@ Procedure：
 
 **Graphical Representation**
 
-![](/devlog/images/bar.jpg)
-
 
 ![](/devlog/images/line.jpg)
 
 
 **Interpretation**
+
+Statistical Analysis: 
+The analysis yielded W = 21.5 with p = 0.9961 > 0.05, providing no evidence of significant distributional differences between game levels (p >> 0.05).
+Both levels demonstrated functionally equivalent performance: Level 1 (M = 73.75, SD = 8.60) and Level 2 (M = 73.50, SD = 10.81), with negligible mean difference of 0.25 points and trivial effect size (r = 0.002).
 
 The results indicated a slight difference in usability perception between Level 1 and Level 2. On average, the SUS score for Level 1 was 72.25, while Level 2 had a marginally lower average of 70.75. This minimal difference (Δ = 1.5) was contrary to the expectation that a more advanced level might yield higher usability ratings through accumulated familiarity. A contributing factor may be the insufficient difficulty differentiation between the two levels — if players did not perceive a meaningful contrast in gameplay challenge, the interface demands across both conditions would remain largely equivalent, naturally producing similar usability ratings. The consistent UI layout and interaction patterns maintained across levels further reinforced this effect, allowing knowledge transfer with minimal friction but also limiting opportunities to observe usability variance.
 

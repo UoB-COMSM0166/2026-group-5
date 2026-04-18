@@ -17,8 +17,10 @@ export class PlaythroughSelectScreen extends Screen {
     this.#eKeyTimer = 0;
   }
 
-  reset() {
-    this.#selectedIndex = 0;
+  reset(state) {
+    const secondUnlocked = Boolean(state?.story?.secondPlaythroughUnlocked);
+    // Default to second playthrough if unlocked, otherwise first
+    this.#selectedIndex = secondUnlocked ? 1 : 0;
     this.#eKeyHolding = false;
     this.#eKeyTimer = 0;
   }
@@ -124,6 +126,7 @@ export class PlaythroughSelectScreen extends Screen {
           storyState.story.currentPlaythrough = 1;
           storyState.story.selectedRoute = null;
           storyState.story.introVariant = 'first';
+          storyState.story.normalMode = false;
           api.setMessage?.('First playthrough selected', 0.8);
           api.setScreen?.(SCREEN_STATES.INTRO);
         }
@@ -135,6 +138,7 @@ export class PlaythroughSelectScreen extends Screen {
           storyState.story.currentPlaythrough = 2;
           storyState.story.selectedRoute = null;
           storyState.story.introVariant = 'second';
+          storyState.story.normalMode = false;
           api.setMessage?.('Second playthrough selected', 0.8);
           api.setScreen?.(SCREEN_STATES.INTRO);
         }

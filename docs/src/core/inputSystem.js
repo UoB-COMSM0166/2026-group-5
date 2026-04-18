@@ -115,8 +115,4 @@ export class InputSystem {
     this.#portalPlacePressed = false;
     this.#spaceHeld = false;
   }
-
-  debugPressed() {
-    return Array.from(this.#pressed.keys());
-  }
 }

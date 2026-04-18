@@ -37,6 +37,7 @@ export class MapSelectScreen extends Screen {
     if (key === 'Enter') {
       const option = ROUTE_OPTIONS[this.#selectedIndex];
       state.story.selectedRoute = option.route;
+      state.story.normalMode = false;
       api.loadStoryLevel?.(option.levelId);
       api.markMissionStart?.();
       api.setScreen?.(SCREEN_STATES.PLAYING);

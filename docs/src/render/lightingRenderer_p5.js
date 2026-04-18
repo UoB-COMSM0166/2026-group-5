@@ -1,13 +1,20 @@
-// Lighting overlay: per-tile darkness, player reveal glow, button glow, room debug.
+// Lighting overlay: per-tile darkness, player reveal glow, button glow.
 import { getTileDarkness } from '../systems/lightingSystem.js';
 
-// Overlay dark rectangles on unlit tiles.
-function drawTileDarkness(p, level) {
+// Overlay dark rectangles on unlit tiles (viewport-culled for performance).
+function drawTileDarkness(p, level, camera) {
   const tile = level.settings.baseTile;
   const matrix = level.roomSystem.matrix || [];
+  if (!matrix.length) return;
+
+  // Get visible tile bounds for culling
+  const mapWidth = matrix[0]?.length || 0;
+  const mapHeight = matrix.length;
+  const bounds = camera.getVisibleTileBounds(tile, mapWidth, mapHeight);
+
   p.noStroke();
-  for (let y = 0; y < matrix.length; y += 1) {
-    for (let x = 0; x < matrix[y].length; x += 1) {
+  for (let y = bounds.startRow; y < bounds.endRow; y += 1) {
+    for (let x = bounds.startCol; x < bounds.endCol; x += 1) {
       const darkness = getTileDarkness(level, x, y);
       if (darkness <= 0) continue;
       p.fill(0, 0, 0, darkness * 255);
@@ -48,9 +55,9 @@ function drawRoomGradientOutline(p, level, matrix, roomSystem) {
     }
   }
 
-  // Draw gradient outline for each room
+  // Draw gradient outline for each room (reduced steps for performance)
   p.noStroke();
-  const steps = 8; // Number of gradient steps
+  const steps = 3; // Reduced from 8 to 3 for better performance
 
   for (const [roomId, edgeTiles] of roomEdges) {
     for (const tileKey of edgeTiles) {
@@ -86,55 +93,35 @@ function drawRoomGradientOutline(p, level, matrix, roomSystem) {
           p.rect(px + tile + offset, py, outlineWidth / steps + 1, tile);
         }
       }
-
-      // Draw corner gradients for exposed corners (inside out)
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const alpha = baseOpacity * (1 - t) * 255;
-        const offset = outlineWidth * t;
-
-        p.fill(0, 0, 0, alpha);
-
-        const top = ty === 0 || matrix[ty - 1][tx] !== roomId;
-        const bottom = ty === matrix.length - 1 || matrix[ty + 1][tx] !== roomId;
-        const left = tx === 0 || matrix[ty][tx - 1] !== roomId;
-        const right = tx === matrix[ty].length - 1 || matrix[ty][tx + 1] !== roomId;
-
-        // Corner fills (all touching the mask at inner layer)
-        if (top && left) {
-          p.rect(px - offset - outlineWidth / steps, py - offset - outlineWidth / steps, outlineWidth / steps + 1, outlineWidth / steps + 1);
-        }
-        if (top && right) {
-          p.rect(px + tile + offset, py - offset - outlineWidth / steps, outlineWidth / steps + 1, outlineWidth / steps + 1);
-        }
-        if (bottom && left) {
-          p.rect(px - offset - outlineWidth / steps, py + tile + offset, outlineWidth / steps + 1, outlineWidth / steps + 1);
-        }
-        if (bottom && right) {
-          p.rect(px + tile + offset, py + tile + offset, outlineWidth / steps + 1, outlineWidth / steps + 1);
-        }
-      }
     }
   }
 }
 
-// Fog-of-war overlay hiding rooms the player has not yet visited.
+// Fog-of-war overlay hiding rooms the player has not yet visited (viewport-culled).
 export function renderUnexploredOverlay(p, state) {
   const level = state.level;
   if (!level) return;
+  const camera = state.camera;
+  if (!camera) return;
 
   const tile = level.settings.baseTile;
   const matrix = level.roomSystem.matrix || [];
+  if (!matrix.length) return;
   const roomSystem = level.roomSystem;
   const now = performance.now();
   const fadeDuration = level.settings.unexploredFadeDuration ?? 1500;
+
+  // Get visible tile bounds for culling
+  const mapWidth = matrix[0].length;
+  const mapHeight = matrix.length;
+  const bounds = camera.getVisibleTileBounds(tile, mapWidth, mapHeight);
 
   // Draw gradient outline first (behind the mask)
   drawRoomGradientOutline(p, level, matrix, roomSystem);
 
   p.noStroke();
-  for (let y = 0; y < matrix.length; y += 1) {
-    for (let x = 0; x < matrix[y].length; x += 1) {
+  for (let y = bounds.startRow; y < bounds.endRow; y += 1) {
+    for (let x = bounds.startCol; x < bounds.endCol; x += 1) {
       const roomId = matrix[y][x];
       if (roomId <= 1) continue;
 
@@ -163,22 +150,6 @@ export function renderUnexploredOverlay(p, state) {
     }
   }
 
-  if (state.debug.showExploration) {
-    p.noFill();
-    p.stroke(255, 0, 255, 120);
-    p.strokeWeight(2);
-    for (let y = 0; y < matrix.length; y += 1) {
-      for (let x = 0; x < matrix[y].length; x += 1) {
-        const roomId = matrix[y][x];
-        if (roomId <= 1) continue;
-        const explored = roomSystem.isExplored(roomId);
-        if (!explored) {
-          p.rect(x * tile, y * tile, tile, tile);
-        }
-      }
-    }
-    p.strokeWeight(1);
-  }
 }
 
 // Draw a radial glow around the player in dark rooms.
@@ -197,26 +168,6 @@ function drawPlayerReveal(p, level) {
   }
 }
 
-// Draw room IDs on each tile for debugging.
-function drawRoomDebug(p, level) {
-  const tile = level.settings.baseTile;
-  const matrix = level.roomSystem.matrix || [];
-  p.textAlign(p.CENTER, p.CENTER);
-  p.textSize(9);
-  for (let y = 0; y < matrix.length; y += 1) {
-    for (let x = 0; x < matrix[y].length; x += 1) {
-      const roomId = matrix[y][x] || 1;
-      if (roomId <= 1) continue;
-      p.noFill();
-      p.stroke(96, 165, 250, 60);
-      p.rect(x * tile, y * tile, tile, tile);
-      p.noStroke();
-      p.fill(191, 219, 254, 80);
-      p.text(String(roomId), x * tile + tile / 2, y * tile + tile / 2 + 1);
-    }
-  }
-}
-
 // Animate a glow ring on buttons that were recently toggled.
 function drawButtonsGlow(p, level) {
   for (const button of level.roomSystem.buttons) {
@@ -232,8 +183,9 @@ function drawButtonsGlow(p, level) {
 export function renderLightingOverlay(p, state) {
   const level = state.level;
   if (!level) return;
-  drawTileDarkness(p, level);
+  const camera = state.camera;
+  if (!camera) return;
+  drawTileDarkness(p, level, camera);
   drawPlayerReveal(p, level);
   drawButtonsGlow(p, level);
-  if (state.debug.showRooms) drawRoomDebug(p, level);
 }

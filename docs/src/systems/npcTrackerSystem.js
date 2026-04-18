@@ -3,75 +3,6 @@ import { canMoveToRect, getEntityCollisionRect } from './collisionSystem.js';
 import { findPath, getActorTilePosition, getPointTilePosition, tilePathToWorldPath } from './pathfindingSystem.js';
 import { DOOR_STATES, DOOR_TIMING } from './doorSystem.js';
 
-// Debug system
-const DEBUG_ENABLED = true;           // master switch (set false to disable all)
-const DEBUG_CHASE_ONLY = true;        // only log CHASE state (false = all states)
-const DEBUG_VERBOSE_STEERING = false; // log each steering ray detail (true = verbose)
-const DEBUG_VERBOSE_COLLISION = true; // log collision tile details
-const DEBUG_FRAME_SAMPLE_RATE = 3;    // log every N frames (1 = every frame, 3 = every 3rd)
-// Note: BUG CONDITION warnings always log, ignoring FRAME_SAMPLE_RATE
-
-let _debugFrameCount = 0;
-let _debugLastSecondTime = 0;
-let _debugGameStartTime = Date.now();
-let _debugFramesThisSecond = 0;
-
-function debugTickSecond(deltaTime) {
-  if (!DEBUG_ENABLED) return;
-  const now = Date.now();
-  _debugFrameCount++;
-  _debugFramesThisSecond++;
-  const elapsed = (now - _debugGameStartTime) / 1000;
-  if (now - _debugLastSecondTime >= 1000) {
-    const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    console.log(`%c[⏱ ${timeStr}] gameTime=${elapsed.toFixed(1)}s frame=${_debugFrameCount} fps=${_debugFramesThisSecond} dt=${(deltaTime*1000).toFixed(1)}ms`, 'color: #00bcd4; font-weight: bold');
-    _debugLastSecondTime = now;
-    _debugFramesThisSecond = 0;
-  }
-}
-
-function debugShouldLog() {
-  return DEBUG_ENABLED && (_debugFrameCount % DEBUG_FRAME_SAMPLE_RATE === 0);
-}
-
-function debugIsChase(npc) {
-  return !DEBUG_CHASE_ONLY || npc.state === 'CHASE';
-}
-
-function debugCollisionRect(npc, x, y) {
-  const rect = getEntityCollisionRect(npc, x, y);
-  const tileSize = 16;
-  return {
-    rect: `(${rect.x.toFixed(2)},${rect.y.toFixed(2)},w=${rect.w},h=${rect.h})`,
-    tiles: `L=${Math.floor(rect.x/tileSize)} R=${Math.floor((rect.x+rect.w-1)/tileSize)} T=${Math.floor(rect.y/tileSize)} B=${Math.floor((rect.y+rect.h-1)/tileSize)}`,
-    exactEdges: `right_edge=${(rect.x+rect.w).toFixed(4)} bottom_edge=${(rect.y+rect.h).toFixed(4)} right_tile_raw=${((rect.x+rect.w-1)/tileSize).toFixed(4)} bottom_tile_raw=${((rect.y+rect.h-1)/tileSize).toFixed(4)}`
-  };
-}
-
-// canMoveToRect wrapper with detailed logging
-function debugCanMoveToRect(npc, nextX, nextY, collision, tileSize, level, label) {
-  const result = canMoveToRect(npc, nextX, nextY, collision, tileSize, level);
-  if (DEBUG_VERBOSE_COLLISION && debugShouldLog() && debugIsChase(npc) && !result) {
-    const info = debugCollisionRect(npc, nextX, nextY);
-    const rect = getEntityCollisionRect(npc, nextX, nextY);
-    const left = Math.floor(rect.x / tileSize);
-    const right = Math.floor((rect.x + rect.w - 1) / tileSize);
-    const top = Math.floor(rect.y / tileSize);
-    const bottom = Math.floor((rect.y + rect.h - 1) / tileSize);
-    let blockedTiles = [];
-    for (let ty = top; ty <= bottom; ty++) {
-      for (let tx = left; tx <= right; tx++) {
-        const colArr = level?.collision || collision;
-        if (colArr[ty] && colArr[ty][tx] === 1) {
-          blockedTiles.push(`(${tx},${ty})`);
-        }
-      }
-    }
-    console.log(`[DEBUG canMoveToRect BLOCKED] ${label || ''} NPC=${npc.id} pos=(${nextX.toFixed(2)},${nextY.toFixed(2)}) ${info.rect} tiles=${info.tiles} edges=${info.exactEdges} blockedAt=[${blockedTiles.join(',')}]`);
-  }
-  return result;
-}
-
 const TRACKER_ALGORITHMS = new Map();
 const DEFAULT_TRACKER_PROFILE = 'path_smooth';
 
@@ -96,9 +27,10 @@ const WAYPOINT_REACH_RADIUS = 6;         // px closeness to consider waypoint re
 const BLOCKED_EDGE_FOLLOW_DELAY = 0.18;  // seconds blocked before starting edge follow
 
 // --- Context-based Steering constants ---
-const STEERING_NUM_RAYS = 24;             // number of sample directions around 360°
+const STEERING_NUM_RAYS = 12;             // Reduced from 24 to 12 for better performance
 const STEERING_DANGER_NEAR = 0.45;        // fraction of danger-far for "close" obstacle check
 const STEERING_PARTIAL_WEIGHT = 0.12;     // weight for directions blocked far but clear near
+const SKIP_DISTANCE_THRESHOLD = 400;      // Skip steering for NPCs far from player (squared)
 
 // Pre-compute unit direction vectors for context steering
 const STEERING_DIRS = [];
@@ -280,26 +212,13 @@ function canBoxTraverseLine(npc, fromCx, fromCy, toCx, toCy, level) {
   if (dist < 1) return true;
   const stepSize = Math.max(2, tileSize * 0.25);
   const steps = Math.ceil(dist / stepSize);
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
-  let failedAtStep = -1;
-  let failedCx = 0, failedCy = 0;
   for (let i = 0; i <= steps; i += 1) {
     const t = i / steps;
     const cx = fromCx + ddx * t;
     const cy = fromCy + ddy * t;
     if (!canMoveToRect(npc, cx - npc.w / 2, cy - npc.h / 2, level.collision, tileSize, level)) {
-      failedAtStep = i;
-      failedCx = cx;
-      failedCy = cy;
-      if (shouldLog) {
-        const info = debugCollisionRect(npc, cx - npc.w / 2, cy - npc.h / 2);
-        console.log(`[DEBUG canBoxTraverseLine] BLOCKED NPC=${npc.id} step=${i}/${steps} t=${t.toFixed(3)} sampleCenter=(${cx.toFixed(2)},${cy.toFixed(2)}) ${info.rect} ${info.tiles} ${info.exactEdges}`);
-      }
       return false;
     }
-  }
-  if (shouldLog) {
-    console.log(`[DEBUG canBoxTraverseLine] CLEAR NPC=${npc.id} from=(${fromCx.toFixed(1)},${fromCy.toFixed(1)}) to=(${toCx.toFixed(1)},${toCy.toFixed(1)}) dist=${dist.toFixed(1)} steps=${steps} stepSize=${stepSize}`);
   }
   return true;
 }
@@ -424,16 +343,8 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
   const dy = targetY - npc.y;
   const dist = Math.hypot(dx, dy);
   const reachThreshold = options.reachThreshold ?? Math.max(4, speed * deltaTime * 1.1);
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
-
-  if (shouldLog) {
-    const curInfo = debugCollisionRect(npc, npc.x, npc.y);
-    console.log(`[DEBUG moveToward START] NPC=${npc.id} pos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) target=(${targetX.toFixed(2)},${targetY.toFixed(2)}) dist=${dist.toFixed(2)} speed=${speed} stepDist=${Math.min(dist, speed*deltaTime).toFixed(2)} reachThr=${reachThreshold.toFixed(2)} curRect=${curInfo.rect} curTiles=${curInfo.tiles} curEdges=${curInfo.exactEdges}`);
-  }
-
   if (dist <= reachThreshold) {
     npc.moving = false;
-    if (shouldLog) console.log(`[DEBUG moveToward] REACHED target NPC=${npc.id}`);
     return true;
   }
 
@@ -446,14 +357,7 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
 
   // 1. Fast path: direct move when no obstacle ahead (skip steering overhead)
   const fastPathClear = canMoveToRect(npc, npc.x + vx, npc.y + vy, level.collision, tileSize, level);
-  if (shouldLog && !fastPathClear) {
-    const info = debugCollisionRect(npc, npc.x + vx, npc.y + vy);
-    console.log(`[DEBUG moveToward] FAST PATH BLOCKED NPC=${npc.id} tryPos=(${(npc.x+vx).toFixed(2)},${(npc.y+vy).toFixed(2)}) vx=${vx.toFixed(3)} vy=${vy.toFixed(3)} desDir=(${desiredDx.toFixed(3)},${desiredDy.toFixed(3)}) ${info.rect} ${info.tiles} ${info.exactEdges}`);
-    // Also check X-only and Y-only to understand which axis is blocked
-    const canX = canMoveToRect(npc, npc.x + vx, npc.y, level.collision, tileSize, level);
-    const canY = canMoveToRect(npc, npc.x, npc.y + vy, level.collision, tileSize, level);
-    console.log(`[DEBUG moveToward] AXIS CHECK NPC=${npc.id} canMoveX=${canX} canMoveY=${canY}`);
-  }
+  // Fast path blocked, continue to steering
   if (fastPathClear) {
     npc.x += vx;
     npc.y += vy;
@@ -462,13 +366,11 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
     tracker.lastMoveY = vy;
     tracker.blockedTimer = 0;
     if (options.updateFacing !== false) updateFacingSmooth(npc, vx, vy, dx, dy, deltaTime);
-    if (shouldLog) console.log(`[DEBUG moveToward] FAST PATH OK NPC=${npc.id} moved=(${vx.toFixed(2)},${vy.toFixed(2)})`);
     return false;
   }
 
   // 2. Direct move blocked → try to open a nearby door
   if (!npc.doorPhase && tryOpenBlockingDoor(npc, level)) {
-    if (shouldLog) console.log(`[DEBUG moveToward] DOOR INTERACTION NPC=${npc.id}`);
     if (options.updateFacing !== false) updateFacingSmooth(npc, 0, 0, dx, dy, deltaTime);
     return false;
   }
@@ -476,15 +378,44 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
   // 3. Context-based Steering: sample multiple directions, weight by interest
   //    (dot product toward target) and danger (box-collision), then sum into a
   //    composite obstacle-aware movement vector.
+
+  // [OPTIMIZATION DISABLED] Performance: skip expensive steering for distant NPCs
+  // const player = level.player;
+  // const dxToPlayer = (npc.x + npc.w / 2) - (player.x + player.w / 2);
+  // const dyToPlayer = (npc.y + npc.h / 2) - (player.y + player.h / 2);
+  // const distSqToPlayer = dxToPlayer * dxToPlayer + dyToPlayer * dyToPlayer;
+  // const skipSteering = distSqToPlayer > (SKIP_DISTANCE_THRESHOLD * SKIP_DISTANCE_THRESHOLD);
+
+  // if (skipSteering) {
+  //   // Simple direct movement for distant NPCs (no obstacle avoidance)
+  //   const slideStep = stepDistance * 0.5;
+  //   let moved = false;
+  //   if (canMoveToRect(npc, npc.x + vx, npc.y, level.collision, tileSize, level)) {
+  //     npc.x += vx * 0.8;
+  //     moved = true;
+  //   } else if (canMoveToRect(npc, npc.x + Math.sign(vx) * slideStep, npc.y, level.collision, tileSize, level)) {
+  //     npc.x += Math.sign(vx) * slideStep;
+  //     moved = true;
+  //   }
+  //   if (canMoveToRect(npc, npc.x, npc.y + vy, level.collision, tileSize, level)) {
+  //     npc.y += vy * 0.8;
+  //     moved = true;
+  //   } else if (canMoveToRect(npc, npc.x, npc.y + Math.sign(vy) * slideStep, level.collision, tileSize, level)) {
+  //     npc.y += Math.sign(vy) * slideStep;
+  //     moved = true;
+  //   }
+  //   npc.moving = moved;
+  //   if (options.updateFacing !== false) updateFacingSmooth(npc, vx, vy, dx, dy, deltaTime);
+  //   return false;
+  // }
+
   const dangerFar = Math.max(tileSize * 0.85, stepDistance * 2.5);
   const dangerNear = dangerFar * STEERING_DANGER_NEAR;
   let sumX = 0;
   let sumY = 0;
   let blockedNearCount = 0;
   let blockedFarCount = 0;
-  let clearCount = 0;
   let skippedCount = 0;
-  let rayDetails = [];
 
   for (let i = 0; i < STEERING_NUM_RAYS; i++) {
     const dir = STEERING_DIRS[i];
@@ -492,9 +423,6 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
     const dot = dir.x * desiredDx + dir.y * desiredDy;
     let weight = Math.max(0, dot);
     if (weight < 0.001) { skippedCount++; continue; }
-
-    const origWeight = weight;
-    let rayStatus = 'clear';
 
     // Danger: box-collision check at two distances
     const farX = npc.x + dir.x * dangerFar;
@@ -505,29 +433,14 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
       if (!canMoveToRect(npc, nearX, nearY, level.collision, tileSize, level)) {
         weight = 0;                        // close obstacle → zero this direction
         blockedNearCount++;
-        rayStatus = 'BLOCKED_NEAR';
       } else {
         weight *= STEERING_PARTIAL_WEIGHT;  // far obstacle only → heavily reduce
         blockedFarCount++;
-        rayStatus = 'blocked_far';
       }
-    } else {
-      clearCount++;
     }
     if (weight > 0) {
       sumX += dir.x * weight;
       sumY += dir.y * weight;
-    }
-    if (shouldLog && DEBUG_VERBOSE_STEERING) {
-      const angle = (i / STEERING_NUM_RAYS * 360).toFixed(0);
-      rayDetails.push(`r${i}(${angle}°,d=${dir.x.toFixed(2)},${dir.y.toFixed(2)},dot=${dot.toFixed(3)},w=${origWeight.toFixed(3)}→${weight.toFixed(3)},${rayStatus})`);
-    }
-  }
-
-  if (shouldLog) {
-    console.log(`[DEBUG moveToward STEERING] NPC=${npc.id} dangerFar=${dangerFar.toFixed(2)} dangerNear=${dangerNear.toFixed(2)} rays: clear=${clearCount} blockedFar=${blockedFarCount} blockedNear=${blockedNearCount} skipped=${skippedCount} sumVec=(${sumX.toFixed(4)},${sumY.toFixed(4)}) sumLen=${Math.hypot(sumX,sumY).toFixed(4)}`);
-    if (DEBUG_VERBOSE_STEERING && rayDetails.length > 0) {
-      console.log(`[DEBUG moveToward RAYS] NPC=${npc.id} ${rayDetails.join(' | ')}`);
     }
   }
 
@@ -536,7 +449,6 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
     // No viable steering direction found
     npc.moving = false;
     tracker.blockedTimer = (tracker.blockedTimer || 0) + deltaTime;
-    if (shouldLog) console.log(`%c[DEBUG moveToward] NO VIABLE STEERING NPC=${npc.id} blockedTimer=${tracker.blockedTimer.toFixed(3)}`, 'color: red; font-weight: bold');
     return false;
   }
 
@@ -545,9 +457,6 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
 
   // 4. Apply steering direction
   const steerClear = canMoveToRect(npc, npc.x + steerX, npc.y + steerY, level.collision, tileSize, level);
-  if (shouldLog) {
-    console.log(`[DEBUG moveToward STEER APPLY] NPC=${npc.id} steer=(${steerX.toFixed(3)},${steerY.toFixed(3)}) steerAngle=${(Math.atan2(steerY,steerX)*180/Math.PI).toFixed(1)}° canApply=${steerClear}`);
-  }
   if (steerClear) {
     npc.x += steerX;
     npc.y += steerY;
@@ -570,9 +479,6 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
   } else if (canSlY) {
     slideY = steerY;
   }
-  if (shouldLog) {
-    console.log(`[DEBUG moveToward SLIDE] NPC=${npc.id} canSlX=${canSlX} canSlY=${canSlY} slideX=${slideX.toFixed(3)} slideY=${slideY.toFixed(3)} steerX=${steerX.toFixed(3)} steerY=${steerY.toFixed(3)}`);
-  }
   if (slideX !== 0 || slideY !== 0) {
     npc.x += slideX;
     npc.y += slideY;
@@ -587,7 +493,6 @@ function moveToward(npc, targetX, targetY, speed, deltaTime, level, options = {}
   // 6. Completely blocked
   npc.moving = false;
   tracker.blockedTimer = (tracker.blockedTimer || 0) + deltaTime;
-  if (shouldLog) console.log(`%c[DEBUG moveToward] COMPLETELY BLOCKED NPC=${npc.id} blockedTimer=${tracker.blockedTimer.toFixed(3)}`, 'color: red; font-weight: bold');
   return false;
 }
 
@@ -641,14 +546,6 @@ function beginEdgeFollow(npc, level, dx, dy, minimumSeconds = 2) {
   const tileSize = level?.settings?.baseTile || 16;
   const step = Math.max(4, tileSize * 0.55);
   const options = getPreferredEdgeDirections(dx, dy);
-  const shouldLog = DEBUG_ENABLED && debugIsChase(npc);
-  if (shouldLog) {
-    const dirResults = options.map(o => {
-      const can = canMoveToRect(npc, npc.x + o.x * step, npc.y + o.y * step, level.collision, tileSize, level);
-      return `(${o.x},${o.y},${o.facing},can=${can})`;
-    });
-    console.log(`[DEBUG beginEdgeFollow] NPC=${npc.id} dx=${dx.toFixed(1)} dy=${dy.toFixed(1)} step=${step.toFixed(1)} minSec=${minimumSeconds} prefDirs=[${dirResults.join(',')}]`);
-  }
   for (const option of options) {
     const nextX = npc.x + option.x * step;
     const nextY = npc.y + option.y * step;
@@ -659,7 +556,6 @@ function beginEdgeFollow(npc, level, dx, dy, minimumSeconds = 2) {
     tracker.edgeFollowDirY = option.y;
     tracker.edgeFacing = option.facing;
     trySetFacing(npc, option.facing);
-    if (shouldLog) console.log(`[DEBUG beginEdgeFollow] NPC=${npc.id} CHOSEN preferred dir=(${option.x},${option.y}) facing=${option.facing}`);
     return true;
   }
   const fallback = EDGE_FOLLOW_DIRECTIONS.find((option) => {
@@ -668,7 +564,6 @@ function beginEdgeFollow(npc, level, dx, dy, minimumSeconds = 2) {
     return canMoveToRect(npc, nextX, nextY, level.collision, tileSize, level);
   });
   if (!fallback) {
-    if (shouldLog) console.log(`[DEBUG beginEdgeFollow] NPC=${npc.id} NO VIABLE DIRECTION`);
     return false;
   }
   tracker.edgeFollowTimer = minimumSeconds;
@@ -676,7 +571,6 @@ function beginEdgeFollow(npc, level, dx, dy, minimumSeconds = 2) {
   tracker.edgeFollowDirY = fallback.y;
   tracker.edgeFacing = fallback.facing;
   trySetFacing(npc, fallback.facing);
-  if (shouldLog) console.log(`[DEBUG beginEdgeFollow] NPC=${npc.id} CHOSEN fallback dir=(${fallback.x},${fallback.y}) facing=${fallback.facing}`);
   return true;
 }
 
@@ -711,10 +605,6 @@ function computePathToPoint(npc, tracker, targetX, targetY, level, label = 'targ
   const tileSize = level?.settings?.baseTile || 16;
   const startTile = getActorTilePosition(npc, tileSize);
   const goalTile = getPointTilePosition(targetX, targetY, tileSize);
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
-  if (shouldLog) {
-    console.log(`[DEBUG computePathToPoint] NPC=${npc.id} npcPos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) startTile=(${startTile.tx},${startTile.ty}) goalTile=(${goalTile.tx},${goalTile.ty}) target=(${targetX.toFixed(2)},${targetY.toFixed(2)}) label=${label}`);
-  }
   const path = findPath(level, npc, startTile, goalTile, { tileSize, allowDoors: true });
   const rawWorldPath = tilePathToWorldPath(path, tileSize).map((node) => getSafeTileWorldTarget(npc, node.tx, node.ty, tileSize));
   tracker.path = simplifyWorldPath(npc, rawWorldPath, level);
@@ -723,19 +613,12 @@ function computePathToPoint(npc, tracker, targetX, targetY, level, label = 'targ
   tracker.pathReplanCooldown = REPLAN_COOLDOWN_DEFAULT;
   tracker.pathGoalX = targetX;
   tracker.pathGoalY = targetY;
-  if (shouldLog) {
-    const rawTiles = path.map(n => `(${n.tx},${n.ty})`).join('→');
-    const simplifiedWaypoints = tracker.path.map(n => `(${n.tx},${n.ty},c=${n.centerX.toFixed(1)},${n.centerY.toFixed(1)})`).join('→');
-    console.log(`[DEBUG computePathToPoint] NPC=${npc.id} rawPathLen=${path.length} tiles=[${rawTiles}] simplifiedLen=${tracker.path.length} waypoints=[${simplifiedWaypoints}]`);
-  }
   return tracker.path.length > 0;
 }
 
 function followCurrentPath(npc, tracker, speed, deltaTime, level, targetX, targetY, options = {}) {
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
   if (!tracker.path.length || tracker.pathIndex >= tracker.path.length) {
     npc.moving = false;
-    if (shouldLog) console.log(`[DEBUG followCurrentPath] EMPTY/DONE NPC=${npc.id} pathLen=${tracker.path.length} pathIdx=${tracker.pathIndex}`);
     return true;
   }
 
@@ -751,25 +634,15 @@ function followCurrentPath(npc, tracker, speed, deltaTime, level, targetX, targe
       break;
     }
   }
-  if (shouldLog && tracker.pathIndex !== prevPathIndex) {
-    const skipped = tracker.pathIndex - prevPathIndex;
-    const node = tracker.path[tracker.pathIndex];
-    console.log(`[DEBUG followCurrentPath] WAYPOINT SKIP NPC=${npc.id} ${prevPathIndex}→${tracker.pathIndex} (skipped ${skipped}) newWP=(${node.centerX.toFixed(1)},${node.centerY.toFixed(1)}) tile=(${node.tx},${node.ty})`);
-  }
-
   const node = tracker.path[tracker.pathIndex];
   const isFinalNode = tracker.pathIndex >= tracker.path.length - 1;
   const waypointX = isFinalNode ? targetX : node.x;
   const waypointY = isFinalNode ? targetY : node.y;
-  if (shouldLog) {
-    console.log(`[DEBUG followCurrentPath] NPC=${npc.id} pathIdx=${tracker.pathIndex}/${tracker.path.length} isFinal=${isFinalNode} waypointPos=(${waypointX.toFixed(1)},${waypointY.toFixed(1)}) nodeTile=(${node.tx},${node.ty}) nodeCenter=(${node.centerX.toFixed(1)},${node.centerY.toFixed(1)})`);
-  }
   const reached = moveToward(npc, waypointX, waypointY, speed, deltaTime, level, options);
   if (!reached) return false;
 
   // Forward-only progression: advance and never go back
   tracker.pathIndex += 1;
-  if (shouldLog) console.log(`[DEBUG followCurrentPath] WAYPOINT REACHED NPC=${npc.id} advancing to pathIdx=${tracker.pathIndex}/${tracker.path.length}`);
   if (tracker.pathIndex >= tracker.path.length) {
     npc.moving = false;
     return true;
@@ -800,20 +673,17 @@ function updateStuckDetection(npc, tracker, deltaTime, tileSize) {
 
 function performStuckRecovery(npc, tracker, level, targetDx, targetDy, speed, deltaTime) {
   const tileSize = level?.settings?.baseTile || 16;
-  const shouldLog = DEBUG_ENABLED && debugIsChase(npc);
   // Tier 1: force replan
   if (tracker.stuckTimer >= STUCK_REPLAN_TIME && tracker.stuckRecoveryLevel < 1) {
     tracker.stuckRecoveryLevel = 1;
     tracker.path = [];
     tracker.pathIndex = 0;
     tracker.pathTargetKey = '';
-    if (shouldLog) console.log(`%c[DEBUG STUCK RECOVERY] NPC=${npc.id} TIER1 REPLAN stuckTimer=${tracker.stuckTimer.toFixed(2)}`, 'color: orange; font-weight: bold');
     return 'replanned';
   }
   // Tier 2: perpendicular nudge
   if (tracker.stuckTimer >= STUCK_NUDGE_TIME && tracker.stuckRecoveryLevel < 2) {
     tracker.stuckRecoveryLevel = 2;
-    if (shouldLog) console.log(`%c[DEBUG STUCK RECOVERY] NPC=${npc.id} TIER2 NUDGE stuckTimer=${tracker.stuckTimer.toFixed(2)} targetDir=(${targetDx.toFixed(1)},${targetDy.toFixed(1)})`, 'color: orange; font-weight: bold');
     const nudgeDist = tileSize * 0.7;
     const perpDirs = [];
     if (Math.abs(targetDx) >= Math.abs(targetDy)) {
@@ -852,19 +722,11 @@ function trackPathSmooth(npc, request, deltaTime, level) {
   const targetY = request.targetY;
   const speed = request.speed;
   const label = request.label || 'target';
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
   tracker.pathReplanCooldown = Math.max(0, (tracker.pathReplanCooldown || 0) - deltaTime);
-
-  if (shouldLog) {
-    console.log(`[DEBUG trackPathSmooth] NPC=${npc.id} pos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) target=(${targetX.toFixed(2)},${targetY.toFixed(2)}) label=${label} stuckTimer=${(tracker.stuckTimer||0).toFixed(2)} stuckLevel=${tracker.stuckRecoveryLevel} replanCD=${(tracker.pathReplanCooldown||0).toFixed(2)} preferDirect=${!!request.preferDirectSight}`);
-  }
 
   // --- Anti-stuck: sample position periodically ---
   updateStuckDetection(npc, tracker, deltaTime, tileSize);
   const stuckAction = performStuckRecovery(npc, tracker, level, targetX - npc.x, targetY - npc.y, speed, deltaTime);
-  if (shouldLog && stuckAction !== 'none') {
-    console.log(`[DEBUG trackPathSmooth] STUCK RECOVERY NPC=${npc.id} action=${stuckAction} stuckTimer=${(tracker.stuckTimer||0).toFixed(2)}`);
-  }
   if (stuckAction === 'nudged' || stuckAction === 'edge_follow') return false;
 
   // --- Direct movement shortcut: only when NPC collision box can traverse the
@@ -875,16 +737,12 @@ function trackPathSmooth(npc, request, deltaTime, level) {
     const targetCenterX = targetX + npc.w / 2;
     const targetCenterY = targetY + npc.h / 2;
     const directClear = canBoxTraverseLine(npc, npcCenterX, npcCenterY, targetCenterX, targetCenterY, level);
-    if (shouldLog) {
-      console.log(`[DEBUG trackPathSmooth] DIRECT SIGHT CHECK NPC=${npc.id} directClear=${directClear} npcCenter=(${npcCenterX.toFixed(1)},${npcCenterY.toFixed(1)}) targetCenter=(${targetCenterX.toFixed(1)},${targetCenterY.toFixed(1)})`);
-    }
     if (directClear) {
       tracker.path = [];
       tracker.pathIndex = 0;
       tracker.pathTargetKey = '';
       tracker.pathGoalX = targetX;
       tracker.pathGoalY = targetY;
-      if (shouldLog) console.log(`[DEBUG trackPathSmooth] USING DIRECT MOVE NPC=${npc.id}`);
       return moveToward(npc, targetX, targetY, speed, deltaTime, level, request);
     }
   }
@@ -902,14 +760,9 @@ function trackPathSmooth(npc, request, deltaTime, level) {
     || request.forceRepath
     || stuckAction === 'replanned';
 
-  if (shouldLog) {
-    console.log(`[DEBUG trackPathSmooth] REBUILD CHECK NPC=${npc.id} shouldRebuild=${shouldRebuild} reasons: noPath=${!tracker.path.length} keyMismatch=${tracker.pathTargetKey !== targetKey} indexDone=${tracker.pathIndex >= tracker.path.length} targetMoved=${targetMovedFarEnough}(shift=${targetShift.toFixed(1)}) forceRepath=${!!request.forceRepath} stuckReplan=${stuckAction === 'replanned'}`);
-  }
-
   if (shouldRebuild) {
     const built = computePathToPoint(npc, tracker, targetX, targetY, level, label);
     if (!built) {
-      if (shouldLog) console.log(`[DEBUG trackPathSmooth] PATH NOT FOUND NPC=${npc.id}`);
       // Path not found — do NOT push directly toward target (causes wall-sticking).
       // Stand still and allow replan on next frame.
       npc.moving = false;
@@ -925,9 +778,7 @@ function trackPathSmooth(npc, request, deltaTime, level) {
   // Don't start edge follow if NPC is waiting to open a door (doorPhase exists)
   if (!npc.moving && !npc.doorPhase) {
     tracker.blockedTimer = (tracker.blockedTimer || 0) + deltaTime;
-    if (shouldLog) console.log(`[DEBUG trackPathSmooth] BLOCKED NPC=${npc.id} blockedTimer=${tracker.blockedTimer.toFixed(3)} threshold=${BLOCKED_EDGE_FOLLOW_DELAY}`);
     if (tracker.blockedTimer >= BLOCKED_EDGE_FOLLOW_DELAY) {
-      if (shouldLog) console.log(`[DEBUG trackPathSmooth] START EDGE FOLLOW NPC=${npc.id}`);
       beginEdgeFollow(npc, level, targetX - npc.x, targetY - npc.y, 0.4);
       runEdgeFollow(npc, speed, deltaTime, level);
       tracker.blockedTimer = 0;
@@ -951,27 +802,18 @@ function trackSteeringChase(npc, request, deltaTime, level) {
   const npcCenterY = npc.y + npc.h / 2;
   const targetCenterX = targetX + npc.w / 2;
   const targetCenterY = targetY + npc.h / 2;
-  const shouldLog = DEBUG_ENABLED && debugShouldLog() && debugIsChase(npc);
   const prevX = npc.x;
   const prevY = npc.y;
 
   // Box-swept check: can NPC's full collision box traverse a straight line to target?
   const canDirectReach = canBoxTraverseLine(npc, npcCenterX, npcCenterY, targetCenterX, targetCenterY, level);
 
-  if (shouldLog) {
-    const distToTarget = Math.hypot(dx, dy);
-    const dirAngle = Math.atan2(dy, dx) * 180 / Math.PI;
-    console.log(`%c[DEBUG trackSteeringChase] NPC=${npc.id} frame=${_debugFrameCount} pos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) center=(${npcCenterX.toFixed(2)},${npcCenterY.toFixed(2)}) target=(${targetX.toFixed(2)},${targetY.toFixed(2)}) targetCenter=(${targetCenterX.toFixed(2)},${targetCenterY.toFixed(2)}) dist=${distToTarget.toFixed(2)} angle=${dirAngle.toFixed(1)}° canDirectReach=${canDirectReach} moving=${npc.moving} edgeFollowTimer=${(tracker.edgeFollowTimer||0).toFixed(2)} blockedTimer=${(tracker.blockedTimer||0).toFixed(2)} pathLen=${tracker.path.length} pathIdx=${tracker.pathIndex}`, 'color: #ff9800');
-  }
-
   // --- Edge follow recovery: cancel when box-traversal regained ---
   if ((tracker.edgeFollowTimer || 0) > 0) {
     if (canDirectReach) {
-      if (shouldLog) console.log(`[DEBUG trackSteeringChase] EDGE FOLLOW CANCELLED (direct regained) NPC=${npc.id}`);
       tracker.edgeFollowTimer = 0;
     } else {
       const edgeMoved = runEdgeFollow(npc, speed, deltaTime, level);
-      if (shouldLog) console.log(`[DEBUG trackSteeringChase] EDGE FOLLOW RUNNING NPC=${npc.id} edgeMoved=${edgeMoved} dir=(${tracker.edgeFollowDirX},${tracker.edgeFollowDirY}) timer=${tracker.edgeFollowTimer.toFixed(2)}`);
       if (edgeMoved) {
         tracker.edgeFollowTimer = Math.max(tracker.edgeFollowTimer, 0.3);
         return Math.hypot(targetX - npc.x, targetY - npc.y) <= Math.max(8, speed * deltaTime * 1.5);
@@ -984,55 +826,20 @@ function trackSteeringChase(npc, request, deltaTime, level) {
   // No more "hasSight || dist <= directRange" shortcut which caused wall-sticking
   // at diagonal obstacles and 90-degree corners. ---
   if (canDirectReach) {
-    if (shouldLog) console.log(`[DEBUG trackSteeringChase] DIRECT MOVE BRANCH NPC=${npc.id} calling moveToward...`);
     const moved = moveToward(npc, targetX, targetY, speed, deltaTime, level, {
       ...request,
       reachThreshold: request.reachThreshold ?? Math.max(6, tileSize * 0.45),
       updateFacing: true
     });
-    const actualDist = Math.hypot(npc.x - prevX, npc.y - prevY);
     tracker.path = [];
     tracker.pathIndex = 0;
     tracker.pathTargetKey = '';
     tracker.pathGoalX = targetX;
     tracker.pathGoalY = targetY;
-    if (shouldLog) {
-      const stuckWarning = (!npc.moving && actualDist < 0.5) ? '⚠️ STUCK!' : '';
-      console.log(`[DEBUG trackSteeringChase] DIRECT RESULT NPC=${npc.id} moved=${moved} npc.moving=${npc.moving} actualDisplacement=${actualDist.toFixed(3)} newPos=(${npc.x.toFixed(2)},${npc.y.toFixed(2)}) ${stuckWarning}`);
-    }
-    // CRITICAL BUG DETECTION - always fires regardless of frame sample rate
-    if (DEBUG_ENABLED && debugIsChase(npc) && !npc.moving && actualDist < 0.5 && canDirectReach) {
-        // CRITICAL: This is the bug condition - canBoxTraverseLine=true but moveToward failed
-        console.log(`%c[DEBUG ⚠️ BUG CONDITION] NPC=${npc.id} canBoxTraverseLine=TRUE but moveToward FAILED! pos=(${npc.x.toFixed(4)},${npc.y.toFixed(4)}) target=(${targetX.toFixed(4)},${targetY.toFixed(4)}) dx=${dx.toFixed(4)} dy=${dy.toFixed(4)}`, 'color: red; font-weight: bold; font-size: 14px');
-        // Log detailed collision info at current position
-        const curInfo = debugCollisionRect(npc, npc.x, npc.y);
-        console.log(`%c[DEBUG ⚠️ BUG DETAIL] NPC=${npc.id} insetX=${npc.collisionInsetX} insetY=${npc.collisionInsetY} w=${npc.w} h=${npc.h} curRect=${curInfo.rect} curTiles=${curInfo.tiles} curEdges=${curInfo.exactEdges}`, 'color: red');
-        // Test small movements in 8 directions to see what's blocked
-        const testDist = 1.0;
-        const testDirs = [
-          {name: '+X', dx: testDist, dy: 0}, {name: '-X', dx: -testDist, dy: 0},
-          {name: '+Y', dx: 0, dy: testDist}, {name: '-Y', dx: 0, dy: -testDist},
-          {name: '+X+Y', dx: testDist, dy: testDist}, {name: '+X-Y', dx: testDist, dy: -testDist},
-          {name: '-X+Y', dx: -testDist, dy: testDist}, {name: '-X-Y', dx: -testDist, dy: -testDist}
-        ];
-        let testResults = testDirs.map(d => {
-          const can = canMoveToRect(npc, npc.x + d.dx, npc.y + d.dy, level.collision, tileSize, level);
-          return `${d.name}=${can}`;
-        });
-        console.log(`%c[DEBUG ⚠️ 8-DIR TEST] NPC=${npc.id} @1px: ${testResults.join(' ')}`, 'color: red');
-        // Test at 0.1px
-        const testDist2 = 0.1;
-        let testResults2 = testDirs.map(d => {
-          const can = canMoveToRect(npc, npc.x + d.dx * 0.1, npc.y + d.dy * 0.1, level.collision, tileSize, level);
-          return `${d.name}=${can}`;
-        });
-        console.log(`%c[DEBUG ⚠️ 8-DIR TEST] NPC=${npc.id} @0.1px: ${testResults2.join(' ')}`, 'color: red');
-    }
     return moved;
   }
 
   // --- Always use A* pathfinding when direct box-traversal is not possible ---
-  if (shouldLog) console.log(`[DEBUG trackSteeringChase] A* PATH BRANCH NPC=${npc.id} canDirectReach=false, using trackPathSmooth...`);
   const finished = trackPathSmooth(npc, {
     ...request,
     preferDirectSight: true,
@@ -1040,15 +847,9 @@ function trackSteeringChase(npc, request, deltaTime, level) {
     repathDistanceThreshold: request.repathDistanceThreshold ?? tileSize * CHASE_REPLAN_TILE_DIST
   }, deltaTime, level);
 
-  const actualDistPath = Math.hypot(npc.x - prevX, npc.y - prevY);
-  if (shouldLog) {
-    console.log(`[DEBUG trackSteeringChase] A* RESULT NPC=${npc.id} finished=${finished} moving=${npc.moving} displacement=${actualDistPath.toFixed(3)} blockedTimer=${(tracker.blockedTimer||0).toFixed(2)}`);
-  }
-
   // Only start edge follow after sustained blockage
   // Don't start edge follow if NPC is waiting to open a door (doorPhase exists)
   if (!npc.moving && (tracker.blockedTimer || 0) >= BLOCKED_EDGE_FOLLOW_DELAY && !npc.doorPhase) {
-    if (shouldLog) console.log(`[DEBUG trackSteeringChase] START EDGE FOLLOW NPC=${npc.id} blockedTimer=${tracker.blockedTimer.toFixed(2)}`);
     beginEdgeFollow(npc, level, dx, dy, 1.0);
   }
   return finished;
@@ -1089,11 +890,6 @@ function trackDirectPatrol(npc, request, deltaTime, level) {
 TRACKER_ALGORITHMS.set(DEFAULT_TRACKER_PROFILE, trackPathSmooth);
 TRACKER_ALGORITHMS.set('steering_chase', trackSteeringChase);
 TRACKER_ALGORITHMS.set('patrol_route', trackDirectPatrol);
-
-// Advance the debug frame counter for NPC tracker logging.
-export function debugTickNpcTracker(deltaTime) {
-  debugTickSecond(deltaTime);
-}
 
 // Execute the appropriate movement algorithm for an NPC's current request.
 export function runNpcTracker(npc, request, deltaTime, level) {
