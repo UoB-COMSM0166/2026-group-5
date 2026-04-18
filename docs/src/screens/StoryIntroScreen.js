@@ -7,6 +7,10 @@ import { getLayout, sx, sy, centerX, centerGroupX } from '../utils/screenLayout.
 import { drawPanelImage } from '../utils/cutsceneDraw.js';
 import { clamp, lerp, smoothAppear, fadeWindow } from '../utils/animation.js';
 import { INTRO_ASSETS } from './storyAssetCatalog.js';
+import { CutscenePlaybackController } from './CutscenePlaybackController.js';
+
+const REVEALED_VISUAL_PROGRESS = 0.84;
+const VISUAL_READY_PROGRESS = 0.84;
 
 const FIRST_PLAYTHROUGH_SCENES = Object.freeze([
   { start: 0, end: 4500, caption: 'In a prosperous kingdom, all was quiet.', draw: drawCastleScene },
@@ -29,75 +33,57 @@ const SECOND_PLAYTHROUGH_SCENES = Object.freeze([
 ]);
 
 export class IntroScreen extends Screen {
-  #timeOffsetMs;
+  #cutscene;
 
   constructor() {
-    super('intro', 'Press Enter to skip');
-    this.#timeOffsetMs = 0;
+    super('intro', 'Press Enter to advance');
+    this.#cutscene = new CutscenePlaybackController();
   }
 
   reset() {
-    this.#timeOffsetMs = 0;
+    this.#cutscene.reset();
+  }
+
+  update(state, deltaTime, api) {
+    this.#cutscene.continueIfComplete(state, api, this.#getScenes(state), {
+      onFinished: (nextState, nextApi) => this.#continueAfterIntro(nextState, nextApi)
+    });
   }
 
   handleKey(key, state, api) {
-    if (key !== 'Enter') return false;
-
-    const scenes = this.#getScenes(state);
-    const elapsed = (state.screenTimeMs ?? 0) + this.#timeOffsetMs;
-    const currentSceneIndex = scenes.findIndex((scene) => elapsed >= scene.start && elapsed < scene.end);
-
-    if (isSequenceFinished(scenes, elapsed) || currentSceneIndex < 0) {
-      this.#timeOffsetMs = 0;
-      this.#continueAfterIntro(state, api);
-      return true;
-    }
-
-    const isLastScene = currentSceneIndex === scenes.length - 1;
-    if (isLastScene) {
-      this.#timeOffsetMs += scenes[currentSceneIndex].end - elapsed;
-      api.setMessage?.('Final scene...', 0.6);
-      return true;
-    }
-
-    const nextScene = scenes[currentSceneIndex + 1];
-    const nextSceneDuration = nextScene.end - nextScene.start;
-    const jumpOffsetInsideScene = Math.min(650, Math.floor(nextSceneDuration * 0.18));
-    const targetElapsed = nextScene.start + jumpOffsetInsideScene;
-    this.#timeOffsetMs += targetElapsed - elapsed;
-    api.setMessage?.('Skipping scene...', 0.5);
-    return true;
+    return this.#cutscene.handleEnter(key, state, api, this.#getScenes(state), {
+      ...this.#getCutsceneOptions(),
+      onFinished: (nextState, nextApi) => this.#continueAfterIntro(nextState, nextApi)
+    });
   }
 
   render(p, state) {
-    if ((state.screenTimeMs || 0) < 50) {
-      this.#timeOffsetMs = 0;
-    }
-
     const rawElapsed = state.screenTimeMs ?? 0;
-    const elapsed = rawElapsed + this.#timeOffsetMs;
+    this.#cutscene.resetForFreshStart(rawElapsed);
+    const elapsed = this.#cutscene.getElapsed(rawElapsed);
     const layout = getLayout(p);
     const scenes = this.#getScenes(state);
     const scene = getActiveScene(scenes, elapsed);
     const progress = getSceneProgress(scene, elapsed);
+    const revealedScenes = this.#cutscene.revealedScenes;
+    const cutsceneOptions = this.#getCutsceneOptions();
 
     p.push();
     p.background(0);
 
     if (state.story?.introVariant === 'second') {
-      drawSecondPlaythroughTextScene(p, layout, scene, progress);
+      drawSecondPlaythroughTextScene(p, layout, scene, progress, revealedScenes);
     } else {
       const introAssets = getIntroAssets();
-      scene.draw(p, layout, elapsed, progress, introAssets);
-      drawSceneCaption(p, layout, scene, progress);
+      const visualProgress = getSceneVisualProgress(scene, progress, revealedScenes);
+      scene.draw(p, layout, elapsed, visualProgress, introAssets);
+      drawSceneCaption(p, layout, scene, progress, revealedScenes);
     }
 
-    drawIntroHud(p, layout, elapsed, state, scenes);
+    drawIntroHud(p, layout, elapsed, state, this.#cutscene.getHudPrompt(scenes, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
-    state.prompt = isSequenceFinished(scenes, elapsed)
-      ? 'Press Enter to continue'
-      : this.promptText;
+    state.prompt = this.#cutscene.getPrompt(scenes, scene, elapsed, progress, cutsceneOptions);
   }
 
   #getScenes(state) {
@@ -115,6 +101,20 @@ export class IntroScreen extends Screen {
 
     api.setScreen?.(SCREEN_STATES.PLAYING);
     api.setMessage?.('Mission start', 1.0);
+  }
+
+  #getCutsceneOptions() {
+    return {
+      getProgress: getSceneProgress,
+      hasText: hasSceneText,
+      hasVisual: hasSceneImage,
+      isTextRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneTextFullyShown(scene, progress, revealedScenes)
+      ),
+      isVisualRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneVisualFullyShown(scene, progress, revealedScenes)
+      )
+    };
   }
 }
 
@@ -154,14 +154,15 @@ function isSequenceFinished(sceneList, elapsed) {
   return elapsed >= getTotalDuration(sceneList);
 }
 
-function drawSecondPlaythroughTextScene(p, layout, scene, progress) {
+function drawSecondPlaythroughTextScene(p, layout, scene, progress, revealedScenes) {
   const alpha = 255 * fadeWindow(progress, 0.12, 0.88);
-  const textIn = smoothAppear(progress, 0.18, 0.58);
+  const textIn = getTextRevealProgress(scene, progress, revealedScenes);
   const visible = typeText(scene.text || '', textIn);
 
   p.push();
   p.translate(layout.offsetX, layout.offsetY);
 
+  p.noStroke();
   p.fill(255, 255, 255, alpha);
   setFont(p, Math.max(18, sx(22, layout)), FONTS.body);
   p.textAlign(p.CENTER, p.CENTER);
@@ -320,8 +321,8 @@ function drawGateScene(p, layout, elapsed, progress, introAssets) {
   });
 }
 
-function drawSceneCaption(p, layout, scene, progress) {
-  const revealT = clamp((progress - 0.18) / (0.82 - 0.18), 0, 1);
+function drawSceneCaption(p, layout, scene, progress, revealedScenes) {
+  const revealT = getCaptionRevealProgress(scene, progress, revealedScenes);
   const fadeOut = clamp((1 - progress) / 0.16, 0, 1);
   const alpha = 255 * Math.min(1, fadeOut);
   if (alpha <= 1 || revealT <= 0) return;
@@ -378,8 +379,7 @@ function drawSceneCaption(p, layout, scene, progress) {
   p.pop();
 }
 
-function drawIntroHud(p, layout, elapsed, state, sceneList) {
-  const finished = isSequenceFinished(sceneList, elapsed);
+function drawIntroHud(p, layout, elapsed, state, prompt) {
   const title = state.story?.introVariant === 'second' ? 'Second Playthrough' : 'Introduction';
 
   p.push();
@@ -389,17 +389,48 @@ function drawIntroHud(p, layout, elapsed, state, sceneList) {
   p.textAlign(p.CENTER, p.CENTER);
   p.text(title, layout.width / 2, sy(16, layout));
 
+  p.noStroke();
   const blink = (0.45 + Math.sin(elapsed * 0.007) * 0.55) * 255;
   p.fill(255, 255, 255, blink);
   setFont(p, Math.max(11, sx(12, layout)), FONTS.ui);
-  p.text(
-    finished ? 'Press ENTER to continue' : 'Press ENTER to skip',
-    layout.width / 2,
-    layout.height - sy(18, layout)
-  );
+  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(18, layout));
   p.pop();
 }
 
 function typeText(text, t) {
   return String(text || '').slice(0, Math.floor(String(text || '').length * clamp(t, 0, 1)));
+}
+
+function hasSceneText(scene) {
+  return !!(scene?.text || scene?.caption || scene?.caption2);
+}
+
+function hasSceneImage(scene) {
+  return typeof scene?.draw === 'function';
+}
+
+function isSceneTextFullyShown(scene, progress, revealedScenes) {
+  if (!hasSceneText(scene)) return true;
+  if (revealedScenes.has(scene)) return true;
+  return scene.text
+    ? getTextRevealProgress(scene, progress) >= 1
+    : getCaptionRevealProgress(scene, progress) >= 1;
+}
+
+function getTextRevealProgress(scene, progress, revealedScenes = new Set()) {
+  if (revealedScenes.has(scene)) return 1;
+  return smoothAppear(progress, 0.18, 0.58);
+}
+
+function getCaptionRevealProgress(scene, progress, revealedScenes = new Set()) {
+  if (revealedScenes.has(scene)) return 1;
+  return clamp((progress - 0.18) / (0.82 - 0.18), 0, 1);
+}
+
+function isSceneVisualFullyShown(scene, progress, revealedScenes) {
+  return !hasSceneImage(scene) || revealedScenes.has(scene) || progress >= VISUAL_READY_PROGRESS;
+}
+
+function getSceneVisualProgress(scene, progress, revealedScenes) {
+  return revealedScenes.has(scene) ? Math.max(progress, REVEALED_VISUAL_PROGRESS) : progress;
 }

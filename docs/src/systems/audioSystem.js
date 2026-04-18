@@ -11,7 +11,7 @@ const TRACK_CONFIG = Object.freeze({
   win: { src: './assets/audio/winScreen.mp3', fallback: './assets/audio/winScreen.wav', volume: 0.28, loop: true },
   lose: { src: './assets/audio/loseScreen.mp3', volume: 0.3, loop: true },
   false_ending: { src: './assets/audio/intro.mp3', volume: 0.24, loop: true },
-  true_ending: { src: './assets/audio/intro.mp3', volume: 0.28, loop: true }
+  true_ending: { src: './assets/audio/trueEnding.mp3', volume: 0.28, loop: true }
 });
 
 // Sound effects.

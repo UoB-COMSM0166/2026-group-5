@@ -5,109 +5,210 @@ import { SCREEN_STATES } from '../core/gameState.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerX } from '../utils/screenLayout.js';
 import { drawPanelImage } from '../utils/cutsceneDraw.js';
-import { clamp, smoothAppear, fadeWindow } from '../utils/animation.js';
-import { TRUE_ENDING_ASSETS } from './storyAssetCatalog.js';
+import { clamp, fadeWindow } from '../utils/animation.js';
+import { TRUE_ENDING_ASSETS, TRUE_ENDING_VIDEO_ASSETS } from './storyAssetCatalog.js';
+import { CutscenePlaybackController } from './CutscenePlaybackController.js';
 
-const SCENES = Object.freeze([
-  { start: 0, end: 4200, text: 'You are here' },
-  { start: 4200, end: 6800, draw: drawPrincessThroneScene },
-  { start: 6800, end: 14000, text: 'I have been waiting for a while' },
-  { start: 14000, end: 16800, draw: drawCrownCloseScene },
-  { start: 16800, end: 19800, draw: drawPrincessPanelScene },
-  { start: 19800, end: 24400, text: 'There is something I want to show you' },
-  { start: 24400, end: 29400, draw: drawThroneCoreRoomScene },
-  { start: 29400, end: 34200, text: 'I guess you already know the situation' },
-  { start: 34200, end: 39200, draw: drawChainedDragonScene },
-  { start: 39200, end: 44600, text: 'Would you like to be part of it?' },
-  { start: 44600, end: 51600, draw: drawConfrontationPanelsScene },
-  { start: 51600, end: 55200, text: 'Thank you, but', color: '#ff5c7a' },
-  { start: 55200, end: 59000, text: 'My answer is no', color: '#ff5c7a' },
-  { start: 59000, end: 60600, draw: drawWhiteFlashScene },
-  { start: 60600, end: 67000, draw: drawKnightLeavesScene },
-  { start: 67000, end: 73000, draw: drawDragonSkyScene },
-  { start: 73000, end: 80800, draw: drawCastlePeaceScene }
-]);
+const KNIGHT_TEXT_COLOR = '#ff5c7a';
+const TEXT_SCENE_BASE_MS = 1600;
+const TEXT_MS_PER_LETTER = 90;
+const TEXT_ONLY_EXTRA_MS = 300;
+const TEXT_WITH_IMAGE_EXTRA_MS = 900;
+const MAX_READING_DURATION_MS = 10500;
+const TYPEWRITER_START_DELAY_MS = 450;
+const TYPEWRITER_MS_PER_CHARACTER = 55;
+const VISUAL_READY_PROGRESS = 0.35;
+
+const SCENE_DEFINITIONS = Object.freeze([
+  { minDuration: 3200, text: 'You are here' },
+  { duration: 3200, images: ['scene1'] },
+  { minDuration: 3600, text: 'I have been waiting for a while' },
+  { duration: 3200, images: ['scene2'] },
+  { minDuration: 5600, text: 'I knew you would find your way to me.', images: ['scene3'] },
+  {
+    minDuration: 6800,
+    text: 'Through every gate, every shadow,\nevery lie this castle raised against you.',
+    images: ['scene4']
+  },
+  { minDuration: 5600, text: 'Then you deserve to see what lies beneath it.', images: ['scene5'] },
+  {
+    minDuration: 7200,
+    text: 'The Core is the hidden heart of this kingdom...\na power that sees the future before it unfolds.',
+    images: ['scene6']
+  },
+  {
+    minDuration: 6800,
+    text: 'With it, no war, no betrayal, no weakness would ever take us by surprise again.',
+    images: ['scene7']
+  },
+  { minDuration: 3000, text: 'The dragon?' },
+  { duration: 3400, images: ['scene8'] },
+  {
+    minDuration: 7200,
+    text: 'It was made part of the seal, bound here so this power would never answer to one will alone.',
+    images: ['scene9']
+  },
+  { minDuration: 3600, text: 'And now, at last, it is within our reach.' },
+  { minDuration: 5200, text: 'Stand with me, and let us claim that future\ntogether.' },
+  { duration: 5200, images: ['scene10'], imageMaxW: 900, imageMaxH: 430 },
+  { minDuration: 3600, text: 'I am grateful for your offer', color: KNIGHT_TEXT_COLOR },
+  {
+    minDuration: 5600,
+    text: 'but I came to save you,',
+    color: KNIGHT_TEXT_COLOR,
+    images: ['scene11'],
+    imageMaxW: 680,
+    imageMaxH: 300
+  },
+  { minDuration: 4200, text: 'not to place the world in chains.', color: KNIGHT_TEXT_COLOR },
+  { duration: 3600, images: ['scene12'], imageMaxW: 760, imageMaxH: 360 },
+  { duration: 1600, effect: 'whiteFlash' },
+  { duration: 3400, images: ['scene13'], imageMaxW: 520, imageMaxH: 380 },
+  {
+    minDuration: 5600,
+    text: 'I would rather prefer an uncertain dawn than a chained tomorrow."',
+    color: KNIGHT_TEXT_COLOR
+  },
+  {
+    minDuration: 6200,
+    text: 'We were never meant to be certain.',
+    images: ['scene14a', 'scene14b']
+  },
+  { duration: 4200, images: ['scene15'], imageMaxW: 860, imageMaxH: 340 },
+  {
+    minDuration: 6200,
+    text: 'To live is to doubt, to fail, and to choose again',
+    images: ['scene16'],
+    imageMaxW: 700,
+    imageMaxH: 300
+  },
+  {
+    minDuration: 5200,
+    text: 'That is not weakness.',
+    images: ['scene17'],
+    imageMaxW: 620,
+    imageMaxH: 260
+  },
+  { duration: 3600, images: ['scene18'], imageMaxW: 760, imageMaxH: 360 },
+  {
+    minDuration: 5600,
+    text: 'That is freedom.',
+    images: ['scene19'],
+    imageMaxW: 760,
+    imageMaxH: 340
+  },
+  { minDuration: 5200, text: 'And together, it is how we build a better tomorrow.' },
+  { duration: 4600, images: ['scene20'], imageMaxW: 760, imageMaxH: 360 },
+  { duration: 9000, video: 'finalFlight', hold: true, imageMaxW: 760, imageMaxH: 380 }
+].map(applyReadableDuration));
+
+const SCENES = createTimedScenes(SCENE_DEFINITIONS);
+
+let endingVideo = null;
+let endingVideoSceneStart = null;
+
+function applyReadableDuration(scene) {
+  if (!scene.text || scene.duration) return Object.freeze(scene);
+
+  const letterCount = String(scene.text).replace(/[^A-Za-z0-9]/g, '').length;
+  const extraMs = scene.images ? TEXT_WITH_IMAGE_EXTRA_MS : TEXT_ONLY_EXTRA_MS;
+  const readableDuration = TEXT_SCENE_BASE_MS + letterCount * TEXT_MS_PER_LETTER + extraMs;
+  const duration = Math.min(
+    scene.maxDuration ?? MAX_READING_DURATION_MS,
+    Math.max(scene.minDuration ?? 0, Math.round(readableDuration))
+  );
+  const { minDuration, maxDuration, ...timedScene } = scene;
+  return Object.freeze({ ...timedScene, duration });
+}
 
 export class TrueEndingScreen extends Screen {
-  #timeOffsetMs;
+  #cutscene;
 
   constructor() {
-    super('true_ending', 'Press Enter to skip to next scene');
-    this.#timeOffsetMs = 0;
+    super('true_ending', 'Press Enter to advance');
+    this.#cutscene = new CutscenePlaybackController();
   }
 
   reset() {
-    this.#timeOffsetMs = 0;
+    this.#cutscene.reset();
+    stopEndingVideo(true);
+    getEndingVideo();
+  }
+
+  update(state, deltaTime, api) {
+    this.#cutscene.continueIfComplete(state, api, SCENES, {
+      onFinished: (nextState, nextApi) => this.#finishEnding(nextState, nextApi)
+    });
   }
 
   handleKey(key, state, api) {
-    if (key !== 'Enter') return false;
-
-    const elapsed = (state.screenTimeMs ?? 0) + this.#timeOffsetMs;
-    const currentSceneIndex = SCENES.findIndex((scene) => elapsed >= scene.start && elapsed < scene.end);
-
-    if (isSequenceFinished(SCENES, elapsed) || currentSceneIndex < 0) {
-      this.#timeOffsetMs = 0;
-      api.setScreen?.(SCREEN_STATES.CREDITS);
-      api.setMessage?.('Opening credits...', 1.0);
-      return true;
-    }
-
-    const isLastScene = currentSceneIndex === SCENES.length - 1;
-    if (isLastScene) {
-      this.#timeOffsetMs += SCENES[currentSceneIndex].end - elapsed;
-      api.setMessage?.('Final scene...', 0.6);
-      return true;
-    }
-
-    const nextScene = SCENES[currentSceneIndex + 1];
-    const nextSceneDuration = nextScene.end - nextScene.start;
-    const jumpOffsetInsideScene = Math.min(650, Math.floor(nextSceneDuration * 0.18));
-    const targetElapsed = nextScene.start + jumpOffsetInsideScene;
-    this.#timeOffsetMs += targetElapsed - elapsed;
-    api.setMessage?.('Skipping scene...', 0.5);
-    return true;
+    return this.#cutscene.handleEnter(key, state, api, SCENES, {
+      ...this.#getCutsceneOptions(),
+      onFinished: (nextState, nextApi) => this.#finishEnding(nextState, nextApi)
+    });
   }
 
   render(p, state) {
-    if ((state.screenTimeMs || 0) < 50) {
-      this.#timeOffsetMs = 0;
+    const rawElapsed = state.screenTimeMs ?? 0;
+    if (this.#cutscene.resetForFreshStart(rawElapsed)) {
+      stopEndingVideo(true);
     }
 
-    const rawElapsed = state.screenTimeMs ?? 0;
-    const elapsed = rawElapsed + this.#timeOffsetMs;
+    const elapsed = this.#cutscene.getElapsed(rawElapsed);
     const layout = getLayout(p);
     const assets = getAssets();
     const scene = getActiveScene(SCENES, elapsed);
     const progress = getSceneProgress(scene, elapsed);
+    const revealedScenes = this.#cutscene.revealedScenes;
+    const cutsceneOptions = this.#getCutsceneOptions();
 
     p.push();
     p.background(0);
-    if (scene.text) drawTextOnlyScene(p, layout, scene, progress);
-    else scene.draw(p, layout, elapsed, progress, assets);
-    drawHud(p, layout, elapsed);
+    drawScene(p, layout, scene, elapsed, progress, assets, revealedScenes);
+    drawHud(p, layout, elapsed, this.#cutscene.getHudPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
-    state.prompt = isSequenceFinished(SCENES, elapsed)
-      ? 'Press Enter to continue'
-      : this.promptText;
+    state.prompt = this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions);
+  }
+
+  #getCutsceneOptions() {
+    return {
+      getProgress: getSceneProgress,
+      hasText: hasSceneText,
+      hasVisual: hasSceneImage,
+      isSingleImageOnly: isSingleImageOnlyScene,
+      isTextRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneTextFullyShown(scene, elapsed, revealedScenes)
+      ),
+      isVisualRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneVisualFullyShown(scene, progress, revealedScenes)
+      )
+    };
+  }
+
+  #finishEnding(state, api) {
+    stopEndingVideo(true);
+    api.setScreen?.(SCREEN_STATES.CREDITS);
+    api.setMessage?.('Opening credits...', 1.0);
   }
 }
 
+function createTimedScenes(sceneDefinitions) {
+  let start = 0;
+  return Object.freeze(sceneDefinitions.map((scene) => {
+    const end = start + scene.duration;
+    const timedScene = Object.freeze({ ...scene, start, end });
+    start = end;
+    return timedScene;
+  }));
+}
+
 function getAssets() {
-  return {
-    princessThrone: getImage(TRUE_ENDING_ASSETS.princessThrone),
-    crownClose: getImage(TRUE_ENDING_ASSETS.crownClose),
-    princessPanel: getImage(TRUE_ENDING_ASSETS.princessPanel),
-    throneCoreRoom: getImage(TRUE_ENDING_ASSETS.throneCoreRoom),
-    chainedDragon: getImage(TRUE_ENDING_ASSETS.chainedDragon),
-    confrontationPanels: getImage(TRUE_ENDING_ASSETS.confrontationPanels),
-    brokenChains: getImage(TRUE_ENDING_ASSETS.brokenChains),
-    swordLowered: getImage(TRUE_ENDING_ASSETS.swordLowered),
-    knightLeaves: getImage(TRUE_ENDING_ASSETS.knightLeaves),
-    dragonSky: getImage(TRUE_ENDING_ASSETS.dragonSky),
-    castlePeace: getImage(TRUE_ENDING_ASSETS.castlePeace)
-  };
+  const assets = {};
+  for (const [key, path] of Object.entries(TRUE_ENDING_ASSETS)) {
+    assets[key] = getImage(path);
+  }
+  return assets;
 }
 
 function getActiveScene(sceneList, elapsed) {
@@ -125,44 +226,168 @@ function isSequenceFinished(sceneList, elapsed) {
   return elapsed >= sceneList[sceneList.length - 1].end;
 }
 
-function drawCenteredFadeScene(p, layout, progress, img, widthPx, fadeOutStart = 0.7) {
+function drawScene(p, layout, scene, elapsed, progress, assets, revealedScenes) {
   p.background(0);
-  if (!img || img.width <= 0) return;
 
-  const panelFade = fadeWindow(progress, 0.3, fadeOutStart);
-  const w = sx(widthPx, layout);
-  const h = img.height * (w / img.width);
-  const x = centerX(w, layout);
-  const y = layout.offsetY + (layout.height - h) / 2;
+  if (scene.effect === 'whiteFlash') {
+    drawWhiteFlashScene(p, layout, elapsed, progress);
+    return;
+  }
 
-  drawPanelImage(p, img, x, y, w, {
-    alpha: 255 * panelFade,
+  if (scene.video) {
+    drawVideoScene(p, layout, scene, progress);
+    return;
+  }
+
+  stopEndingVideo(false);
+
+  if (scene.images) {
+    drawSceneImages(p, layout, scene, progress, assets, revealedScenes);
+  }
+
+  if (scene.text) {
+    if (scene.images) drawSceneText(p, layout, scene, elapsed, progress, revealedScenes);
+    else drawTextOnlyScene(p, layout, scene, elapsed, progress, revealedScenes);
+  }
+}
+
+function drawSceneImages(p, layout, scene, progress, assets, revealedScenes) {
+  const images = scene.images.map((key) => assets[key]).filter(Boolean);
+  if (!images.length) return;
+
+  if (images.length >= 2) {
+    drawTwoImageScene(p, layout, scene, progress, images[0], images[1], revealedScenes);
+    return;
+  }
+
+  const centerYPos = getSingleImageCenterY(layout, scene);
+  drawFittedImage(p, layout, images[0], centerYPos, {
+    maxW: scene.imageMaxW ?? (scene.text ? 780 : 860),
+    maxH: scene.imageMaxH ?? (scene.text ? 330 : 420),
+    alpha: 255 * getImageRevealFade(scene, progress, revealedScenes, 0.30, scene.fadeOutStart ?? 0.82)
+  });
+}
+
+function drawTwoImageScene(p, layout, scene, progress, leftImage, rightImage, revealedScenes) {
+  if (!leftImage || !rightImage) return;
+
+  const alpha = 255 * getImageRevealFade(scene, progress, revealedScenes, 0.30, scene.fadeOutStart ?? 0.84);
+  const gap = sx(16, layout);
+  const maxW = sx(scene.imageMaxW ?? 410, layout);
+  const maxH = sy(scene.imageMaxH ?? 250, layout);
+  const leftRect = fitRect(leftImage.width, leftImage.height, maxW, maxH);
+  const rightRect = fitRect(rightImage.width, rightImage.height, maxW, maxH);
+  const groupW = leftRect.w + gap + rightRect.w;
+  const groupX = centerX(groupW, layout);
+  const centerYPos = layout.offsetY + sy(240, layout);
+  const groupH = Math.max(leftRect.h, rightRect.h);
+  const y = centerYPos - groupH / 2;
+
+  drawPanelImage(p, leftImage, groupX, y + (groupH - leftRect.h) / 2, leftRect.w, {
+    alpha,
+    h: leftRect.h,
+    scale: 1
+  });
+  drawPanelImage(p, rightImage, groupX + leftRect.w + gap, y + (groupH - rightRect.h) / 2, rightRect.w, {
+    alpha,
+    h: rightRect.h,
     scale: 1
   });
 }
 
-function drawPrincessThroneScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.princessThrone, 760);
+function drawFittedImage(p, layout, img, centerYPos, opts = {}) {
+  if (!img || !img.width || !img.height) return;
+
+  const maxW = sx(opts.maxW ?? 860, layout);
+  const maxH = sy(opts.maxH ?? 420, layout);
+  const rect = fitRect(img.width, img.height, maxW, maxH);
+
+  drawPanelImage(p, img, centerX(rect.w, layout), centerYPos - rect.h / 2, rect.w, {
+    alpha: opts.alpha ?? 255,
+    h: rect.h,
+    scale: 1
+  });
 }
 
-function drawCrownCloseScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.crownClose, 360);
+function drawVideoScene(p, layout, scene, progress) {
+  const video = syncEndingVideo(scene);
+  if (!video || !video.videoWidth || !video.videoHeight) return;
+
+  const alpha = getFade(progress, 0.24, 1.0, true);
+  const maxW = sx(scene.imageMaxW ?? 760, layout);
+  const maxH = sy(scene.imageMaxH ?? 380, layout);
+  const rect = fitRect(video.videoWidth, video.videoHeight, maxW, maxH);
+  const x = centerX(rect.w, layout);
+  const y = layout.offsetY + layout.height / 2 - rect.h / 2;
+  const ctx = p.drawingContext;
+
+  ctx.save();
+  const previousSmoothing = ctx.imageSmoothingEnabled;
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(video, x, y, rect.w, rect.h);
+  ctx.imageSmoothingEnabled = previousSmoothing;
+  ctx.restore();
 }
 
-function drawPrincessPanelScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.princessPanel, 560);
+function fitRect(sourceW, sourceH, maxW, maxH) {
+  if (!sourceW || !sourceH) return { w: 0, h: 0 };
+  const aspect = sourceW / sourceH;
+  let w = Math.min(maxW, maxH * aspect);
+  let h = w / aspect;
+
+  if (h > maxH) {
+    h = maxH;
+    w = h * aspect;
+  }
+
+  return { w, h };
 }
 
-function drawThroneCoreRoomScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.throneCoreRoom, 900);
+function getSingleImageCenterY(layout, scene) {
+  if (!scene.text) return layout.offsetY + layout.height / 2;
+  return layout.offsetY + sy(235, layout);
 }
 
-function drawChainedDragonScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.chainedDragon, 700);
+function drawSceneText(p, layout, scene, elapsed, progress, revealedScenes) {
+  drawTypewriterText(p, layout, scene, elapsed, progress, sy(456, layout), {
+    fontSize: 18,
+    fadeOutStart: scene.fadeOutStart ?? 0.88,
+    revealedScenes
+  });
 }
 
-function drawConfrontationPanelsScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.confrontationPanels, 860);
+function drawTypewriterText(p, layout, scene, elapsed, progress, centerYPos, opts = {}) {
+  const alpha = 255 * fadeWindow(progress, 0.12, opts.fadeOutStart ?? 0.88);
+  const textIn = getTypewriterProgress(scene, elapsed, opts.revealedScenes);
+  const visible = typeText(scene.text || '', textIn);
+  const color = scene.color || '#ffffff';
+  const fontSize = Math.max(16, sx(opts.fontSize ?? 18, layout));
+  const lineHeight = fontSize * 1.35;
+
+  p.push();
+  p.translate(layout.offsetX, layout.offsetY);
+
+  const c = p.color(color);
+  p.fill(p.red(c), p.green(c), p.blue(c), alpha);
+  setFont(p, fontSize, FONTS.body);
+  p.textLeading(lineHeight);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.text(visible, layout.width / 2, centerYPos);
+
+  if (textIn < 1) {
+    const cursorAlpha = (0.45 + Math.sin(p.millis() * 0.02) * 0.55) * alpha;
+    const lines = String(visible || '').split('\n');
+    const lastLine = lines[lines.length - 1] || '';
+    const lineIndex = Math.max(0, lines.length - 1);
+    const cursorY = centerYPos + (lineIndex - (lines.length - 1) / 2) * lineHeight;
+
+    p.fill(p.red(c), p.green(c), p.blue(c), cursorAlpha);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text('|', layout.width / 2 + p.textWidth(lastLine) / 2 + sx(4, layout), cursorY);
+  }
+
+  p.pop();
 }
 
 function drawWhiteFlashScene(p, layout, elapsed, progress) {
@@ -176,62 +401,112 @@ function drawWhiteFlashScene(p, layout, elapsed, progress) {
   p.pop();
 }
 
-function drawKnightLeavesScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.knightLeaves, 860);
-}
-
-function drawDragonSkyScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.dragonSky, 900);
-}
-
-function drawCastlePeaceScene(p, layout, elapsed, progress, assets) {
-  drawCenteredFadeScene(p, layout, progress, assets.castlePeace, 900, 1.0);
-}
-
-function drawTextOnlyScene(p, layout, scene, progress) {
+function drawTextOnlyScene(p, layout, scene, elapsed, progress, revealedScenes) {
   p.background(0);
-
-  const alpha = 255 * fadeWindow(progress, 0.12, 0.88);
-  const textIn = smoothAppear(progress, 0.18, 0.58);
-  const visible = typeText(scene.text || '', textIn);
-  const color = scene.color || '#ffffff';
-
-  p.push();
-  p.translate(layout.offsetX, layout.offsetY);
-
-  const c = p.color(color);
-  p.fill(p.red(c), p.green(c), p.blue(c), alpha);
-  setFont(p, Math.max(16, sx(18, layout)), FONTS.body);
-  p.textAlign(p.CENTER, p.CENTER);
-  p.text(visible, layout.width / 2, layout.height / 2);
-
-  if (textIn < 1) {
-    const cursorAlpha = (0.45 + Math.sin(p.millis() * 0.02) * 0.55) * alpha;
-    p.fill(p.red(c), p.green(c), p.blue(c), cursorAlpha);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text('|', layout.width / 2 + p.textWidth(visible) / 2 + sx(4, layout), layout.height / 2);
-  }
-
-  p.pop();
+  drawTypewriterText(p, layout, scene, elapsed, progress, layout.height / 2, { revealedScenes });
 }
 
-function drawHud(p, layout, elapsed) {
-  const finished = isSequenceFinished(SCENES, elapsed);
-
+function drawHud(p, layout, elapsed, prompt) {
   p.push();
   p.translate(layout.offsetX, layout.offsetY);
   const blink = (0.45 + Math.sin(elapsed * 0.008) * 0.55) * 255;
   p.fill(255, 255, 255, blink);
   setFont(p, Math.max(11, sx(12, layout)), FONTS.ui);
   p.textAlign(p.CENTER, p.CENTER);
-  p.text(
-    finished ? 'Press ENTER to continue' : 'Press ENTER to skip',
-    layout.width / 2,
-    layout.height - sy(18, layout)
-  );
+  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(18, layout));
   p.pop();
 }
 
 function typeText(text, t) {
   return String(text || '').slice(0, Math.floor(String(text || '').length * clamp(t, 0, 1)));
+}
+
+function hasSceneText(scene) {
+  return !!scene?.text;
+}
+
+function hasSceneImage(scene) {
+  return !!scene?.images?.length;
+}
+
+function isSceneTextFullyShown(scene, elapsed, revealedScenes) {
+  return !hasSceneText(scene) || revealedScenes.has(scene) || getTypewriterProgress(scene, elapsed) >= 1;
+}
+
+function isSceneVisualFullyShown(scene, progress, revealedScenes) {
+  return !hasSceneImage(scene) || isSingleImageOnlyScene(scene) || revealedScenes.has(scene) || progress >= VISUAL_READY_PROGRESS;
+}
+
+function getTypewriterProgress(scene, elapsed, revealedScenes = new Set()) {
+  if (revealedScenes.has(scene)) return 1;
+  const textLength = Math.max(1, String(scene.text || '').length);
+  const revealDuration = textLength * TYPEWRITER_MS_PER_CHARACTER;
+  const sceneElapsed = Math.max(0, elapsed - scene.start - TYPEWRITER_START_DELAY_MS);
+  return clamp(sceneElapsed / revealDuration, 0, 1);
+}
+
+function getFade(progress, fadeInEnd, fadeOutStart, hold = false) {
+  if (hold && progress >= 1) return 1;
+  return fadeWindow(progress, fadeInEnd, fadeOutStart);
+}
+
+function getImageRevealFade(scene, progress, revealedScenes, fadeInEnd, fadeOutStart) {
+  if (revealedScenes.has(scene)) return 1;
+  return getFade(progress, fadeInEnd, fadeOutStart, scene.hold);
+}
+
+function isSingleImageOnlyScene(scene) {
+  return !hasSceneText(scene) && scene?.images?.length === 1;
+}
+
+function getEndingVideo() {
+  if (endingVideo || typeof document === 'undefined') return endingVideo;
+
+  const video = document.createElement('video');
+  video.src = TRUE_ENDING_VIDEO_ASSETS.finalFlight;
+  video.preload = 'auto';
+  video.loop = true;
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.style.position = 'fixed';
+  video.style.left = '-9999px';
+  video.style.top = '0';
+  video.style.width = '1px';
+  video.style.height = '1px';
+  video.style.opacity = '0';
+  video.style.pointerEvents = 'none';
+  document.body.appendChild(video);
+  endingVideo = video;
+  return endingVideo;
+}
+
+function syncEndingVideo(scene) {
+  const video = getEndingVideo();
+  if (!video) return null;
+
+  if (endingVideoSceneStart !== scene.start) {
+    endingVideoSceneStart = scene.start;
+    try {
+      video.currentTime = 0;
+    } catch (error) {}
+  }
+
+  if (video.paused || video.ended) {
+    video.play().catch(() => {});
+  }
+
+  return video;
+}
+
+function stopEndingVideo(rewind) {
+  if (!endingVideo) return;
+  endingVideo.pause();
+  endingVideoSceneStart = null;
+
+  if (rewind) {
+    try {
+      endingVideo.currentTime = 0;
+    } catch (error) {}
+  }
 }

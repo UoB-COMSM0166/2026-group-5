@@ -7,84 +7,89 @@ import { getLayout, sx, sy, centerX } from '../utils/screenLayout.js';
 import { drawPanelImage } from '../utils/cutsceneDraw.js';
 import { clamp, lerp, smoothAppear, fadeWindow } from '../utils/animation.js';
 import { FALSE_ENDING_ASSETS } from './storyAssetCatalog.js';
+import { CutscenePlaybackController } from './CutscenePlaybackController.js';
+
+const REVEALED_VISUAL_PROGRESS = 0.58;
+const VISUAL_READY_PROGRESS = 0.50;
 
 const SCENES = Object.freeze([
-  { start: 0, end: 3600, draw: drawHandReachScene },
-  { start: 3600, end: 7200, draw: drawPrincessCloseScene },
-  { start: 7200, end: 9800, text: 'you came' },
-  { start: 9800, end: 13200, draw: drawSwordGripScene },
-  { start: 13200, end: 17800, draw: drawKnightPrincessScene },
+  { start: 0, end: 3600, draw: drawHandReachScene, imageCount: 1 },
+  { start: 3600, end: 7200, draw: drawGrapArmScene, imageCount: 1 },
+  { start: 7200, end: 9800, draw: drawPrincessCloseScene, imageCount: 1 },
+  { start: 9800, end: 13200, text: 'you came' },
+  { start: 13200, end: 17800, draw: drawKnightPrincessScene, imageCount: 1 },
   { start: 17800, end: 22200, text: 'I know I can always trust you' },
-  { start: 22200, end: 26800, draw: drawGateStrikeHandTouchScene },
-  { start: 26800, end: 30200, draw: drawEscapeScene },
+  { start: 22200, end: 26800, draw: drawGateStrikeHandTouchScene, imageCount: 2 },
+  { start: 26800, end: 30200, draw: drawEscapeScene, imageCount: 1 },
   { start: 30200, end: 35600, text: 'Just as I know that it will be back' },
-  { start: 35600, end: 40200, draw: drawFinalChamberScene }
+  { start: 35600, end: 40200, draw: drawFinalChamberScene, imageCount: 1 }
 ]);
 
 export class FalseEndingScreen extends Screen {
-  #timeOffsetMs;
+  #cutscene;
 
   constructor() {
-    super('false_ending', 'Press Enter to skip to next scene');
-    this.#timeOffsetMs = 0;
+    super('false_ending', 'Press Enter to advance');
+    this.#cutscene = new CutscenePlaybackController();
   }
 
   reset() {
-    this.#timeOffsetMs = 0;
+    this.#cutscene.reset();
+  }
+
+  update(state, deltaTime, api) {
+    this.#cutscene.continueIfComplete(state, api, SCENES, {
+      onFinished: (nextState, nextApi) => this.#finishEnding(nextState, nextApi)
+    });
   }
 
   handleKey(key, state, api) {
-    if (key !== 'Enter') return false;
-
-    const elapsed = (state.screenTimeMs ?? 0) + this.#timeOffsetMs;
-    const currentSceneIndex = SCENES.findIndex((scene) => elapsed >= scene.start && elapsed < scene.end);
-
-    if (isSequenceFinished(SCENES, elapsed) || currentSceneIndex < 0) {
-      this.#timeOffsetMs = 0;
-      state.story.secondPlaythroughUnlocked = true;
-      api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
-      api.setMessage?.('Second playthrough unlocked', 1.2);
-      return true;
-    }
-
-    const isLastScene = currentSceneIndex === SCENES.length - 1;
-    if (isLastScene) {
-      this.#timeOffsetMs += SCENES[currentSceneIndex].end - elapsed;
-      api.setMessage?.('Final scene...', 0.6);
-      return true;
-    }
-
-    const nextScene = SCENES[currentSceneIndex + 1];
-    const nextSceneDuration = nextScene.end - nextScene.start;
-    const jumpOffsetInsideScene = Math.min(650, Math.floor(nextSceneDuration * 0.18));
-    const targetElapsed = nextScene.start + jumpOffsetInsideScene;
-    this.#timeOffsetMs += targetElapsed - elapsed;
-    api.setMessage?.('Skipping scene...', 0.5);
-    return true;
+    return this.#cutscene.handleEnter(key, state, api, SCENES, {
+      ...this.#getCutsceneOptions(),
+      onFinished: (nextState, nextApi) => this.#finishEnding(nextState, nextApi)
+    });
   }
 
   render(p, state) {
-    if ((state.screenTimeMs || 0) < 50) {
-      this.#timeOffsetMs = 0;
-    }
-
     const rawElapsed = state.screenTimeMs ?? 0;
-    const elapsed = rawElapsed + this.#timeOffsetMs;
+    this.#cutscene.resetForFreshStart(rawElapsed);
+    const elapsed = this.#cutscene.getElapsed(rawElapsed);
     const layout = getLayout(p);
     const assets = getAssets();
     const scene = getActiveScene(SCENES, elapsed);
     const progress = getSceneProgress(scene, elapsed);
+    const revealedScenes = this.#cutscene.revealedScenes;
+    const cutsceneOptions = this.#getCutsceneOptions();
 
     p.push();
     p.background(0);
-    if (scene.text) drawTextOnlyScene(p, layout, scene, progress);
-    else scene.draw(p, layout, elapsed, progress, assets);
-    drawHud(p, layout, elapsed);
+    if (scene.text) drawTextOnlyScene(p, layout, scene, progress, revealedScenes);
+    else scene.draw(p, layout, elapsed, getSceneVisualProgress(scene, progress, revealedScenes), assets);
+    drawHud(p, layout, elapsed, this.#cutscene.getHudPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
-    state.prompt = isSequenceFinished(SCENES, elapsed)
-      ? 'Press Enter to continue'
-      : this.promptText;
+    state.prompt = this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions);
+  }
+
+  #getCutsceneOptions() {
+    return {
+      getProgress: getSceneProgress,
+      hasText: hasSceneText,
+      hasVisual: hasSceneImage,
+      isSingleImageOnly: isSingleImageOnlyScene,
+      isTextRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneTextFullyShown(scene, progress, revealedScenes)
+      ),
+      isVisualRevealed: (scene, elapsed, progress, revealedScenes) => (
+        isSceneVisualFullyShown(scene, progress, revealedScenes)
+      )
+    };
+  }
+
+  #finishEnding(state, api) {
+    state.story.secondPlaythroughUnlocked = true;
+    api.setScreen?.(SCREEN_STATES.PLAYTHROUGH_SELECT);
+    api.setMessage?.('Second playthrough unlocked', 1.2);
   }
 }
 
@@ -92,7 +97,7 @@ function getAssets() {
   return {
     handReach: getImage(FALSE_ENDING_ASSETS.handReach),
     princessClose: getImage(FALSE_ENDING_ASSETS.princessClose),
-    swordGrip: getImage(FALSE_ENDING_ASSETS.swordGrip),
+    grapArm: getImage(FALSE_ENDING_ASSETS.grapArm),
     knightPrincess: getImage(FALSE_ENDING_ASSETS.knightPrincess),
     gateStrike: getImage(FALSE_ENDING_ASSETS.gateStrike),
     handTouch: getImage(FALSE_ENDING_ASSETS.handTouch),
@@ -135,9 +140,9 @@ function drawPrincessCloseScene(p, layout, elapsed, progress, assets) {
   drawCenteredFadeScene(p, layout, progress, assets.princessClose, 820);
 }
 
-function drawSwordGripScene(p, layout, elapsed, progress, assets) {
+function drawGrapArmScene(p, layout, elapsed, progress, assets) {
   p.background(0);
-  drawCenteredFadeScene(p, layout, progress, assets.swordGrip, 820);
+  drawCenteredFadeScene(p, layout, progress, assets.grapArm, 820);
 }
 
 function drawKnightPrincessScene(p, layout, elapsed, progress, assets) {
@@ -181,9 +186,9 @@ function drawFinalChamberScene(p, layout, elapsed, progress, assets) {
   drawCenteredFadeScene(p, layout, progress, assets.finalChamber, 820);
 }
 
-function drawTextOnlyScene(p, layout, scene, progress) {
+function drawTextOnlyScene(p, layout, scene, progress, revealedScenes) {
   const alpha = 255 * fadeWindow(progress, 0.12, 0.88);
-  const textIn = smoothAppear(progress, 0.18, 0.58);
+  const textIn = getTextRevealProgress(scene, progress, revealedScenes);
   const visible = typeText(scene.text || '', textIn);
 
   p.push();
@@ -202,23 +207,46 @@ function drawTextOnlyScene(p, layout, scene, progress) {
   p.pop();
 }
 
-function drawHud(p, layout, elapsed) {
-  const finished = isSequenceFinished(SCENES, elapsed);
-
+function drawHud(p, layout, elapsed, prompt) {
   p.push();
   p.translate(layout.offsetX, layout.offsetY);
   const blink = (0.45 + Math.sin(elapsed * 0.008) * 0.55) * 255;
   p.fill(255, 255, 255, blink);
   setFont(p, Math.max(11, sx(12, layout)), FONTS.ui);
   p.textAlign(p.CENTER, p.CENTER);
-  p.text(
-    finished ? 'Press ENTER to continue' : 'Press ENTER to skip',
-    layout.width / 2,
-    layout.height - sy(18, layout)
-  );
+  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(18, layout));
   p.pop();
 }
 
 function typeText(text, t) {
   return String(text || '').slice(0, Math.floor(String(text || '').length * clamp(t, 0, 1)));
+}
+
+function hasSceneText(scene) {
+  return !!scene?.text;
+}
+
+function hasSceneImage(scene) {
+  return typeof scene?.draw === 'function';
+}
+
+function isSceneTextFullyShown(scene, progress, revealedScenes) {
+  return !hasSceneText(scene) || revealedScenes.has(scene) || getTextRevealProgress(scene, progress) >= 1;
+}
+
+function isSceneVisualFullyShown(scene, progress, revealedScenes) {
+  return !hasSceneImage(scene) || isSingleImageOnlyScene(scene) || revealedScenes.has(scene) || progress >= VISUAL_READY_PROGRESS;
+}
+
+function getTextRevealProgress(scene, progress, revealedScenes = new Set()) {
+  if (revealedScenes.has(scene)) return 1;
+  return smoothAppear(progress, 0.18, 0.58);
+}
+
+function getSceneVisualProgress(scene, progress, revealedScenes) {
+  return revealedScenes.has(scene) ? Math.max(progress, REVEALED_VISUAL_PROGRESS) : progress;
+}
+
+function isSingleImageOnlyScene(scene) {
+  return !hasSceneText(scene) && scene?.imageCount === 1;
 }
