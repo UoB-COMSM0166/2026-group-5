@@ -25,6 +25,7 @@ function collectPaths() {
   Object.values(SPRITE_PATHS.button).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.portal).forEach((v) => paths.add(v));
   paths.add('./assets/images/adapted/interactives/key3232.png');
+  paths.add('./assets/images/sprites/key_Esc.png');
   paths.add('./assets/images/sprites/note.png');
   paths.add('./assets/images/original/drawings/start_bg.png');
   paths.add('./assets/images/original/npcs/dragon/dragon.png');

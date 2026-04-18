@@ -7,6 +7,7 @@ import { getInteractionPrompt } from '../systems/interactionSystem.js';
 import { updateLootPopups, renderLootPopups } from '../systems/lootPopup.js';
 import { NPC_SEARCH_REASON_PORTAL_CONFUSED } from '../systems/npcStateMachine.js';
 import { setFont, FONTS } from '../utils/fonts.js';
+import { getKeyDisplayName } from '../systems/lootTable.js';
 
 
 // Draw a sprite image at fixed height, preserving aspect ratio.
@@ -364,12 +365,13 @@ export function renderDoorInteractionPrompts(p, level, inventory) {
   // Show keyId text above E box for locked doors
   if (door.state === 'LOCKED' && door.keyId) {
     const hasKey = inventory?.hasKey?.(door.keyId);
+    const keyName = getKeyDisplayName(level.id, door.keyId);
     p.textAlign(p.CENTER, p.BOTTOM);
     p.textSize(10);
     p.textStyle(p.BOLD);
     p.fill(hasKey ? '#ffd700' : '#ff6b6b');
     const keyTextY = promptY - 20;
-    p.text(hasKey ? door.keyId : `need ${door.keyId}`, centerX, keyTextY);
+    p.text(hasKey ? keyName : `Requires ${keyName}`, centerX, keyTextY);
   }
   // Draw key background
   p.fill(15, 23, 42, 200);

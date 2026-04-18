@@ -18,6 +18,7 @@ const MAX_READING_DURATION_MS = 10500;
 const TYPEWRITER_START_DELAY_MS = 450;
 const TYPEWRITER_MS_PER_CHARACTER = 55;
 const VISUAL_READY_PROGRESS = 0.35;
+const REVEALED_IMAGE_PROGRESS = 0.35;
 
 const SCENE_DEFINITIONS = Object.freeze([
   { minDuration: 3200, text: 'You are here' },
@@ -66,7 +67,7 @@ const SCENE_DEFINITIONS = Object.freeze([
   { duration: 3400, images: ['scene13'], imageMaxW: 520, imageMaxH: 380 },
   {
     minDuration: 5600,
-    text: 'I would rather prefer an uncertain dawn than a chained tomorrow."',
+    text: 'I would rather prefer an uncertain dawn than a chained tomorrow.',
     color: KNIGHT_TEXT_COLOR
   },
   {
@@ -451,8 +452,10 @@ function getFade(progress, fadeInEnd, fadeOutStart, hold = false) {
 }
 
 function getImageRevealFade(scene, progress, revealedScenes, fadeInEnd, fadeOutStart) {
-  if (revealedScenes.has(scene)) return 1;
-  return getFade(progress, fadeInEnd, fadeOutStart, scene.hold);
+  const effectiveProgress = revealedScenes.has(scene)
+    ? Math.max(progress, REVEALED_IMAGE_PROGRESS)
+    : progress;
+  return getFade(effectiveProgress, fadeInEnd, fadeOutStart, scene.hold);
 }
 
 function isSingleImageOnlyScene(scene) {

@@ -56,9 +56,10 @@ export class GameState {
     this.#ui = {
       message: '',
       messageTimer: 0,
+      messageIcon: null,
+      messageQueue: [],
       overlayAlpha: 0,
       flashAlpha: 0,
-      vignette: 0.18,
       tutorial: {
         pageIndex: 0,
         turnDir: 0,

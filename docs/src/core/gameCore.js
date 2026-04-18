@@ -11,7 +11,7 @@ import { renderScene } from '../render/renderSystem.js';
 import { AudioSystem } from '../systems/audioSystem.js';
 import { ScreenOverlaySystem } from '../systems/screenOverlaySystem.js';
 import { Camera } from '../systems/cameraSystem.js';
-import { Inventory, collectLoot, countTotalKeys, countTotalNotes } from '../systems/lootTable.js';
+import { Inventory, collectLoot, countTotalKeys, countTotalNotes, getKeyDisplayName } from '../systems/lootTable.js';
 import { spawnLootPopup, clearLootPopups } from '../systems/lootPopup.js';
 
 const MENU_NAV_SCREENS = new Set([
@@ -25,6 +25,14 @@ const DOOR_STATE_OPEN = 'OPEN';
 const DOOR_STATE_CLOSED = 'CLOSED';
 const DOOR_STATE_LOCKED = 'LOCKED';
 const TELEPORT_OUT_DELAY_MS = 80;
+const PASSAGE_KEY_ID = 'key_exit';
+const PASSAGE_KEY_PROMPT = 'Passage Key found. The exit is unlocked!';
+const PASSAGE_KEY_PROMPT_DURATION = 2.6;
+const NOTE_COLLECTED_PROMPT = 'Note collected. Press Esc to pause and read it.';
+const NOTE_COLLECTED_PROMPT_DURATION = 4;
+const NOTE_COLLECTED_PROMPT_ICON = './assets/images/sprites/key_Esc.png';
+const EXTRACTION_UNLOCKED_PROMPT = 'All chests found. Time to escape!';
+const EXTRACTION_UNLOCKED_PROMPT_DURATION = 2;
 
 // Main game controller: owns state, input, audio, overlay, and orchestrates the game loop.
 export class GameCore {
@@ -81,7 +89,16 @@ export class GameCore {
     if (noteCountEl) noteCountEl.textContent = `${s.inventory.note}/${countTotalNotes(s.levelId)}`;
   }
 
-  #setMessage(text, seconds = 1.5) { this.#state.ui.message = text; this.#state.ui.messageTimer = seconds; }
+  #setMessage(text, seconds = 1.5, iconPath = null) {
+    this.#state.ui.messageQueue = [];
+    this.#state.ui.message = text;
+    this.#state.ui.messageTimer = seconds;
+    this.#state.ui.messageIcon = iconPath;
+  }
+  #queueMessage(text, seconds = 1.5, iconPath = null) {
+    this.#state.ui.messageQueue ??= [];
+    this.#state.ui.messageQueue.push({ text, seconds, iconPath });
+  }
   #markMissionStart() { this.#state.meta.startedAt = performance.now(); }
   #resetStorySelection() {
     this.#state.story.currentPlaythrough = 1;
@@ -458,7 +475,6 @@ export class GameCore {
     s.dt = deltaTime;
     s.screenTimeMs = performance.now() - s.screenEnteredAt;
     this.#overlay.update(s, deltaTime, this.#getApi());
-    if (s.ui.messageTimer > 0) { s.ui.messageTimer -= deltaTime; if (s.ui.messageTimer <= 0) s.ui.message = ''; }
     if (s.screen !== SCREEN_STATES.PLAYING) { this.#audio.setLoopingSfx('running', false); this.#syncHud(deltaTime); return; }
     s.meta.elapsedMs = Math.max(0, performance.now() - s.meta.startedAt);
     // Handle intro animation (blocks player input during animation)
@@ -503,7 +519,10 @@ export class GameCore {
       this.#playInteractionSfx(r);
       if (r.success) {
         triggerPlayerAction(s.level.player, r.kind === 'light' ? 'alert' : 'interact', r.kind === 'light' ? 0.22 : 0.28);
-        this.#setMessage(r.text, 1.2); this.#overlay.flash(s, r.kind === 'light' ? 0.12 : 0.18);
+        if (r.text && r.kind !== 'light' && r.kind !== 'door' && r.kind !== 'box' && r.kind !== 'exit') {
+          this.#setMessage(r.text, 1.2);
+        }
+        this.#overlay.flash(s, r.kind === 'light' ? 0.12 : 0.18);
       } else if (r.text) this.#setMessage(r.text, 1);
       if (r.success && r.kind === 'exit') {
         if (s.story.normalMode) {
@@ -522,9 +541,7 @@ export class GameCore {
         this.#syncHud(deltaTime);
         return;
       }
-      if (r.success && r.kind === 'light') { const roomId = r.entity?.roomId; if (roomId) this.#setMessage(s.level.roomSystem.isLit(roomId) ? `Room ${roomId} restored` : `Room ${roomId} darkened`, 1.3); }
       if (r.success && r.kind === 'door') {
-        this.#setMessage(r.text, 1);
         // Map1 win condition: unlocking door_3 (key_exit) wins the game
         if (s.levelId === 'map1' && r.entity?.id === 'door_3') {
           if (s.story.normalMode) {
@@ -570,18 +587,41 @@ export class GameCore {
       }
       if (r.success && r.kind === 'box') {
         const loot = collectLoot(s.inventory, r.entity.id, s.levelId);
+        let collectedLoot = null;
         if (loot) {
+          collectedLoot = loot;
           const tile = s.level.settings.baseTile;
           const bx = r.entity.x * tile + ((r.entity.renderOffsetX || 0) + (r.entity.renderW || r.entity.w) / 2) * tile;
           const by = r.entity.y * tile + (r.entity.renderOffsetY || 0) * tile;
-          spawnLootPopup(loot.id, bx, by, tile, loot.keyId);
-          const lootText = loot.keyId ? `${loot.label} (${loot.keyId})` : loot.label;
-          this.#setMessage(`Found: ${lootText}`, 1.5);
+          const keyLabel = loot.keyId ? getKeyDisplayName(s.levelId, loot.keyId) : null;
+          const lootText = keyLabel || loot.label;
+          spawnLootPopup(loot.id, bx, by, tile, loot.keyId, keyLabel);
+          const isPassageKey = loot.keyId === PASSAGE_KEY_ID;
+          const message = loot.id === 'note'
+            ? NOTE_COLLECTED_PROMPT
+            : isPassageKey
+              ? PASSAGE_KEY_PROMPT
+              : `Found: ${lootText}`;
+          this.#setMessage(
+            message,
+            loot.id === 'note'
+              ? NOTE_COLLECTED_PROMPT_DURATION
+              : isPassageKey
+                ? PASSAGE_KEY_PROMPT_DURATION
+                : 1.5,
+            loot.id === 'note' ? NOTE_COLLECTED_PROMPT_ICON : null
+          );
         }
         s.meta.collected = s.level.boxSystem.boxes.filter(b => b.opened).length;
         if (s.meta.collected >= s.meta.target && s.meta.target > 0 && !s.level.missionSystem.isUnlocked()) {
           s.level.missionSystem.unlock(); s.meta.objective = s.level.missionSystem.getObjectiveText(s.meta.collected, s.meta.target);
-          s.prompt = 'Extraction unlocked'; this.#setMessage('All chests secured. Reach extraction.', 2); this.#overlay.flash(s, 0.26);
+          s.prompt = 'Extraction unlocked';
+          if (collectedLoot?.id === 'note' || collectedLoot?.keyId === PASSAGE_KEY_ID) {
+            this.#queueMessage(EXTRACTION_UNLOCKED_PROMPT, EXTRACTION_UNLOCKED_PROMPT_DURATION);
+          } else {
+            this.#setMessage(EXTRACTION_UNLOCKED_PROMPT, EXTRACTION_UNLOCKED_PROMPT_DURATION);
+          }
+          this.#overlay.flash(s, 0.26);
         }
       }
     }
@@ -611,7 +651,7 @@ export class GameCore {
       this.#overlay.screenManager.handleKeyUp(this.#state.screen, key, this.#state, this.#getApi());
     }
   }
-  onWindowBlur() { this.#input.reset?.(); if (this.#state.screen === SCREEN_STATES.PLAYING) this.#setMessage('Input reset', 0.6); this.#syncHud(); }
+  onWindowBlur() { this.#input.reset?.(); this.#syncHud(); }
   onDomKeyDown(key, code) { this.#input.onDomKeyDown?.(key, code); }
   onDomKeyUp(key, code) { this.#input.onDomKeyUp?.(key, code); }
 

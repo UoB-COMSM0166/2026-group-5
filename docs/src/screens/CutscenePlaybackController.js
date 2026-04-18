@@ -44,19 +44,16 @@ export class CutscenePlaybackController {
 
     if (this.#shouldRevealText(scene, elapsed, progress, options)) {
       this.#revealedScenes.add(scene);
-      api.setMessage?.('Text revealed', 0.45);
       return true;
     }
 
     if (this.#shouldRevealVisual(scene, elapsed, progress, options)) {
       this.#revealedScenes.add(scene);
-      api.setMessage?.('Scene revealed', 0.45);
       return true;
     }
 
     if (currentSceneIndex === sceneList.length - 1) {
       this.#timeOffsetMs += scene.end - elapsed;
-      api.setMessage?.('Final scene...', 0.6);
       return true;
     }
 
@@ -92,7 +89,6 @@ export class CutscenePlaybackController {
     const jumpOffsetInsideScene = Math.min(650, Math.floor(nextSceneDuration * 0.18));
     const targetElapsed = nextScene.start + jumpOffsetInsideScene;
     this.#timeOffsetMs += targetElapsed - elapsed;
-    api.setMessage?.('Advancing...', 0.5);
   }
 
   #finish(state, api, options) {

@@ -2,7 +2,15 @@
 import { SCREEN_STATES } from '../core/gameState.js';
 import { ScreenManager } from '../screens/ScreenManager.js';
 
-// Manages screen overlays (fades, flashes, vignette) and delegates to ScreenManager.
+function showQueuedMessage(ui) {
+  const next = ui.messageQueue?.shift?.();
+  if (!next) return;
+  ui.message = next.text;
+  ui.messageTimer = next.seconds;
+  ui.messageIcon = next.iconPath || null;
+}
+
+// Manages screen overlays (fades and flashes) and delegates to ScreenManager.
 export class ScreenOverlaySystem {
   #screenManager;
 
@@ -19,7 +27,13 @@ export class ScreenOverlaySystem {
     state.ui.overlayAlpha += (targetAlpha - state.ui.overlayAlpha) * Math.min(1, deltaTime * 6);
     if (state.ui.messageTimer > 0) {
       state.ui.messageTimer = Math.max(0, state.ui.messageTimer - deltaTime);
-      if (state.ui.messageTimer === 0) state.ui.message = '';
+      if (state.ui.messageTimer === 0) {
+        state.ui.message = '';
+        state.ui.messageIcon = null;
+        showQueuedMessage(state.ui);
+      }
+    } else if (!state.ui.message) {
+      showQueuedMessage(state.ui);
     }
     state.ui.flashAlpha = Math.max(0, state.ui.flashAlpha - deltaTime * 1.8);
     this.#screenManager.update(state.screen, state, deltaTime, api);
@@ -30,17 +44,11 @@ export class ScreenOverlaySystem {
     state.ui.flashAlpha = Math.max(state.ui.flashAlpha, alpha);
   }
 
-  // Draw the active screen, HUD overlays, messages, and vignette.
+  // Draw the active screen, HUD overlays, messages, and flashes.
   render(p, state) {
     this.#screenManager.render(state.screen, p, state);
 
     if (state.screen === SCREEN_STATES.PLAYING || state.screen === SCREEN_STATES.PAUSE) {
-      if (state.ui.vignette > 0) {
-        p.noStroke();
-        p.fill(0, 0, 0, 60);
-        p.rect(0, 0, p.width, 28);
-        p.rect(0, p.height - 28, p.width, 28);
-      }
       if (state.ui.overlayAlpha > 0.01) {
         p.noStroke();
         p.fill(0, 0, 0, 255 * state.ui.overlayAlpha);

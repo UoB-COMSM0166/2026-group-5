@@ -5,6 +5,51 @@ export const LOOT_TYPES = Object.freeze({
   note: { id: 'note', label: 'Note Fragment',  icon: null }
 });
 
+// Player-facing key names by level. Internal key IDs stay unchanged for gameplay.
+const KEY_NAMES_BY_LEVEL = Object.freeze({
+  map1: Object.freeze({
+    key_doorA: 'Hall Key',
+    key_exit: 'Passage Key'
+  }),
+  map2: Object.freeze({
+    key_A: 'Archive Key',
+    key_B: 'Restricted Key',
+    key_D: 'Bloodline Key',
+    key_exit: 'Passage Key'
+  }),
+  map3: Object.freeze({
+    key_A: 'Vanity Key',
+    key_B: 'Crown Key',
+    key_C: 'Chain Key',
+    key_exit: 'Passage Key'
+  })
+});
+
+const FALLBACK_KEY_NAMES = Object.freeze({
+  key_exit: 'Passage Key',
+  key_doorA: 'Hall Key',
+  key_A: 'Archive Key',
+  key_B: 'Restricted Key',
+  key_C: 'Chain Key',
+  key_D: 'Bloodline Key'
+});
+
+function humanizeKeyId(keyId) {
+  const name = String(keyId || '')
+    .replace(/^key[_-]?/i, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .trim();
+  return `${name || 'Unknown'} Key`;
+}
+
+export function getKeyDisplayName(levelId, keyId) {
+  if (!keyId) return 'Key';
+  return KEY_NAMES_BY_LEVEL[levelId]?.[keyId]
+    || FALLBACK_KEY_NAMES[keyId]
+    || humanizeKeyId(keyId);
+}
+
 // Per-map loot tables mapping chest IDs to their drop type.
 const MAP_LOOT = Object.freeze({
   map1: Object.freeze({

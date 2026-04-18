@@ -41,7 +41,6 @@ export class DifficultySelectScreen extends Screen {
       api.loadStoryLevel?.(option.levelId);
       api.markMissionStart?.();
       api.setScreen?.(SCREEN_STATES.PLAYING);
-      api.setMessage?.(`${option.label} selected`, 1.0);
       return true;
     }
 
