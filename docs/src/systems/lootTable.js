@@ -78,15 +78,15 @@ const MAP_LOOT = Object.freeze({
   map3: Object.freeze({
     'chest-3-1': { type: 'key', keyId: 'key_exit' },
     'chest-3-2': 'note',
-    'chest-3-3': { type: 'key', keyId: 'key_A' },
-    'chest-3-4': 'note',
+    'chest-3-3': 'note',
+    'chest-3-4': { type: 'key', keyId: 'key_A' },
     'chest-3-5': 'note',
     'chest-3-6': 'note',
-    'chest-3-7': { type: 'key', keyId: 'key_B' },
+    'chest-3-7': 'note',
     'chest-3-8': 'note',
     'chest-3-9': { type: 'key', keyId: 'key_C' },
     'chest-3-10': 'note',
-    'chest-3-11': 'note'
+    'chest-3-11': { type: 'key', keyId: 'key_B' }
   })
 });
 

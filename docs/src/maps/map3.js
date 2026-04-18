@@ -389,8 +389,8 @@
         { id: 'door_I', tiles: [{ x: 33, y: 23 }, { x: 33, y: 24 }, { x: 34, y: 23 }, { x: 34, y: 24 }], slideDir: 'left' },
         // Unidirectional doors (1x2) - default CLOSED, no keyId
         { id: 'door_A', tiles: [{ x: 12, y: 19 }, { x: 12, y: 20 }], slideDir: 'up', keyId: 'key_C' },
-        { id: 'door_B', tiles: [{ x: 38, y: 7 }, { x: 38, y: 8 }], slideDir: 'up' },
-        { id: 'door_C', tiles: [{ x: 38, y: 17 }, { x: 38, y: 18 }], slideDir: 'up', keyId: 'key_B' },
+        { id: 'door_B', tiles: [{ x: 38, y: 7 }, { x: 38, y: 8 }], slideDir: 'up', keyId: 'key_B' },
+        { id: 'door_C', tiles: [{ x: 38, y: 17 }, { x: 38, y: 18 }], slideDir: 'up' },
         { id: 'door_J', tiles: [{ x: 59, y: 38 }, { x: 59, y: 37 }], slideDir: 'up', keyId: 'key_exit' },
       ],
       chests: [
