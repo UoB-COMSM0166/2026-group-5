@@ -106,7 +106,27 @@ Below are the user stories for our first epic, Stealth and Movement. Please see 
 - Course Staff
   - Instructors & Teaching Assistants: define requirements and grading criteria
 -->
+## Use Case Diagram
 
+To consolidate our user stories into a player-facing view of the system and scope the behavior we planned to implement, we created the use case diagram shown below. 
+
+<img src="devlog/images/use_case_diagram.png" alt="Use case diagram">
+
+The Player has three entry points into the system: starting a new game, viewing the tutorial, or playing a level. Starting a new game _includes_ selecting a playthrough and a difficulty as both are required to load a level. Playing a level _includes_ navigating the map, avoiding detection, collecting items in chests, and reaching the exit. These four are part of the core loop and can't be opted out of. Sprinting, using portals, or pausing the game are modelled as _extends_ relationships because they are optional. The player can complete a level only by walking and using the base controls. Pausing the game _extends_ itself further into viewing collected story notes or exiting to the title screen. The full use case specification for the Play Level use case is given below.
+
+| Field         | Specification            | 
+| ------------- | ------------------------ | 
+| Actor         | Player                   | 
+| Pre-conditions               | The player has selected a playthrough variant and a difficulty level, the corresponding map has loaded, and the intro cutscene has finished    | 
+| Basic Flow - Goal            | Collect every chest in the level, then reach the exit door without being caught by a guard.    | 
+| Basic Flow - Step 1          | Player explores the level, avoiding guards and using movement, sprinting, interaction, and portals as needed.    | 
+| Basic Flow - Step 2          | Player opens chests to collect keys and story notes. Opening every chest unlocks the exit door.    | 
+| Basic Flow - Step 3          | Player reaches the unlocked exit door and presses E to exit. The win screen is shown.    | 
+| Alternative Flow             | A guard detects the player and begins searching or chasing.            |
+| Recovery Step                | Player breaks line of sight using walls, doors, or a portal before the guard reaches them. The guard searches the area and eventually resumes patrol.    |
+| Failure                      | A guard in a CHASE catches the player and the lose screen is shown.   | 
+| Post-conditions (Success)    | Narrative progress advances through a cutscene, and the player returns to the map select screen.   | 
+| Playthrough Variation        | FOYER (easy) has a simple layout with few guards, large open spaces, and a direct path to the exit. LIBRARY (medium) has multiple connections between rooms, reduced room size, and more guards. SALON (hard) has the most complex layout and the greatest number of rooms, and a large number of guards patrolling confined spaces.    | 
 
 # 4. Design
 
