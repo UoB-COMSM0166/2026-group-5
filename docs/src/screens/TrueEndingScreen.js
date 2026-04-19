@@ -39,14 +39,14 @@ const SCENE_DEFINITIONS = Object.freeze([
   },
   {
     minDuration: 6800,
-    text: 'With it, no war, no betrayal, no weakness would ever take us by surprise again.',
+    text: 'With it, no war, no betrayal, no weakness \nwould ever take us by surprise again.',
     images: ['scene7']
   },
   { minDuration: 3000, text: 'The dragon?' },
   { duration: 3400, images: ['scene8'] },
   {
     minDuration: 7200,
-    text: 'It was made part of the seal, bound here so this power would never answer to one will alone.',
+    text: 'It was made part of the seal, bound here \nso this power would never answer to one will alone.',
     images: ['scene9']
   },
   { minDuration: 3600, text: 'And now, at last, it is within our reach.' },
@@ -67,7 +67,7 @@ const SCENE_DEFINITIONS = Object.freeze([
   { duration: 3400, images: ['scene13'], imageMaxW: 520, imageMaxH: 380 },
   {
     minDuration: 5600,
-    text: 'I would rather prefer an uncertain dawn than a chained tomorrow.',
+    text: 'I would rather prefer an uncertain dawn \nthan a chained tomorrow.',
     color: KNIGHT_TEXT_COLOR
   },
   {
@@ -166,7 +166,7 @@ export class TrueEndingScreen extends Screen {
     p.push();
     p.background(0);
     drawScene(p, layout, scene, elapsed, progress, assets, revealedScenes);
-    drawHud(p, layout, elapsed, this.#cutscene.getHudPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
+    drawHud(p, layout, elapsed, this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
     state.prompt = this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions);

@@ -65,7 +65,7 @@ export class FalseEndingScreen extends Screen {
     p.background(0);
     if (scene.text) drawTextOnlyScene(p, layout, scene, progress, revealedScenes);
     else scene.draw(p, layout, elapsed, getSceneVisualProgress(scene, progress, revealedScenes), assets);
-    drawHud(p, layout, elapsed, this.#cutscene.getHudPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
+    drawHud(p, layout, elapsed, this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
     state.prompt = this.#cutscene.getPrompt(SCENES, scene, elapsed, progress, cutsceneOptions);
@@ -214,7 +214,7 @@ function drawHud(p, layout, elapsed, prompt) {
   p.fill(255, 255, 255, blink);
   setFont(p, Math.max(11, sx(12, layout)), FONTS.ui);
   p.textAlign(p.CENTER, p.CENTER);
-  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(18, layout));
+  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(1, layout));
   p.pop();
 }
 

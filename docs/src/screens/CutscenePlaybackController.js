@@ -74,11 +74,6 @@ export class CutscenePlaybackController {
     return 'Press Enter to advance';
   }
 
-  getHudPrompt(sceneList, scene, elapsed, progress, options = {}) {
-    if (this.#isSequenceFinished(sceneList, elapsed)) return '';
-    return 'Press ENTER to advance';
-  }
-
   isSceneFullyRevealed(scene, elapsed, progress, options = {}) {
     return this.#isTextRevealed(scene, elapsed, progress, options)
       && this.#isVisualRevealed(scene, elapsed, progress, options);

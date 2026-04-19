@@ -80,7 +80,7 @@ export class IntroScreen extends Screen {
       drawSceneCaption(p, layout, scene, progress, revealedScenes);
     }
 
-    drawIntroHud(p, layout, elapsed, state, this.#cutscene.getHudPrompt(scenes, scene, elapsed, progress, cutsceneOptions));
+    drawIntroHud(p, layout, elapsed, state, this.#cutscene.getPrompt(scenes, scene, elapsed, progress, cutsceneOptions));
     p.pop();
 
     state.prompt = this.#cutscene.getPrompt(scenes, scene, elapsed, progress, cutsceneOptions);
@@ -357,7 +357,7 @@ function drawSceneCaption(p, layout, scene, progress, revealedScenes) {
   p.rect(boxX, boxY, boxW, boxH, 12);
 
   p.fill(255, 255, 255, alpha);
-  setFont(p, Math.max(12, sx(14, layout)), FONTS.body);
+  setFont(p, Math.max(16, sx(20, layout)), FONTS.body);
   p.textAlign(p.CENTER, p.CENTER);
 
   if (scene.caption2) {
@@ -395,7 +395,7 @@ function drawIntroHud(p, layout, elapsed, state, prompt) {
   const blink = (0.45 + Math.sin(elapsed * 0.007) * 0.55) * 255;
   p.fill(255, 255, 255, blink);
   setFont(p, Math.max(11, sx(12, layout)), FONTS.ui);
-  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(18, layout));
+  if (prompt) p.text(prompt, layout.width / 2, layout.height - sy(1, layout));
   p.pop();
 }
 
