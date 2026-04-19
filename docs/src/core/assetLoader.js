@@ -31,14 +31,16 @@ function collectPaths() {
   paths.add('./assets/images/original/npcs/dragon/dragon.png');
   paths.add('./assets/images/original/drawings/title_logo.png');
   paths.add('./assets/images/original/drawings/captured.png');
-  paths.add('./assets/images/tutorial/page1_move_asdw.png');
-  paths.add('./assets/images/tutorial/page2_accelarate.png');
-  paths.add('./assets/images/tutorial/page3_interact_e1.png');
-  paths.add('./assets/images/tutorial/page4_interact_e2.png');
-  paths.add('./assets/images/tutorial/page5_interact_e3.png');
-  paths.add('./assets/images/tutorial/page6_pauced_esc.png');
-  paths.add('./assets/images/tutorial/page7_portal_space.png');
-  paths.add('./assets/images/tutorial/page8_readnotes.png');
+  paths.add('./assets/images/tutorial/page0_gameplay1.png');
+  paths.add('./assets/images/tutorial/page1_gameplay2.png');
+  paths.add('./assets/images/tutorial/page2_move_asdw.png');
+  paths.add('./assets/images/tutorial/page3_accelarate.png');
+  paths.add('./assets/images/tutorial/page4_interact_e1.png');
+  paths.add('./assets/images/tutorial/page5_interact_e2.png');
+  paths.add('./assets/images/tutorial/page6_interact_e3.png');
+  paths.add('./assets/images/tutorial/page7_pauced_esc.png');
+  paths.add('./assets/images/tutorial/page8_portal_space.png');
+  paths.add('./assets/images/tutorial/page9_readnotes.png');
   STORY_SCREEN_ASSET_PATHS.forEach((path) => paths.add(path));
 
   // v19 intentionally stops probing every potential character variant path.

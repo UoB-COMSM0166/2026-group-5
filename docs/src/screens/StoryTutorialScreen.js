@@ -6,14 +6,16 @@ import { getLayout, sx, sy } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
 const TUTORIAL_PAGES = Object.freeze([
-  './assets/images/tutorial/page1_move_asdw.png',
-  './assets/images/tutorial/page2_accelarate.png',
-  './assets/images/tutorial/page3_interact_e1.png',
-  './assets/images/tutorial/page4_interact_e2.png',
-  './assets/images/tutorial/page5_interact_e3.png',
-  './assets/images/tutorial/page6_pauced_esc.png',
-  './assets/images/tutorial/page7_portal_space.png',
-  './assets/images/tutorial/page8_readnotes.png'
+  './assets/images/tutorial/page0_gameplay1.png',
+  './assets/images/tutorial/page1_gameplay2.png',
+  './assets/images/tutorial/page2_move_asdw.png',
+  './assets/images/tutorial/page3_accelarate.png',
+  './assets/images/tutorial/page4_interact_e1.png',
+  './assets/images/tutorial/page5_interact_e2.png',
+  './assets/images/tutorial/page6_interact_e3.png',
+  './assets/images/tutorial/page7_pauced_esc.png',
+  './assets/images/tutorial/page8_portal_space.png',
+  './assets/images/tutorial/page9_readnotes.png'
 ]);
 
 export class TutorialScreen extends Screen {
