@@ -245,8 +245,8 @@ export class TutorialScreen extends Screen {
     p.fill('#ffffff');
     setFont(p, Math.max(16, sx(20, layout)), FONTS.ui);
     p.textAlign(p.CENTER, p.CENTER);
-    p.text('<', leftBtnX + btnSize / 2, btnY + btnSize / 2);
-    p.text('>', rightBtnX + btnSize / 2, btnY + btnSize / 2);
+    p.text('←', leftBtnX + btnSize / 2, btnY + btnSize / 2);
+    p.text('→', rightBtnX + btnSize / 2, btnY + btnSize / 2);
   }
 
   #drawPageIndicator(p, x, y, w, h, layout) {
