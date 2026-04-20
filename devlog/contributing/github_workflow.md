@@ -22,6 +22,5 @@ Some people suggest that using branches and pull requests can demonstrate more s
 
 Sometimes, automatically-generated descriptions are enough. However, if we want to do more complex features, we need to use description formats. Here are 2 quick screenshots for reference: 
 
-<img src="images/commit-example-1.jpg" width="500" alt="commit example 1">
-
-<img src="images/commit-example-2.jpg" alt="commit example 2">
+<img src="../images/commit-example-1.jpg" width="500" alt="commit example 1">
+<img src="../images/commit-example-2.jpg" alt="commit example 2">
