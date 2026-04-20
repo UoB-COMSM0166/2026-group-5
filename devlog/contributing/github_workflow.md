@@ -28,21 +28,30 @@ Sometimes, automatically-generated descriptions are enough. However, if we want 
 ## Common issues
 
 - **Branching**
-    - Using personal names for branches instead of feature-based names
+    - Using personal names for branches instead of descriptive feature-based names
+    
 - **Commits**
-    - One commit includes too many changes, not following the **one issue, one commit** principle
-    - Using past tense in commit messages
-    - Not distinguishing between `feature` and `fix` types
+    - Commits contain too many unrelated changes (violates atomic commit principle)
+    - Using past tense instead of imperative mood in commit messages
+    - Not distinguishing between `feat` and `fix` types
+    - Not distinguishing between `docs` and `chore` types
     - Using `doc` instead of the correct `docs`
+    - Overusing `refactor` and `feat` for non-code changes, especially on edge cases
+    
 - **Merge / Sync Workflow**
-    - Unnecessary merge commits caused by pulling from the remote branch, shown in messages like `Merge branch 'main' of https://github.com/...`
+    - Unnecessary merge commits caused by pulling from the remote branch, shown in messages like Merge branch 'main' of https://github.com/...
     - Pulling updates after local edits and then pushing, causing duplicated game code files
+    - Skipping pull requests entirely (pushing directly to main)
+    
 - **Issue Management**
-    - Closing issues without team coordination
+    - Closing issues without team coordination or verification
+    
 - **File / Path Management**
-    - Incorrect image reference paths
+    - Incorrect or broken image reference paths
+    
 - **Documentation / Markdown**
     - Lack of a concise and clean Markdown style in technical documentation
+    
 - **Typos / Writing Conventions**
-    - Typos such as `assets` vs `asserts`
-    - Missing spaces after punctuation
+    - Common typos (e.g., `assets` vs `asserts`)
+    - Missing spaces after punctuation marks
