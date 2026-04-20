@@ -24,3 +24,25 @@ Sometimes, automatically-generated descriptions are enough. However, if we want 
 
 <img src="../images/commit-example-1.jpg" width="500" alt="commit example 1">
 <img src="../images/commit-example-2.jpg" alt="commit example 2">
+
+## Common issues
+
+- **Branching**
+    - Using personal names for branches instead of feature-based names
+- **Commits**
+    - One commit includes too many changes, not following the **one issue, one commit** principle
+    - Using past tense in commit messages
+    - Not distinguishing between `feature` and `fix` types
+    - Using `doc` instead of the correct `docs`
+- **Merge / Sync Workflow**
+    - Unnecessary merge commits caused by pulling from the remote branch, shown in messages like `Merge branch 'main' of https://github.com/...`
+    - Pulling updates after local edits and then pushing, causing duplicated game code files
+- **Issue Management**
+    - Closing issues without team coordination
+- **File / Path Management**
+    - Incorrect image reference paths
+- **Documentation / Markdown**
+    - Lack of a concise and clean Markdown style in technical documentation
+- **Typos / Writing Conventions**
+    - Typos such as `assets` vs `asserts`
+    - Missing spaces after punctuation
