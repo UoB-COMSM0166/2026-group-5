@@ -5,6 +5,34 @@ const game = createGameCore({ initialLevel: 'map1' });
 //window.__game = game; // for testing purpose
 let p5Instance = null;
 
+// Loading screen elements
+const loadingScreen = document.getElementById('loading-screen');
+const loadingProgressBar = document.getElementById('loading-progress-bar');
+const loadingPercent = document.getElementById('loading-percent');
+const loadingStatus = document.getElementById('loading-status');
+
+// Update loading progress UI
+function updateLoadingProgress(completed, total) {
+  const percent = Math.round((completed / total) * 100);
+  if (loadingProgressBar) {
+    loadingProgressBar.style.width = `${percent}%`;
+  }
+  if (loadingPercent) {
+    loadingPercent.textContent = percent;
+  }
+}
+
+// Hide loading screen with fade-out animation
+function hideLoadingScreen() {
+  if (loadingScreen) {
+    loadingScreen.classList.add('hidden');
+    // Remove from DOM after animation completes
+    setTimeout(() => {
+      loadingScreen.style.display = 'none';
+    }, 500);
+  }
+}
+
 const DESIGN_W = 960;
 const DESIGN_H = 640;
 
@@ -77,12 +105,28 @@ new window.p5((p) => {
     } catch (e) {}
     p.noSmooth();
     try {
-      await game.loadAssets(p);
+      // Load assets with progress tracking
+      await game.loadAssets(p, ({ completed, total, path }) => {
+        updateLoadingProgress(completed, total);
+        if (loadingStatus && path) {
+          // Extract filename from path for status display
+          const filename = path.split('/').pop();
+          loadingStatus.textContent = `Loading: ${filename}`;
+        }
+      });
     } catch (error) {
       // Asset load error handled silently
+      if (loadingStatus) {
+        loadingStatus.textContent = 'Loading complete with some errors';
+      }
     }
     game.setup();
     game.onResize?.(p.width, p.height);
+
+    // Hide loading screen after everything is ready
+    setTimeout(() => {
+      hideLoadingScreen();
+    }, 300);
 
     // Nudge: force browser reflow/recomposite to fix stale canvas rendering.
     // Temporarily shift layout scale, wait one frame, then restore.

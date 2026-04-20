@@ -453,9 +453,14 @@ export class GameCore {
   }
 
   // Load all image and audio assets, updating the loading state.
-  async loadAssets(p) {
+  // Optional onProgress callback receives { completed, total, path } updates.
+  async loadAssets(p, onProgress) {
     this.#state.loading.message = 'Loading assets...';
-    try { const r = await loadAssetsAsync(p); this.#state.loading.ready = true; this.#state.loading.message = r.failedCount > 0 ? `Loaded with ${r.failedCount} fallback asset(s)` : 'Assets loaded'; }
+    try {
+      const r = await loadAssetsAsync(p, onProgress);
+      this.#state.loading.ready = true;
+      this.#state.loading.message = r.failedCount > 0 ? `Loaded with ${r.failedCount} fallback asset(s)` : 'Assets loaded';
+    }
     catch (e) { this.#state.loading.error = e?.message || String(e); throw e; }
     this.#syncHud();
   }

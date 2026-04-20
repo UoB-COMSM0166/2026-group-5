@@ -293,3 +293,110 @@ button:hover { filter: brightness(1.08); }
   background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
 }
 
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0f1220 0%, #1a1f35 50%, #0f1220 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 40px;
+}
+
+.loading-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 24px;
+  color: #c92d59;
+  text-shadow: 4px 4px 0 #2a1730;
+  margin: 0;
+  text-align: center;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.loading-tagline1 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: #e8d4da;
+  text-shadow: 2px 2px 0 #c92d59;
+  margin: 8px 0 16px 0;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.loading-tagline2 {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 14px;
+  color: #f8fafc;
+  text-shadow: 2px 2px 0 #c92d59;
+  margin: 8px 0 16px 0;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.loading-progress-container {
+  width: 400px;
+  height: 24px;
+  background: #2a1730;
+  border: 4px solid #c92d59;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 6px 6px 0 #1a0f20;
+}
+
+.loading-progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #c92d59 0%, #e85a7e 50%, #c92d59 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite, progress-glow 0.3s ease-out;
+  transition: width 0.3s ease-out;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes progress-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(201, 45, 89, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(201, 45, 89, 0.8); }
+}
+
+.loading-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 20px;
+  color: #f8fafc;
+  text-shadow: 2px 2px 0 #2a1730;
+}
+
+.loading-status {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: #94a3b8;
+  margin-top: 8px;
+}

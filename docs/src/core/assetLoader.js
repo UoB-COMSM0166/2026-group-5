@@ -19,7 +19,11 @@ function collectPaths() {
   paths.add(SPRITE_PATHS.playerSheet);
   Object.values(SPRITE_PATHS.npc).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.npcSheet).forEach((v) => paths.add(v));
-  collectCharacterPaths().forEach((p) => paths.add(p));
+  collectCharacterPaths().forEach((p) => {
+    if (p !== './assets/images/characters/player/default/down.png') {
+      paths.add(p);
+    }
+  });
   Object.values(SPRITE_PATHS.door).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.chest).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.button).forEach((v) => paths.add(v));
@@ -109,9 +113,19 @@ function loadImageAsync(p, path) {
 
 // Load all game assets in batches to prevent overwhelming the browser.
 // Critical assets load first, then non-critical in parallel batches.
-export async function loadAssetsAsync(p) {
+// Calls onProgress with { completed, total, path } after each batch.
+export async function loadAssetsAsync(p, onProgress) {
   const paths = collectPaths();
   assets.failed = [];
+  const totalPaths = paths.length;
+  let loadedSoFar = 0;
+
+  const progressWrapper = ({ completed, total, path }) => {
+    loadedSoFar = completed;
+    if (onProgress) {
+      onProgress({ completed: loadedSoFar, total: totalPaths, path });
+    }
+  };
 
   // Critical UI assets that must load first for basic display
   const criticalPaths = paths.filter(p =>
@@ -123,18 +137,21 @@ export async function loadAssetsAsync(p) {
   );
 
   // Load critical assets first
-  await loadBatch(p, criticalPaths, 8);
+  await loadBatch(p, criticalPaths, 8, progressWrapper);
 
   // Load remaining assets in parallel batches
   const remainingPaths = paths.filter(p => !assets.requested.has(p));
-  await loadBatch(p, remainingPaths, 16);
+  await loadBatch(p, remainingPaths, 16, progressWrapper);
 
   assets.ready = true;
   return getAssetState();
 }
 
 // Load a batch of assets with concurrency limit
-async function loadBatch(p, paths, concurrency) {
+async function loadBatch(p, paths, concurrency, onProgress) {
+  const total = paths.length;
+  let completed = 0;
+
   for (let i = 0; i < paths.length; i += concurrency) {
     const batch = paths.slice(i, i + concurrency);
     const promises = batch.map(path => {
@@ -150,6 +167,10 @@ async function loadBatch(p, paths, concurrency) {
         assets.failed.push(result.path);
         assets.images.set(result.path, null);
       }
+    }
+    completed += batch.length;
+    if (onProgress) {
+      onProgress({ completed, total, path: paths[i] });
     }
   }
 }
