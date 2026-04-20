@@ -2,6 +2,7 @@
 import { createGameCore } from './core/gameCore.js';
 
 const game = createGameCore({ initialLevel: 'map1' });
+//window.__game = game; // for testing purpose
 let p5Instance = null;
 
 const DESIGN_W = 960;
