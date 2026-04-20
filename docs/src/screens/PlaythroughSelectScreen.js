@@ -51,12 +51,20 @@ export class PlaythroughSelectScreen extends Screen {
     }
 
     if (key === 'ArrowUp') {
+      const secondUnlocked = Boolean(state.story?.secondPlaythroughUnlocked);
+      if (this.#selectedIndex === 0 && !secondUnlocked) {
+        return true;
+      }
       this.#selectedIndex = (this.#selectedIndex - 1 + options.length) % options.length;
       api.setMessage?.(options[this.#selectedIndex].label, 0.6);
       return true;
     }
 
     if (key === 'ArrowDown') {
+      const secondUnlocked = Boolean(state.story?.secondPlaythroughUnlocked);
+      if (this.#selectedIndex === 0 && !secondUnlocked) {
+        return true;
+      }
       this.#selectedIndex = (this.#selectedIndex + 1) % options.length;
       api.setMessage?.(options[this.#selectedIndex].label, 0.6);
       return true;
