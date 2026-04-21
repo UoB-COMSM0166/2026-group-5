@@ -38,14 +38,14 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 <img src="devlog/images/group-pic.jpeg" alt="Group pic" width="900" height="800">
 
-| Person        | Email                    | GitHub                    | Roles                                        |
-| ------------- | ------------------------ | ------------------------- | -------------------------------------------- | 
-| Yan Cui       | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture and Integration                 | 
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                        | 
-| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design and Gameplay Vision  | 
-| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation and Scrum Master               |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, Code Review and Github Workflow  |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | UI/UX and Testing                            | 
+| Person        | Email                    | GitHub                    | Roles                                         |
+| ------------- | ------------------------ | ------------------------- | --------------------------------------------- | 
+| Yan Cui       | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Lead Developer, Architecture and Integration  | 
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | Front-end Developer                           | 
+| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Developer, Game Flow, Level Design            | 
+| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Developer, Documentation, and Scrum Master    |
+| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, GitHub Review and Github Workflow |
+| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Front-end Developer and Testing               | 
 
 
 
