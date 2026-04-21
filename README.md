@@ -4,8 +4,8 @@
 
 [![Play](https://img.shields.io/badge/🕹️_Play_the_Game-4CAF50?style=for-the-badge)](https://uob-comsm0166.github.io/2026-group-5/index.html)
 [![Video](https://img.shields.io/badge/🎥_Watch_Video-E91E63?style=for-the-badge)]()
-[![Kanban](https://img.shields.io/badge/📌_Kanban_Board-7C4DFF?style=for-the-badge)]()
-[![Updates](https://img.shields.io/badge/📅_Weekly_Updates-FF6F00?style=for-the-badge)]()
+[![Kanban](https://img.shields.io/badge/📌_Kanban_Board-7C4DFF?style=for-the-badge)](https://github.com/orgs/UoB-COMSM0166/projects/150)
+[![Updates](https://img.shields.io/badge/📅_Weekly_Updates-FF6F00?style=for-the-badge)](https://github.com/UoB-COMSM0166/2026-group-5/tree/main/weekly-updates)
 
 </div>
 
@@ -19,8 +19,10 @@
 5. [Implementation](#5-implementation)
 6. [Evaluation](#6-evaluation)
 7. [Process](#7-process)
-8. [Conclusion](#8-conclusion)
-9. [Contribution Statement](#9-contribution-statement)
+8. [Sustainability, Ethics, and Accessibility](#8-sustainability-ethics-and-accessibility)
+9. [Conclusion](#9-conclusion)
+10. [Contribution Statement](#10-contribution-statement)
+11. [AI Statement](#11-ai-statement)
 
 
 # 1. Introduction
@@ -40,15 +42,14 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 <img src="devlog/images/group-pic.jpeg" alt="Group pic" width="900" height="800">
 
-| Person        | Email                    | GitHub                    | Roles                                         |
-| ------------- | ------------------------ | ------------------------- | --------------------------------------------- | 
-| Yan Cui       | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Lead Developer, Architecture and Integration  | 
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | Front-end Developer, UX/UI Design             | 
-| Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Developer, Game Flow, Level Design            | 
-| Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Developer, Documentation, and Scrum Master    |
-| Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, GitHub Review and Github Workflow |
-| Jinni Li      | ra25313@bristol.ac.uk    | @Jinni-Li                 | Front-end Developer and Testing               | 
-
+| Person        | Email                 | GitHub                 | Roles                                                      |
+| ------------- | --------------------- | ---------------------- | ---------------------------------------------------------- |
+| Yan Cui       | sk25619@bristol.ac.uk | @Tracy-fuyao           | Lead Developer, Architecture and Integration               |
+| Yawen Zhang   | vm25514@bristol.ac.uk | @joan9yawen-source     | Front-end Developer, UX/UI Design                          |
+| Hanqing Zhang | sv25099@bristol.ac.uk | @zhq1374547005-UOB     | Developer, Game Flow, Level Design and Video               |
+| Haris Kovac   | yw25220@bristol.ac.uk | @hariskovac            | Developer, Documentation, and Scrum Master                 |
+| Frida Chen    | ba25966@bristol.ac.uk | @fridachen1127         | Evaluation, Code Review, Github Workflow and Documentation |
+| Jinni Li      | ra25313@bristol.ac.uk | @Jinni-Li              | Front-end Developer and Testing                            |
 
 
 # 3. Requirements 
@@ -281,7 +282,14 @@ Overall, both levels scored above the general SUS benchmark of 68, confirming th
 
 # 10. Contribution Statement
 
-- Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
+| Member Name   | Weight |
+| ------------- | ------ |
+| Yan Cui       | 1/6    |
+| Yawen Zhang   | 1/6    |
+| Hanqing Zhang | 1/6    |
+| Haris Kovac   | 1/6    |
+| Frida Chen    | 1/6    |
+| Jinni Li      | 1/6    |
 
 # 11. AI Statement
 
