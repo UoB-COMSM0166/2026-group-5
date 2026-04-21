@@ -174,7 +174,30 @@ PATROL can also be interrupted directly into SEARCH in 3 different ways. Players
 
 - 15% ~750 words
 
-- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
+- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game.
+
+During the development process, the guard AI's movement and decision making and the map rendering system stood out as the greatest technical challenges. The development and implementation of each system is described in further detail below.
+
+## Challenge 1: NPC Pursuit AI
+
+Key to developing the kind of game we wanted was to build an NPC movement system that would reliably chase the player through multi-room environments and respond to player behavior. This meant balancing four competing goals at the same time:
+
+1. Robustness (never getting stuck in narrow coridors or around corners)
+2. Responsiveness (continuously track the player)
+3. Naturalness (avoid jitter, oscillation, and robotic motion)
+4. Performance (staying close to 60 FPS in a single-threaded JS game loop)
+
+The guard's decision making has to plan paths in real time. In PATROL and SEARCH (see _Figure 5_), it must find fast, believable routes from any point on the map back to a known waypoint. In CHASE, it must react withing a handful of frames as the player changes direction. After reviewing several tracking approaches, we chose **A* pathfinding** as our global planner because it is a well-established algorithm for shortest-path search on graphs. To make the movement more natural in dynamic environments, we added an intelligent waypoint-skipping mechanism which scans the path backwards from the end and jumps directly to the furthest waypoint an NPC can reach.
+
+This approach was not enough as the guards would still behave clumsily in maps with many obstacles. NPCs would often get stuck in corners and if an obstacle was between them and the player, they could not go around the obstacle to continue the chase. Returning to our research, we adopted a context-based steering approach. The idea is to case 12 equally-spaced rays around the NPC and then score each direction based on 1) how well it aligns with the desired direction and 2) how far it is from nearby obstacles. Directions that are towards the target and far from obstacles receive higher scores. A weighted sum of all valid direction vectors is then computed and normalized to obtain the final movement direction that naturally avoids obstacles while still heading toward the player. 
+
+These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occassionally still jitter near tight corners as the AI constantly recalculated the best direction. To avoid this, we added three supporting mechanisms:
+
+1. A three-tier progressive recovery system to prevent the NPC from getting permanently stuck
+2. A smooth-facing algorithm to reduce jitter in rotation
+3. A box-swept traversal check to handle cases where a stright line is clear for the ray but not for the actual body
+
+With this combined approach, we achieved NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
 
 # 6. Evaluation
 
