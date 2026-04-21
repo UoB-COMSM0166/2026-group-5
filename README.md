@@ -40,7 +40,7 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 
 | Person        | Email                    | GitHub                    | Roles                                        |
 | ------------- | ------------------------ | ------------------------- | -------------------------------------------- | 
-| Tracy Cui     | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture and Integration                 | 
+| Yan Cui       | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Architecture and Integration                 | 
 | Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | UI/UX                                        | 
 | Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Game Flow, Level Design and Gameplay Vision  | 
 | Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Documentation and Scrum Master               |
