@@ -41,7 +41,7 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 | Person        | Email                    | GitHub                    | Roles                                         |
 | ------------- | ------------------------ | ------------------------- | --------------------------------------------- | 
 | Yan Cui       | sk25619@bristol.ac.uk    | @Tracy-fuyao              | Lead Developer, Architecture and Integration  | 
-| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | Front-end Developer                           | 
+| Yawen Zhang   | vm25514@bristol.ac.uk    | @joan9yawen-source        | Front-end Developer, UX/UI Design             | 
 | Hanqing Zhang | sv25099@bristol.ac.uk    | @zhq1374547005-UOB        | Developer, Game Flow, Level Design            | 
 | Haris Kovac   | yw25220@bristol.ac.uk    | @hariskovac               | Developer, Documentation, and Scrum Master    |
 | Frida Chen    | ba25966@bristol.ac.uk    | @fridachen1127            | Evaluation, GitHub Review and Github Workflow |
