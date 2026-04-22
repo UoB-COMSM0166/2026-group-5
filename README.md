@@ -119,7 +119,7 @@ Below are the user stories for our first epic, Stealth and Movement. Please see 
 
 To consolidate our user stories into a player-facing view of the system and scope the behavior we planned to implement, we created the use case diagram shown below. 
 
-<img src="devlog/images/use_case_diagram.png" alt="Use case diagram">
+<img src="devlog/images/use_case_diagram.svg" alt="Use case diagram">
 <p align="center">Figure 2: Use Case Diagram</p>
 
 The Player has three entry points into the system: starting a new game, viewing the tutorial, or playing a level. Starting a new game _includes_ selecting a playthrough and a difficulty as both are required to load a level. Playing a level _includes_ navigating the map, avoiding detection, collecting items in chests, and reaching the exit. These four are part of the core loop and can't be opted out of. Sprinting, using portals, or pausing the game are modelled as _extends_ relationships because they are optional, as the player can theoretically complete a level only by walking and using the base controls. Pausing the game _extends_ itself further into viewing collected story notes or exiting to the title screen. The full use case specification for the Play Level use case is given below.
@@ -651,7 +651,131 @@ classDiagram
 
 Figure 4 below captures how the core game loop functions in our project. The loop begins when p5's draw callback fires, which then causes GameCore.update(dt) to drive each subsystem in a fixed order, ending with render(p) handing the p5 instance to the render system. The ordering of each subsystem matters because several subsystems read state written by earlier ones. For example, MissionSystem checks the player's position after playerSystem has moved them, and the interactionSystem checks door, box, and button states after DoorSystem and RoomSystem have triggered. This rigid approach keeps the game determinisitic and free of inter-system race conditions and makes adding new systems simple. For any new system to be added, we need to only find the right point in the sequence to insert it.
 
-<img src="devlog/images/sd_game_loop.png" alt="Game Loop Sequence Diagram">
+```mermaid
+---
+title: Sequence Diagram — Core Game Loop
+---
+sequenceDiagram
+    autonumber
+    participant p5 as p5 instance
+    participant GC as GameCore
+    participant GS as GameState
+    participant Overlay as ScreenOverlaySystem
+    participant Input as InputSystem
+    participant PlayerSys as playerSystem
+    participant Player
+    participant Portal as PortalSystem
+    participant Cam as Camera
+    participant Room as RoomSystem
+    participant Door as DoorSystem
+    participant "Box" as BoxSystem
+    participant Mission as MissionSystem
+    participant NPCSys as npcSystem
+    participant Audio as AudioSystem
+    participant Interact as interactionSystem
+    participant Render as renderSystem
+
+    Note over p5: p.draw() fires (requestAnimationFrame)
+
+    p5->>p5: dt = min(0.05, deltaTime/1000)
+    p5->>GC: update(dt)
+    activate GC
+
+    GC->>GS: screenTimeMs = now - screenEnteredAt
+    GC->>Overlay: update(state, dt, api)
+    GC->>GS: messageTimer -= dt
+    Note right of GC: screen === PLAYING ✓
+    GC->>GS: meta.elapsedMs = now - startedAt
+
+    GC->>GC: #updateIntroAnimation(dt)
+    Note right of GC: returns false<br/>(past intro)
+
+    GC->>Input: getMovement()
+    Input-->>GC: { x, y, sprint }
+
+    GC->>PlayerSys: updatePlayer(player, movement, level, dt)
+    activate PlayerSys
+    PlayerSys->>Player: x/y, stamina, moving, anim, footsteps
+    PlayerSys-->>GC: 
+    deactivate PlayerSys
+
+    GC->>GC: #syncRunningSfx(movement, player)
+    GC->>Audio: setLoopingSfx('running', active?)
+
+    GC->>Input: consumePortalPlace()
+    Input-->>GC: false
+    GC->>Portal: updatePlayerTeleport(player, level, dt)
+    Portal-->>GC: { teleported: false }
+
+    GC->>Cam: update(player, dt)
+    Cam->>Cam: dead-zone + smooth lerp + clamp
+
+    GC->>Room: getActorRoomId(player)
+    Room-->>GC: roomId
+    alt roomId > 1
+        GC->>Room: explorePlayerRoom(player)
+    end
+
+    GC->>Door: update(dt, [player, ...npcs])
+    GC->>"Box": update(dt)
+    GC->>Room: update(dt)
+    GC->>Mission: update(dt)
+
+    GC->>GC: #snapshotDoorStates(level)
+    GC->>GC: #snapshotRoomLightStates(level)
+
+    GC->>NPCSys: updateNpcs(level, dt)
+    activate NPCSys
+    Note right of NPCSys: per-NPC: vision,<br/>alert, PATROL/SEARCH/CHASE,<br/>pathfinding, steering
+    NPCSys-->>GC: detectedBy (null this frame)
+    deactivate NPCSys
+
+    GC->>GC: #playAlertOnNewNpcChase(level)
+    GC->>GC: #playEnemyWorldInteractionSfx(before, before)
+    Note right of GC: detectedBy is null →<br/>no LOSE transition
+
+    GC->>Mission: getObjectiveText(collected, target)
+    Mission-->>GC: objective text
+    GC->>Mission: isUnlocked() / getDistanceToExit(player)
+    Mission-->>GC: distance
+    GC->>GS: meta.objective / meta.exitDistanceText
+
+    GC->>Interact: getInteractionPrompt(level)
+    activate Interact
+    Interact->>Mission: isUnlocked / getDistanceToExit
+    Interact->>"Box": boxes (findNearbyEntity)
+    Interact->>Door: doors (findNearbyDoor)
+    Interact->>Room: getNearestButtonForPlayer(player)
+    Interact-->>GC: prompt or null
+    deactivate Interact
+    GC->>GS: nearestLightButton / prompt text
+
+    GC->>Input: consumeInteract()
+    Input-->>GC: false
+    Note right of GC: E not pressed this frame →<br/>skip tryInteract branch
+
+    GC->>GC: #syncHud(dt)
+    deactivate GC
+
+    p5->>GC: render(p)
+    activate GC
+    GC->>Render: renderScene(p, state, overlay)
+    activate Render
+    Render->>Cam: zoom / x / y (via state.camera)
+    Render->>Render: renderMap(p, state)
+    Render->>Render: renderLightingOverlay(p, state)
+    Render->>Render: renderEntities(p, state)
+    Render->>Render: renderUnexploredOverlay(p, state)
+    Render->>Render: renderWorldUi(p, state)<br/>(door/button/chest prompts)
+    Render->>Render: renderScreenUi(p, state)
+    Render->>Overlay: render(p, state)
+    Overlay->>Overlay: screenManager render / flash
+    Render-->>GC: 
+    deactivate Render
+    deactivate GC
+
+    Note over p5: Frame complete, wait for next RAF
+```
 <p align="center">Figure 4: Game Loop Sequence Diagram</p>
 
 ## NPC State Machine
