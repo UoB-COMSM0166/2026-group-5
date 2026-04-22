@@ -33,8 +33,9 @@
 
 Our game is inspired by Invisible Inc., The Were Cleaner, and the Thief series for their stealth-focused gameplay and emphasis on problem solving over direct confrontation. Players must study patrol routes and sneak through the castle, avoiding being seen (or heard), unless they want to become a snack for the stylish, sunglasses-wearing dragon. 
 
-<video src="devlog/video/invisible_inc.mp4" width="640" height="480" controls></video>
-<video src="devlog/video/were_cleaner.mp4" width="640" height="480" controls></video>
+https://github.com/user-attachments/assets/88d7cc92-bbeb-496c-903a-57cc5a493f2e
+
+https://github.com/user-attachments/assets/4bdb69d2-5167-44dd-834c-28154986fde5
 
 The twist mechanic was inspired by Valve's Portal series. Players can place linked portals to quickly and strategically navigate the castle's interior, bypass dangerous chokepoints, or recover from risky plays. This mechanic is built directly into our game's core stealth navigation, creating constant tactical choices between planning safe routes and improvising under pressure. 
 
