@@ -394,9 +394,25 @@ button:hover { filter: brightness(1.08); }
   text-shadow: 2px 2px 0 #2a1730;
 }
 
-.loading-status {
-  font-family: 'VT323', monospace;
-  font-size: 18px;
+.loading-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
   color: #94a3b8;
-  margin-top: 8px;
+  margin-top: 16px;
+  max-width: 480px;
+  text-align: center;
+  min-height: 36px;
+}
+.loading-tip-label {
+  color: #c92d59;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+.loading-tip-text {
+  line-height: 1.6;
+  transition: opacity 0.3s;
 }

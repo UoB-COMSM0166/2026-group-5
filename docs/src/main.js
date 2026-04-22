@@ -9,7 +9,9 @@ let p5Instance = null;
 const loadingScreen = document.getElementById('loading-screen');
 const loadingProgressBar = document.getElementById('loading-progress-bar');
 const loadingPercent = document.getElementById('loading-percent');
-const loadingStatus = document.getElementById('loading-status');
+const loadingTipText = document.getElementById('loading-tip-text');
+let loadingTipIdx = 0;
+let loadingTipInterval = null;
 
 // Update loading progress UI
 function updateLoadingProgress(completed, total) {
@@ -104,22 +106,28 @@ new window.p5((p) => {
       canvas.elt.focus();
     } catch (e) {}
     p.noSmooth();
+    // Start loading tip rotation
+    loadingTipInterval = setInterval(() => {
+      if (!loadingTipText) return;
+      let next;
+      do { next = Math.floor(Math.random() * TIPS.length); } while (next === loadingTipIdx && TIPS.length > 1);
+      loadingTipIdx = next;
+      loadingTipText.style.transition = 'opacity 0.3s';
+      loadingTipText.style.opacity = '0';
+      setTimeout(() => {
+        loadingTipText.textContent = TIPS[loadingTipIdx];
+        loadingTipText.style.opacity = '1';
+      }, 300);
+    }, 3000);
     try {
       // Load assets with progress tracking
-      await game.loadAssets(p, ({ completed, total, path }) => {
+      await game.loadAssets(p, ({ completed, total }) => {
         updateLoadingProgress(completed, total);
-        if (loadingStatus && path) {
-          // Extract filename from path for status display
-          const filename = path.split('/').pop();
-          loadingStatus.textContent = `Loading: ${filename}`;
-        }
       });
     } catch (error) {
       // Asset load error handled silently
-      if (loadingStatus) {
-        loadingStatus.textContent = 'Loading complete with some errors';
-      }
     }
+    if (loadingTipInterval) clearInterval(loadingTipInterval);
     game.setup();
     game.onResize?.(p.width, p.height);
 

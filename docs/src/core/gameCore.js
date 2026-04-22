@@ -501,7 +501,13 @@ export class GameCore {
     }
     if (s.camera) s.camera.update(s.level.player, deltaTime);
     const roomSystem = s.level.roomSystem;
-    if (roomSystem.getActorRoomId(s.level.player) > 1) roomSystem.explorePlayerRoom(s.level.player);
+    if (roomSystem.getActorRoomId(s.level.player) > 1) {
+      const enteredRoomId = roomSystem.getActorRoomId(s.level.player);
+      const firstVisit = roomSystem.explorePlayerRoom(s.level.player);
+      if (firstVisit && enteredRoomId === 5 && s.levelId === 'map1') {
+        this.#setMessage('Highlighted items are interactive.', 2.5);
+      }
+    }
     s.level.doorSystem.update(deltaTime, [s.level.player, ...(s.level.npcs || [])]);
     s.level.boxSystem.update(deltaTime); s.level.roomSystem.update(deltaTime); s.level.missionSystem.update(deltaTime);
     const npcDoorStatesBefore = this.#snapshotDoorStates(s.level);

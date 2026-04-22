@@ -10,6 +10,30 @@ import { setFont, FONTS } from '../utils/fonts.js';
 import { getKeyDisplayName } from '../systems/lootTable.js';
 
 
+// Draw a twinkling 4-pointed star sparkle on interactive objects.
+function drawSparkles(p, x, y, w, h) {
+  const t = performance.now() * 0.001;
+  const alpha = (Math.sin(t * 2.3) + 1) * 0.5;
+  if (alpha < 0.1) return;
+  const sx = x + w * 0.8;
+  const sy = y + h * 0.15;
+  const outer = 2.5 + alpha * 3;
+  const inner = outer * 0.25;
+  p.push();
+  p.stroke(0, 0, 0, alpha * 200);
+  p.strokeWeight(0.8);
+  // 4-pointed star shape
+  p.fill(255, 215, 0, alpha * 255);
+  p.beginShape();
+  for (let i = 0; i < 8; i++) {
+    const angle = (i * Math.PI) / 4 - Math.PI / 2;
+    const r = i % 2 === 0 ? outer : inner;
+    p.vertex(sx + Math.cos(angle) * r, sy + Math.sin(angle) * r);
+  }
+  p.endShape(p.CLOSE);
+  p.pop();
+}
+
 // Draw a sprite image at fixed height, preserving aspect ratio.
 function drawDirectionalWithFixedHeight(p, img, x, y, anchorW, anchorH, fixedH = 32, bob = 0) {
   if (!img) return false;
@@ -457,6 +481,28 @@ export function renderEntities(p, state) {
     if (!camera.isRectVisible(worldX, worldY, worldW, worldH, 48)) continue;
     if (door.panels === 'double') drawDoubleDoor(p, door, tile);
     else drawSingleDoor(p, door, tile);
+    if (!door.visualOnly) {
+      // Sparkles only in room 5 (map1); comment out the roomId check to enable for all rooms
+      const doorRoomId = level.roomSystem.getRoomId(Math.floor(door.x), Math.floor(door.y));
+      if (doorRoomId === 5 || door.id === 'door_4') {
+        if (door.state === 'OPEN') {
+          drawSparkles(p, worldX, worldY, worldW, worldH);
+        } else {
+          // Door closed/locked: sparkles on left and right frame edges
+          drawSparkles(p, worldX - 4, worldY, 6, worldH);
+          drawSparkles(p, worldX + worldW - 2, worldY, 6, worldH);
+        }
+      }
+      // Other rooms sparkles commented out:
+      // if (doorRoomId !== 5) {
+      //   if (door.state === 'OPEN') {
+      //     drawSparkles(p, worldX, worldY, worldW, worldH);
+      //   } else {
+      //     drawSparkles(p, worldX - 4, worldY, 6, worldH);
+      //     drawSparkles(p, worldX + worldW - 2, worldY, 6, worldH);
+      //   }
+      // }
+    }
 
     // Render EXIT label and glow for exit doors (doorJ, door_3, door_K)
     if (door.keyId === 'key_exit') {
@@ -506,6 +552,14 @@ export function renderEntities(p, state) {
   for (const button of level.roomSystem.buttons) {
     if (!camera.isRectVisible(button.centerX - 10, button.centerY - 10, 20, 20, 16)) continue;
     renderButton(p, level, button);
+    // Sparkles only in room 5 (map1); uncomment below to enable for all rooms
+    if (button.roomId === 5) {
+      drawSparkles(p, button.centerX - 8, button.centerY - 8, 16, 16);
+    }
+    // Other rooms sparkles commented out:
+    // if (button.roomId !== 5) {
+    //   drawSparkles(p, button.centerX - 8, button.centerY - 8, 16, 16);
+    // }
   }
 
   renderPortals(p, level, camera, tile);
@@ -549,6 +603,15 @@ export function renderEntities(p, state) {
     const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
     if (!camera.isRectVisible(rx, ry, rw, rh, 24)) continue;
     drawChest(p, chest, tile, level);
+    // Sparkles only in room 5 (map1); uncomment below to enable for all rooms
+    const chestRoomId = level.roomSystem.getRoomId(Math.floor(chest.x), Math.floor(chest.y));
+    if (chestRoomId === 5) {
+      drawSparkles(p, rx, ry, rw, rh);
+    }
+    // Other rooms sparkles commented out:
+    // if (chestRoomId !== 5) {
+    //   drawSparkles(p, rx, ry, rw, rh);
+    // }
   }
 
   if (camera.isRectVisible(level.player.x, level.player.y, level.player.w, level.player.h, 64)) {
