@@ -861,11 +861,13 @@ We eventually sorted out our approach and finalized the correct sequential rende
 
 # 6. Evaluation
 
-## Qualitative
+## 6.1 Qualitative
 
 We chose a think-aloud usability study as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
 
-<img src="devlog/images/think-aloud.jpg" alt="think aloud mindmap" width="900" height="800">
+<p align="center">
+  <img src="devlog/images/think-aloud.jpg" alt="think aloud mindmap" width="900" height="800">
+</p>
 <p align="center">Figure 6: Think Aloud Summary</p>
 
 Several recurring issues arose across participants that warranted reconsideration. In response we made the following changes to the build:
@@ -877,7 +879,7 @@ Several recurring issues arose across participants that warranted reconsideratio
 - A tutorial mode was added to introduce mechanics
 - A bug where players could close a door while standing in the frame was fixed
 
-## Quantitative 
+## 6.2 Quantitative 
 
 We employed the System Usability Scale (SUS) as our quantitative method, a standardized 10-item Likert instrument that gives a single 0-100 usability score. SUS was a good fit because it is short enough to complete after a play session, it benchmarks against an established industry average of 68, and it does not require prior gaming experience.
 
@@ -886,48 +888,49 @@ Procedure：Ten participants were split into two groups of five to control for l
 - Group B (P6–P10): played Level 2 (Medium) then Level 1 (Easy)
 - Each participant completed the SUS form after each level, producing both an L1 and L2 score
 
-<div align="center"><strong>Table x - SUS Data Overview  </strong></div>
-
 <div align="center">
-
+    
 | **Participant** | **SUS L1** | **SUS L2** | **Difference** |
 | --------------- | ---------- | ---------- | -------------- |
-| P1              | 62.5       | 65         | 2.5            |
-| P2              | 80         | 82.5       | 2.5            |
-| P3              | 55         | 67.5       | 12.5           |
-| P4              | 77.5       | 80         | 2.5            |
-| P5              | 62.5       | 65         | 2.5            |
-| P6              | 80         | 65         | -15            |
-| P7              | 62.5       | 57.5       | -5             |
-| P8              | 82.5       | 80         | -2.5           |
-| P9              | 70         | 57.5       | -12.5          |
-| P10             | 90         | 87.5       | -2.5           |
-| Average         | 72.25      | 70.75      | -1.5           |
+| P1              | 67.5       | 72.5       | 5.0            |
+| P2              | 77.5       | 80.0       | 2.5            |
+| P3              | 65.0       | 80.0       | 15.0           |
+| P4              | 72.5       | 85.0       | 12.5           |
+| P5              | 70.0       | 70.0       | 0.0            |
+| P6              | 80.0       | 65.0       | -15.0          |
+| P7              | 62.5       | 57.5       | -5.0           |
+| P8              | 82.5       | 80.0       | -2.5           |
+| P9              | 70.0       | 57.5       | -12.5          |
+| P10             | 90.0       | 87.5       | -2.5           |
+| **Average**     | **73.75**  | **73.50**  | **-0.25**      |
 
 </div>
 
+<p align="center"><strong>Figure 7: SUS Data Overview</strong></p>
+
 **Graphical Representation**
 
-![](/devlog/images/line.jpg)
+<p align="center">
+  <img src="devlog/images/sus-scores-with-differences.png" alt="SUS Scores with Differences" width="900" height="800">
+</p>
+<p align="center">Figure 8: SUS Scores with Differences</p>
 
 **Statistical Analysis**
 
-The analysis yielded W = 21.5 with p = 0.9961 > 0.05, providing no evidence of significant distributional differences between game levels (p >> 0.05).
-
-Both levels demonstrated functionally equivalent performance: Level 1 (Mean = 73.75, SD = 8.60) and Level 2 (Mean = 73.50, SD = 10.81), with negligible mean difference of 0.25 points and trivial effect size (r = 0.002).
+The analysis yielded W = 21.5 with p = 0.9961 (p > 0.05), indicating no significant distributional differences between game levels.
+Both levels demonstrated functionally equivalent usability performance: Level 1 (Mean = 73.75, SD = 8.60) and Level 2 (Mean = 73.50, SD = 10.81), with a negligible mean difference of 0.25 points and trivial effect size (r = 0.002).
 
 **Interpretation**
 
-These results ran counter to our expectation that a second more advanced level would earn higher usability ratings due to increased familiarity. We saw two possible factors for this:
+These results ran counter to our expectation that a second, more advanced level would earn higher usability ratings due to increased familiarity. We identified two possible factors for this:
 
-1. The difficulty gap between the two levels may have been too narrow to produce different interaction demands.
-2. The deliberately consistent UI layout and controls across levels allowed knowledge transfer from L1 to L2.
+- The difficulty gap between the two levels may have been too narrow to produce different interaction demands.
+- The deliberately consistent UI layout and controls across levels facilitated knowledge transfer from L1 to L2.
 
-If players do not perceive a meaningfully different gameplay challenge between levels, the interface demands should remain roughly equal and produce near-identical scores, which is what we saw. 
+If players do not perceive a meaningfully different gameplay challenge between levels, the interface demands should remain roughly equal and produce near-identical scores, as reflected in our results.
+Both levels scored above the acceptable SUS benchmark of 68, confirming that users found the interface accessible regardless of level. Neither condition reached the "Excellent" threshold of 85, indicating room for improvement in interface responsiveness and feedback clarity. Our next design iteration should therefore differentiate levels more through stealth and routing demands rather than relying on larger maps or more guards. Additionally, we should sharpen feedback cues to move our scores closer to the excellent range.
 
-Both levels scored above the SUS benchmark of 68, which confirmed that users found the interface accessibly regardless of level. Neither condition reached the "Excellent" threshold of 85, indicating room for improvement in interface responsiveness and feedback clarity. Our next design iteration should therefor differentiate levels more in terms of stealth and routing demands, rather than relying on larger maps or more guards, and sharpen feedback cues to move our score closer to the excellent range.
-
-## Testing
+## 6.3 Testing
 
 Along with the user studies above, we ran a structured testing program to validate the code itself. The testing documentation lives under testing/ in the repository and is summarised below; full row-by-row execution records are kept in general_test_table.xlsx and npc_ep_test_cases.xlsx.
 
