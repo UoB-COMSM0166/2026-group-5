@@ -111,7 +111,7 @@ To consolidate our user stories into a player-facing view of the system and scop
 <img src="devlog/images/use_case_diagram.png" alt="Use case diagram">
 <p align="center">Figure 2: Use Case Diagram</p>
 
-The Player has three entry points into the system: starting a new game, viewing the tutorial, or playing a level. Starting a new game _includes_ selecting a playthrough and a difficulty as both are required to load a level. Playing a level _includes_ navigating the map, avoiding detection, collecting items in chests, and reaching the exit. These four are part of the core loop and can't be opted out of. Sprinting, using portals, or pausing the game are modelled as _extends_ relationships because they are optional. The player can complete a level only by walking and using the base controls. Pausing the game _extends_ itself further into viewing collected story notes or exiting to the title screen. The full use case specification for the Play Level use case is given below.
+The Player has three entry points into the system: starting a new game, viewing the tutorial, or playing a level. Starting a new game _includes_ selecting a playthrough and a difficulty as both are required to load a level. Playing a level _includes_ navigating the map, avoiding detection, collecting items in chests, and reaching the exit. These four are part of the core loop and can't be opted out of. Sprinting, using portals, or pausing the game are modelled as _extends_ relationships because they are optional, as the player can theoretically complete a level only by walking and using the base controls. Pausing the game _extends_ itself further into viewing collected story notes or exiting to the title screen. The full use case specification for the Play Level use case is given below.
 
 | Field         | Specification            | 
 | ------------- | ------------------------ | 
@@ -212,22 +212,30 @@ We eventually sorted out our approach and finalized the correct sequential rende
 
 ## Qualitative
 
+We chose a think-aloud usability study as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
+
 <img src="devlog/images/think-aloud.jpg" alt="think aloud mindmap" width="900" height="800">
+<p align="center">Figure 6: Think Aloud Summary</p>
 
-Changes made:
+Several recurring issues arose across participants that warranted reconsideration. In response we made the following changes to the build:
 
+- Doors were widened and their interaction was simplified
+- Sprinting speed was lowered to increase difficulty
+- Additional cover was provided so that breaking line of sight became a viable recovery tactic
+- Controls were reworked to include arrow keys as well as WASD, and the HUD was reworked to more prominently display key bindings
+- A tutorial mode was added to introduce mechanics
+- A bug where players could close a door while standing in the frame was fixed
 
 ## Quantitative 
 
-We employed the System Usability Scale (SUS), a quick and reliable standardized questionnaire developed by John Brooke in 1986 for measuring the perceived usability of a system through 10 Likert-scale items, as a quantitative method. Upon completion, we exchanged reflections with the participants to ensure the effectiveness of the data analysis.
+We employed the System Usability Scale (SUS) as our quantitative method, a standardized 10-item Likert instrument that gives a single 0-100 usability score. SUS was a good fit because it is short enough to complete after a play session, it benchmarks against an established industry average of 68, and it does not require prior gaming experience.
 
-Procedure：
-- Group A, 5 people, P1–P5: L1→L2
-- Group B, 5 people, P6–P10: L2→L1
-- Each user plays one difficulty level and then fills out the SUS form.
-- Tips: Give each participant a sticky note with their ID in case they forget.
+Procedure：Ten participants were split into two groups of five to control for learning effects.
+- Group A (P1–P5): played Level 1 (Easy) then Level 2 (Medium)
+- Group B (P6–P10): played Level 2 (Medium) then Level 1 (Easy)
+- Each participant completed the SUS form after each level, producing both an L1 and L2 score
 
-<div align="center"><strong>Table x - Data Overview  </strong></div>
+<div align="center"><strong>Table x - SUS Data Overview  </strong></div>
 
 <div align="center">
 
@@ -249,20 +257,39 @@ Procedure：
 
 **Graphical Representation**
 
-
 ![](/devlog/images/line.jpg)
 
+**Statistical Analysis**
+
+The analysis yielded W = 21.5 with p = 0.9961 > 0.05, providing no evidence of significant distributional differences between game levels (p >> 0.05).
+
+Both levels demonstrated functionally equivalent performance: Level 1 (Mean = 73.75, SD = 8.60) and Level 2 (Mean = 73.50, SD = 10.81), with negligible mean difference of 0.25 points and trivial effect size (r = 0.002).
 
 **Interpretation**
 
-Statistical Analysis: 
-The analysis yielded W = 21.5 with p = 0.9961 > 0.05, providing no evidence of significant distributional differences between game levels (p >> 0.05).
-Both levels demonstrated functionally equivalent performance: Level 1 (M = 73.75, SD = 8.60) and Level 2 (M = 73.50, SD = 10.81), with negligible mean difference of 0.25 points and trivial effect size (r = 0.002).
+These results ran counter to our expectation that a second more advanced level would earn higher usability ratings due to increased familiarity. We saw two possible factors for this:
 
-The results indicated a slight difference in usability perception between Level 1 and Level 2. On average, the SUS score for Level 1 was 72.25, while Level 2 had a marginally lower average of 70.75. This minimal difference (Δ = 1.5) was contrary to the expectation that a more advanced level might yield higher usability ratings through accumulated familiarity. A contributing factor may be the insufficient difficulty differentiation between the two levels — if players did not perceive a meaningful contrast in gameplay challenge, the interface demands across both conditions would remain largely equivalent, naturally producing similar usability ratings. The consistent UI layout and interaction patterns maintained across levels further reinforced this effect, allowing knowledge transfer with minimal friction but also limiting opportunities to observe usability variance.
+1. The difficulty gap between the two levels may have been too narrow to produce different interaction demands.
+2. The deliberately consistent UI layout and controls across levels allowed knowledge transfer from L1 to L2.
 
-Overall, both levels scored above the general SUS benchmark of 68, confirming that users found the interface reasonably accessible regardless of level. However, neither condition reached the "Excellent" threshold (SUS ≥ 85), indicating room for improvement in interface responsiveness and feedback clarity. The lack of perceived difficulty distinction between levels also suggests that future design iterations should establish more pronounced gameplay differentiation, ensuring that usability evaluations reflect genuinely varied interaction demands rather than near-identical experiences across conditions.
+If players do not perceive a meaningfully different gameplay challenge between levels, the interface demands should remain roughly equal and produce near-identical scores, which is what we saw. 
 
+Both levels scored above the SUS benchmark of 68, which confirmed that users found the interface accessibly regardless of level. Neither condition reached the "Excellent" threshold of 85, indicating room for improvement in interface responsiveness and feedback clarity. Our next design iteration should therefor differentiate levels more in terms of stealth and routing demands, rather than relying on larger maps or more guards, and sharpen feedback cues to move our score closer to the excellent range.
+
+## Testing
+
+Along with the user studies above, we ran a structured testing program to validate the code itself. The testing documentation lives under testing/ in the repository and is summarised below; full row-by-row execution records are kept in general_test_table.xlsx and npc_ep_test_cases.xlsx.
+
+**Methodology**. We applied four testing techniques. 
+
+| **Technique** | **Number of Cases** | **Systems Tested** |
+| --------------- | ---------- | ---------- | 
+| Black-box testing          | 51       | Used for player-visible behaviour. This covered launch flow, screen transitions, gameplay rendering, controls, audio, interactions, objectives, endings, deployment, and game-state flow. | 
+| White-box testing          | 10       | Used for selected internal logic. These tests checked state routing, audio sync, layout helpers, overlay rendering guards, interaction prompt priority, door state transitions, mission unlock logic, and input reset behaviour. | 
+| Boundary-value testing     | 10       | Used for edge cases. These included first input, rapid input, small and large browser windows, loading delay, hold thresholds, and repeated door interaction. | 
+| Equivalence partitioning   | 7        | Used for NPC state transitions. NPC state behaviour was divided into representative classes based on current NPC state, player visibility, alert level, and trigger/completion condition. | 
+
+**Results**. The final result was 78/78 cases passing with 0 open bugs. Two defects were found during testing and were fixed before submission: B01, a high-severity UI scaling failure when the browser window was resized, and B02, a tutorial-exit bug where pressing E at the end of the story-mode tutorial returned the player to the start page. The failing test rows were retested after each fix and now record Pass, while the bug log keeps the historical defect record for traceability. 
 
 # 7. Process 
 
