@@ -482,19 +482,18 @@ export function renderEntities(p, state) {
     if (door.panels === 'double') drawDoubleDoor(p, door, tile);
     else drawSingleDoor(p, door, tile);
     if (!door.visualOnly) {
-      // Sparkles only in room 5 (map1); comment out the roomId check to enable for all rooms
+      // Sparkles only in room 5 of map1; remove the levelId/roomId checks to enable globally
       const doorRoomId = level.roomSystem.getRoomId(Math.floor(door.x), Math.floor(door.y));
-      if (doorRoomId === 5 || door.id === 'door_4') {
+      if (state.levelId === 'map1' && (doorRoomId === 5 || door.id === 'door_4')) {
         if (door.state === 'OPEN') {
           drawSparkles(p, worldX, worldY, worldW, worldH);
         } else {
-          // Door closed/locked: sparkles on left and right frame edges
           drawSparkles(p, worldX - 4, worldY, 6, worldH);
           drawSparkles(p, worldX + worldW - 2, worldY, 6, worldH);
         }
       }
-      // Other rooms sparkles commented out:
-      // if (doorRoomId !== 5) {
+      // Other maps / rooms sparkles commented out:
+      // if (state.levelId !== 'map1' || (doorRoomId !== 5 && door.id !== 'door_4')) {
       //   if (door.state === 'OPEN') {
       //     drawSparkles(p, worldX, worldY, worldW, worldH);
       //   } else {
@@ -552,12 +551,12 @@ export function renderEntities(p, state) {
   for (const button of level.roomSystem.buttons) {
     if (!camera.isRectVisible(button.centerX - 10, button.centerY - 10, 20, 20, 16)) continue;
     renderButton(p, level, button);
-    // Sparkles only in room 5 (map1); uncomment below to enable for all rooms
-    if (button.roomId === 5) {
+    // Sparkles only in room 5 of map1; remove the levelId/roomId checks to enable globally
+    if (state.levelId === 'map1' && button.roomId === 5) {
       drawSparkles(p, button.centerX - 8, button.centerY - 8, 16, 16);
     }
-    // Other rooms sparkles commented out:
-    // if (button.roomId !== 5) {
+    // Other maps / rooms sparkles commented out:
+    // if (state.levelId !== 'map1' || button.roomId !== 5) {
     //   drawSparkles(p, button.centerX - 8, button.centerY - 8, 16, 16);
     // }
   }
@@ -603,13 +602,13 @@ export function renderEntities(p, state) {
     const ry = chest.y * tile + (chest.renderOffsetY || 0) * tile;
     if (!camera.isRectVisible(rx, ry, rw, rh, 24)) continue;
     drawChest(p, chest, tile, level);
-    // Sparkles only in room 5 (map1); uncomment below to enable for all rooms
+    // Sparkles only in room 5 of map1; remove the levelId/roomId checks to enable globally
     const chestRoomId = level.roomSystem.getRoomId(Math.floor(chest.x), Math.floor(chest.y));
-    if (chestRoomId === 5) {
+    if (state.levelId === 'map1' && chestRoomId === 5) {
       drawSparkles(p, rx, ry, rw, rh);
     }
-    // Other rooms sparkles commented out:
-    // if (chestRoomId !== 5) {
+    // Other maps / rooms sparkles commented out:
+    // if (state.levelId !== 'map1' || chestRoomId !== 5) {
     //   drawSparkles(p, rx, ry, rw, rh);
     // }
   }
