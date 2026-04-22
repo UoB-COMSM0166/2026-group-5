@@ -33,10 +33,6 @@
 
 Our game is inspired by Invisible Inc., The Were Cleaner, and the Thief series for their stealth-focused gameplay and emphasis on problem solving over direct confrontation. Players must study patrol routes and sneak through the castle, avoiding being seen (or heard), unless they want to become a snack for the stylish, sunglasses-wearing dragon. 
 
-https://github.com/user-attachments/assets/88d7cc92-bbeb-496c-903a-57cc5a493f2e
-
-https://github.com/user-attachments/assets/4bdb69d2-5167-44dd-834c-28154986fde5
-
 The twist mechanic was inspired by Valve's Portal series. Players can place linked portals to quickly and strategically navigate the castle's interior, bypass dangerous chokepoints, or recover from risky plays. This mechanic is built directly into our game's core stealth navigation, creating constant tactical choices between planning safe routes and improvising under pressure. 
 
 The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the kingdom's chaos may be an unintended consequence of one unbelievably un-self-aware hero.
@@ -62,11 +58,24 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 - Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
 
 ## Ideation
-During the ideation process, team members took turns proposing their ideas. Our initial list contained several concepts, but three quickly became the frontrunners: a tactical stealth game inspired by Invisible Inc., a rogue-like, and a Bomberman clone. The team spent a great deal of time debating on the merits of each idea, considering factors such as difficulty of implementation, originality, player enjoyment, and how excited we were about the concept as developers.
+During the ideation process, team members took turns proposing their ideas. Our initial list contained several concepts, but three quickly became the frontrunners: a tactical stealth game inspired by Invisible Inc. and The Were Cleaner, a rogue-like, and a Bomberman clone. The team spent a great deal of time debating on the merits of each idea, considering factors such as difficulty of implementation, originality, player enjoyment, and how excited we were about the concept as developers.
+
+https://github.com/user-attachments/assets/b10edfd1-4337-47ff-91ac-f8038991df29
+<p align="center">Video 1: Inspiration - Invisible Inc.</p>
+
+https://github.com/user-attachments/assets/74a8758c-af38-4798-808c-7c11fce48a90
+<p align="center">Video 2: Inspiration - The Were Cleaner</p>
 
 Due to the semester-long nature of the course, the difficulty and time it would take to implement a game became deciding factors. Because of that, we decided that the rogue-like would not be feasible to complete to a satisfactory level given our timeframe. We created paper prototypes for the remaining two ideas and presented them to classmates.
 
-For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
+For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. 
+
+https://github.com/user-attachments/assets/9940a5db-5fca-4c4e-b8e4-658c5386039b
+<p align="center">Video 3: Paper Prototype - Stealth Game</p>
+
+For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
+
+<img src="devlog/images/prototype_bomberman.jpg" alt="Onion Model">
 
 ## Stakeholders
 
