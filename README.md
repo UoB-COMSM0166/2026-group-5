@@ -35,6 +35,10 @@ Our game is inspired by Invisible Inc., The Were Cleaner, and the Thief series f
 
 The twist mechanic was inspired by Valve's Portal series. Players can place linked portals to quickly and strategically navigate the castle's interior, bypass dangerous chokepoints, or recover from risky plays. This mechanic is built directly into our game's core stealth navigation, creating constant tactical choices between planning safe routes and improvising under pressure. 
 
+<p align="center">
+  <img width="640" src="devlog/images/cutscene1.png">
+</p>
+
 The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the kingdom's chaos may be an unintended consequence of one unbelievably un-self-aware hero.
 
 
@@ -75,13 +79,17 @@ https://github.com/user-attachments/assets/9940a5db-5fca-4c4e-b8e4-658c5386039b
 
 For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
 
-<img src="devlog/images/prototype_bomberman.jpg" alt="Onion Model">
+<p align="center">
+    <img width="640" src="devlog/images/prototype_bomberman.jpg" alt="Bomberman Paper Prototype">    
+</p>
 
 ## Stakeholders
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
-<img src="devlog/images/onion_model.png" alt="Onion Model">
+<p align="center">
+    <img width="640" src="devlog/images/onion_model.png" alt="Onion Model">    
+</p>
 <p align="center">Figure 1: Stakeholder Onion Model</p>
 
 The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (dev team, teaching staff). The Wider Environment captures university-level constraints and infrastructure.
