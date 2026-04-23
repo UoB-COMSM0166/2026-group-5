@@ -173,18 +173,19 @@ button:hover { filter: brightness(1.08); }
 .collectibles-row {
   display: flex;
   gap: 10px;
-  margin: 6px 0;
+  margin: 3px 0 0 0;
 }
 
 .chest-counter,
 .key-counter {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 3px 6px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   width: fit-content;
+  font-size: calc(9px * var(--s, 1));
 }
 
 .chest-icon {
@@ -202,17 +203,41 @@ button:hover { filter: brightness(1.08); }
 .note-counter {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 6px 0;
-  padding: 4px 8px;
+  gap: 4px;
+  padding: 3px 6px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   width: fit-content;
+  font-size: calc(9px * var(--s, 1));
 }
 
 .note-icon {
   width: calc(24px * var(--s, 1));
   height: calc(24px * var(--s, 1));
+  image-rendering: pixelated;
+}
+
+.interactive-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  width: fit-content;
+  font-size: calc(8px * var(--s, 1));
+  margin-top: 3px !important;
+}
+
+.interactive-icon {
+  width: calc(24px * var(--s, 1));
+  height: calc(24px * var(--s, 1));
+  image-rendering: pixelated;
+}
+
+.interactive-icon-auto {
+  height: calc(24px * var(--s, 1));
+  width: auto;
   image-rendering: pixelated;
 }
 
