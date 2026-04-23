@@ -39,12 +39,13 @@ The twist mechanic was inspired by Valve's Portal series. Players can place link
   <img width="640" src="devlog/images/cutscene1.png">
 </p>
 
-The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the kingdom's chaos may be an unintended consequence of one unbelievably un-self-aware hero.
-
+The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the truth behind the kingdom’s unrest is stranger, darker, and far less convenient than it first appears.
 
 # 2. Development Team
 
-<img src="devlog/images/group-pic.jpeg" alt="Group pic" width="900" height="800">
+<div align="center">
+  <img src="devlog/images/group-pic.jpeg" alt="Group pic" width="900" height="800">
+</div>
 
 | Person        | Email                 | GitHub                 | Roles                                                      |
 | ------------- | --------------------- | ---------------------- | ---------------------------------------------------------- |
@@ -55,13 +56,12 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 | Frida Chen    | ba25966@bristol.ac.uk | @fridachen1127         | QA Lead, Github Review, Documentation                      |
 | Jinni Li      | ra25313@bristol.ac.uk | @Jinni-Li              | Project Manager, Front-end Developer, QA                   |
 
-
 # 3. Requirements 
 
 - 15% ~750 words
 - Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
 
-## Ideation
+## 3.1 Ideation
 During the ideation process, team members took turns proposing their ideas. Our initial list contained several concepts, but three quickly became the frontrunners: a tactical stealth game inspired by Invisible Inc. and The WereCleaner, a rogue-like, and a Bomberman clone. The team spent a great deal of time debating on the merits of each idea, considering factors such as difficulty of implementation, originality, player enjoyment, and how excited we were about the concept as developers.
 
 <div align="center">
@@ -86,8 +86,9 @@ For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and
 <p align="center">
     <img width="640" src="devlog/images/prototype_bomberman.jpg" alt="Bomberman Paper Prototype">    
 </p>
+<p align="center">Paper Prototype - Bomberman Clone</p>
 
-## Stakeholders
+## 3.2 Stakeholders
 
 The following figure shows our Stakeholder Onion Model, with layers indicated in the image.
 
@@ -96,9 +97,9 @@ The following figure shows our Stakeholder Onion Model, with layers indicated in
 </p>
 <p align="center">Figure 1: Stakeholder Onion Model</p>
 
-The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (dev team, teaching staff). The Wider Environment captures university-level constraints and infrastructure.
+The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (development team and teaching staff). The Wider Environment captures university-level constraints and infrastructure. Stakeholders here are represented as roles, though the same individuals may serve as lecturers/TAs and also act as assessors.
 
-## Epics and User Stories
+## 3.3 Epics and User Stories
 
 We used an epic-driven approach to define our feature scope. Each epic represents a major gameplay system, with user stories capturing specific player needs. These stories were then tracked as GitHub issues to manage implementation and progress.
 
@@ -127,7 +128,7 @@ Below are the user stories for our first epic, Stealth and Movement. Please see 
 | U1.7          | As a player, I want to fail only when a guard reaches me in a chase so that mistakes feel fair and understandable.    | High            |
 | U1.8          | As a player, I want to preview nearby danger (panning camera) so I can scout safely before advancing.    | Medium            |
 
-## Use Case Diagram
+## 3.4 Use Case Diagram
 
 To consolidate our user stories into a player-facing view of the system and scope the behavior we planned to implement, we created the use case diagram shown below. 
 
@@ -155,19 +156,21 @@ The Player has three entry points into the system: starting a new game, viewing 
 - 15% ~750 words 
 - System architecture. Class diagrams, behavioural diagrams.
 
-## System Architecture
+## 4.1 System Architecture
 
 Escape: Oh Dear Dragon! is built upon p5.js, organized as ES modules under src/ with a layered architecture. At the top, main.js creates a p5 instance and forwards its hooks (setup, draw, keyPressed, mousePressed, etc.) into a single GameCore controller. GameCore then owns the per-frame loop and holds all other top level subsystems, including GameState, InputSystem, AudioSystem, a ScreenOverlaySystem that wraps a ScreenManager, and a Camera. GameCore.render() hands state off to the renderSystem, which handles maps, lighting, entities, fog of war, and UI.
 
 Gameplay state lives inside a Level object built by mapFactory from map specs in mapManager. The Level object composes five gameplay systems (DoorSystem, BoxSystem, RoomSystem, MissionSystem, and PortalSystem) plus a Player and an array of NPCs, both of which extend an abstract Entity. The per-frame update in GameCore follows a fixed structure:
 
-<p align="center">Advance overlay -> update player movement -> resolve portals -> update camera -> tick world systems -> update NPCs and check for detection -> resolve interactions</p>
+<div align="center">
+  <img width="640" src="devlog/images/gamecore_flow.png" alt="Per-frame update structure">  
+</div>
 
 NPC behavior is split across function modules (npcSystem, npcStateMachine, pathfindingSystem, npcTrackerSystem) rather than being handled by a single class. The NPC class contains NPC data, and the state machine is driven by external functions that handle things like reading vision cones, room lighting, and player footstep trails to decide what each guard does.
 
 An abstract Screen class defines render, update, reset, handleKey/handleMouse hooks, and 13 screens inherit from it. ScreenManager holds the screens by name and forwards calls to whichever screen is active, and GameCore transitions between screens via a setScreen function which handles input resets, text, overlay, and audio. 
 
-## Class Diagram
+## 4.2 Class Diagram
 
 ```mermaid
 ---
@@ -659,7 +662,7 @@ classDiagram
 
 The class diagram above shows the structure of the codebase. Composition is used throughout our project to allow us to build complex behavior from several smaller pieces. For example, GameCore owns its subsystems, Level owns its systems, and ScreenManager owns its screens. This approach gives use clear object lifetimes and makes each subsystem independently testable. With a composition approach, we are able to use GameState as a container that holds the current Level, so swapping levels requires reassignment rather than tearing the world down completely. The screens and the gameplay would are also fully decoupled, which lets us add new screens, like multiple endings, without touching the gameplay loop.
 
-## Game Loop Sequence Diagram
+## 4.3 Game Loop Sequence Diagram
 
 ```mermaid
 ---
@@ -790,7 +793,7 @@ sequenceDiagram
 
 Figure 4 below captures how the core game loop functions in our project. The loop begins when p5's draw callback fires, which then causes GameCore.update(dt) to drive each subsystem in a fixed order, ending with render(p) handing the p5 instance to the render system. The ordering of each subsystem matters because several subsystems read state written by earlier ones. For example, MissionSystem checks the player's position after playerSystem has moved them, and the interactionSystem checks door, box, and button states after DoorSystem and RoomSystem have triggered. This rigid approach keeps the game determinisitic and free of inter-system race conditions and makes adding new systems simple. For any new system to be added, we need to only find the right point in the sequence to insert it.
 
-## NPC State Machine
+## 4.4 NPC State Machine
 
 ```mermaid
 ---
@@ -838,7 +841,7 @@ PATROL can also be interrupted directly into SEARCH in 3 different ways. Players
 
 During the development process, the guard AI's movement and decision making and the map rendering system stood out as the greatest technical challenges. The development and implementation of each system is described in further detail below.
 
-## Challenge 1: NPC Pursuit AI
+## 5.1 Challenge 1: NPC Pursuit AI
 
 Key to developing the kind of game we wanted was to build an NPC movement system that would reliably chase the player through multi-room environments and respond to player behavior. This meant balancing four competing goals at the same time:
 
@@ -859,7 +862,7 @@ These two strategies resulted in guards that could weave through obstacles in a 
 
 With this combined approach, we achieved NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
 
-## Challenge 2: Map Rendering
+## 5.2 Challenge 2: Map Rendering
 
 Our second challenge was map rendering. Initially, we planned on placing all content on a single layer like a jigsaw puzzle but found out that this approach ran counter to the principle of low coupling, resulting in interdependencies between several elements. As a result, we designed a layer rendering architecture where each layer is rendered independently, with transformation states managed with p5's push()/pop() methods. Although we started development with native HTML Canvas, we quickly realized that p5.js was necessary for the project, and after consulting our instructors, we abandoned the original plan and made the switch to p5.
 
@@ -918,7 +921,7 @@ Procedure：Ten participants were split into two groups of five to control for l
 
 </div>
 
-<p align="center"><strong>Figure 7: SUS Data Overview</strong></p>
+<p align="center">Figure 7: SUS Data Overview</p>
 
 **Graphical Representation**
 
@@ -963,29 +966,29 @@ Along with the user studies above, we ran a structured testing program to valida
 
 - Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
 
-## Team Roles
+## 7.1 Team Roles
 
 Our team divided responsibilities early on based on each member's prior interests and experience. The full breakdown is shown in _Table 1_ above. Defining roles early gave us a starting point and reduced confusion over ownership. In practice, responsibilities still overlapped so our workflow was more collaborative than the role list suggests.
 
-## Methodology
+## 7.2 Methodology
 
 We initially planned to follow a Scrum-style agile methodology with fixed-length sprints, sprint backlogs, standups, reviews, and retrospectives. In practice, we ran two sprints of uneven length (two weeks and three weeks) before the formal process fell away. Most of the team had not worked in an agile/Scrum context before, and with the pressure of the project timeline, we moved toward lighter-weight coordination that the whole team could participate in and feel comfortable with. 
 
 User stories were translated into issues and placed on our Kanban board during the first sprint, prioritizing tasks that other systems depended on. Unfinished tasks from sprint one and additional user stories from our sprint backlog were added to sprint two. Neither sprint was executed strictly, and as a team we were more successful at tracking what needed to be done rather than enforcing when it had to be done. 
 
-## Communication and Meeting Cadence
+## 7.3 Communication and Meeting Cadence
 
 Communication was one of the more successful parts of our process. We met three times a week after class to share progress, discuss blockers, and decide what each person should complete before the next meeting. These meetings were not formal Scrum standups though they did share some similarities, and most importantly, kept the team aligned. 
 
 Outside meetings, we used WhatsApp for questions, receiving feedback, and providing progress updates. It worked well for us because it was immediate, familiar, and easy to engage with. Although our process frameworks were inconsistent, our communication habits were reliable, which helped us compensate for weaknesses elsewhere.
 
-## Tools and Documentation
+## 7.4 Tools and Documentation
 
 Google Drive became the home for everything that wasn't code, including meeting notes, weekly updates, and supporting documentation. We developed an intuitive and organized folder structure which made it easier to find the latest version of documents and reduced confusion. 
 
 GitHub held our codebase and our Kanban board, and after an initial adjustment period (discussed below), it became the source of all files. We authored a GitHub contributing guide early in the project, covering branching conventions, commit message format, PR etiquette, and a definition of done. Although the guide was not strictly followed, it did establish a set of expectations that the team eventually adapted in our development process.
 
-## The Learning Phase
+## 7.5 The Learning Phase
 
 Early in the project, most development happened through live coding sessions with extended voice calls rather than through the repository. This strategy had some advantages, like quick feedback, team-based problem solving, and strengthening team cohesion, but its limitations became clear as our codebase grew. Contributions were hard to attribute to each individual and integration happened in large bulk commits instead of small, reviewable increments. The repo's history did not reflect the pace at which the work was actually being done, which reduced the value of GitHub as a development tool. 
 
@@ -993,7 +996,7 @@ After speaking with our instructors, we moved development and all of our documen
 
 We now acknowledge that it would have been easier to start that way, but experiencing the problems first-hand gave everyone an understanding of why git-based workflows exist. That lesson is likely to stay with us more clearly than if we had followed the correct process from day one.
 
-## Reflection
+## 7.6 Reflection
 
 The process side of the project is where we learned the most. As a team we celebrate: 
 
@@ -1022,13 +1025,15 @@ These issues did not prevent us from completing the project, but they made parts
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
+## 9.1 Reflection
+
 Building **Escape: Oh Dear Dragon!** gave our team our first experience of taking an idea into a playable build, along with a solid idea of what software engineering in a team looks like. We accomplished what we set out to do and created a 2D stealth game with a neon-cyberpunk aesthetic, responsive guard AI, and a story twist that subverts the established "rescue the princess" trope. As a team, we think the game is fun to play and tells a fun, short story, and of that we are proud.
 
 On the technical side, we learned that a stealth game is an AI problem disguised as a level design problem. Every decision about levels, cover objects, and object interactions came down to how the guards interacted with the player and the environment. Getting the NPC state machine and pathfinding algorithm to cooperate was the most challenging and time consuming task, but also one that was most rewarded, as it was the core game mechanic on which everything else hinged.
 
 On the process side, our attempt to adopt Scrum formally was less successful than the Kanban and frequent meetings approach we utilized early on. Our consistent communication and strong documentation allowed us to overcome the challenges that came from not using any formal version control until our project grew in size. The git workflow we eventually settled into was one we arrived at through iteration, and was a valuable learning experience for our team. 
 
-## Next Steps for Escape: Oh Dear Dragon!
+## 9.2 Next Steps for Escape: Oh Dear Dragon!
 
 The feature we were unable to implement is a consumable item system that we set as a goal in case we finished development ahead of schedule. We planned on implementing invisibility cloaks, guard disguises, and stun bombs that would give the player a more versatile toolkit for handling enemy encounters. 
 
@@ -1039,7 +1044,7 @@ Some other ideas we have for enhancing the game include:
 - Note-driven side objectives
 - Increased focus on accessibility (colorblind-safe colors, remappable controls, resizable UI)
 
-## Sequel Ideas
+## 9.3 Sequel Ideas
 
 The story ends with the hero freeing the dragon and leaving the princess in the ruins of the dungeon, having foiled her plans. This narrative lends itself naturally to a sequel as the princess seeks revenge by capturing the hero and imprisoning him. The player would take the role of the hero escaping the princess's dungeon, preserving the game's core stealth mechanic while inverting the power dynamic. The sequel would also be a good place to attempt a 3D game and potentially experiment with cooperative multiplayer.
 
@@ -1048,7 +1053,7 @@ The story ends with the hero freeing the dragon and leaving the princess in the 
 </div>
 <p align="center">3D Sequel Mockup</p>
 
-## Closing Thoughts
+## 9.4 Closing Thoughts
 
 Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with us into the summer project and eventually, our careers. 
 
