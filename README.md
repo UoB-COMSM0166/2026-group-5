@@ -947,7 +947,7 @@ Both levels scored above the acceptable SUS benchmark of 68, confirming that use
 
 ## 6.3 Testing
 
-Along with the user studies above, we ran a structured testing program to validate the code itself. The testing documentation lives under testing/ in the repository and is summarised below; full row-by-row execution records are kept in general_test_table.xlsx and npc_ep_test_cases.xlsx.
+Along with the user studies above, we ran a structured testing program to validate the code itself. The testing documentation lives under testing/ in the repository and is summarised below. Full row-by-row execution records are kept in general_test_table.xlsx and npc_ep_test_cases.xlsx.
 
 **Methodology**. We applied four testing techniques. 
 
@@ -996,6 +996,23 @@ After speaking with our instructors, we moved development and all of our documen
 
 We now acknowledge that it would have been easier to start that way, but experiencing the problems first-hand gave everyone an understanding of why git-based workflows exist. That lesson is likely to stay with us more clearly than if we had followed the correct process from day one.
 
+<p align="center">Weekly Progress</p>
+
+| Week       | Description                                                                                                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Week 1     | Initial group discussions and idea exploration; project proposal, GitHub template, and Google Drive were set up; early research on similar games, art direction, and gameplay inspiration was conducted.                    |
+| Week 2     | Ownership distribution and gameplay direction were discussed; workflow planning, Kanban setup, and meeting documentation were developed; early design work on mechanics, art concepts, and prototype ideas was carried out. |
+| Week 3     | The core game loop was defined; user stories were expanded; detailed gameplay and coding design documents were produced; prototype materials were uploaded and implementation planning became more structured.              |
+| Week 4     | The team reviewed whether to change the original game idea but decided to keep it; work continued on documentation, coding references, asset planning, and system design; some role responsibilities became clearer.        |
+| Week 5     | Initial production work began, including game asset creation, UX/UI materials, diagrams, and screen-related content; technical preparation also continued through module design and contribution guidelines.                |
+| Week 6     | Coding started; the underlying architecture and main game loop began to be built; UX/UI asset creation, map generation, and supporting evaluation materials also progressed.                                                |
+| Week 7     | The group focused on integration and gameplay systems, including scene-related code, NPC patrol and alert systems, stamina mechanics, animations, sprites, and maps; onsite evaluation tasks were also carried out.         |
+| Week 8     | Work continued on asset generation, refactoring, game integration, visual effects, and statistical evaluation; sprint roles and task distribution were also reviewed.                                                       |
+| Week 9     | The project shifted toward testing, with preparation of testing documents, procedures, and supporting materials, while some technical and animation work also continued.                                                    |
+| Week 10–12 | Progress slowed due to spring break and celebration week, but work still continued on screen creation, endings development, portal implementation, animation, and report support.                                           |
+| Week 13    | The team focused on final feature completion, including the notes feature, on-screen notifications, tutorial creation, testing completion, bug fixing, and music and sound effects.                                         |
+| Week 14    | Final work centred on report writing, remaining fixes and improvements, video production, and overall project wrap-up.                                                                                                      |
+
 ## 7.6 Reflection
 
 The process side of the project is where we learned the most. As a team we celebrate: 
@@ -1011,6 +1028,16 @@ At the same time, we recognise several weaknesses in how we worked:
 - Our contributing guide and sprint boards were set up but not followed rigorously
 - Our GitHub workflow developed gradually instead of being established properly from the start
 
+<p align="center">Process Changes Over Time</p>
+
+| Category        | Before                          | Now  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow        | There were differences in preferred working styles: some preferred short meetings for updates, while others preferred onsite meetings to discuss ideas and work directly on the project together. | We hold regular meetings for short updates with the whole group, as well as one-to-one meetings when developing or collaborating on the same module.                                        |
+| Workflow        | In the first few weeks, we worked mainly through Google Drive and private chats, so some contributions and progress were harder to track.                                                         | Google Drive is now used only for visualization, and no further updates are made there. All changes are now made and tracked through GitHub.                                                |
+| Documentation   | Some early decisions and contributions were discussed informally, which made them harder to trace later.                                                                                          | Important decisions, meeting notes, and task changes are now documented more consistently to improve transparency.                                                                          |
+| Task Allocation | Responsibilities were not always clearly defined, and some members had different expectations about their roles.                                                                                  | Now each member’s responsibilities are documented to make contributions easier to track. Also we will talk about how to split and rotate tasks so everybody can touch a little bit of code. |
+
+
 These issues did not prevent us from completing the project, but they made parts of the process less efficient than they should have been. The most important outcome is that we adapted as the project progressed and now have a clearer understanding of how we would organise a similar project in future. In particular, we would establish a repository-centred workflow earlier, keep sprint structures simpler and more realistic, and maintain the strong communication habits that worked well for us throughout. 
 
 # 8. Sustainability, Ethics, and Accessibility
@@ -1019,7 +1046,7 @@ These issues did not prevent us from completing the project, but they made parts
 
 - Evidence of the impact of your game across the environment + 2 of the following: social, economic, technical, individual
 
-8.1 Sustainability Awareness Framework (SusAF)
+## 8.1 Sustainability Awareness Framework (SusAF)
 
 Our reflection on our game's wider impact focuses on the three dimensions that our design decisions impacted the most: environmental, social, and individual.
 
