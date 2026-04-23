@@ -1019,6 +1019,31 @@ These issues did not prevent us from completing the project, but they made parts
 
 - Evidence of the impact of your game across the environment + 2 of the following: social, economic, technical, individual
 
+8.1 Sustainability Awareness Framework (SusAF)
+
+Our reflection on our game's wider impact focuses on the three dimensions that our design decisions impacted the most: environmental, social, and individual.
+
+### Environmental
+
+### Social
+
+On the inclusiveness and diversity front, our initial approach was to make a game that was playable with one hand to support one-handed players. The original control structure is shown below. However, we also received feedback that this layout felt too clustered for many players, so we added the ability to control the character with the arrow keys. In future iterations, we would develop a similar one hand layout on the right side of the keyboard to accommodate multiple preferences. 
+
+<p align="center">
+  <img src="devlog/images/keyboard_layout.png" alt="Control Layout" width="640">
+</p>
+<p align="center">Control Layout</p>
+
+A tutorial mode was also added after usability testing to introduce mechanics gradually rather than assuming prior gaming experience. Game text was tested against WCAG contrast ratio guidelines using WebAIM's contrast checker and passed both AA and AAA tests.
+
+We do acknowledge that the current build does not have a colorblind-safe mode, no option to change text size, and no option to resize the UI, and these are clear accessibility extensions for future versions of the game.
+
+### Individual
+
+On the individual dimension, we intentionally built the game to be playable without collecting personal data of any kind. Our game does not require an account, collects no analytics, does not use third-party tracking scripts, cookies, or persistent storage. A player's session is entirely local to their browser and does not leave any trace on our end once the tab is closed. This was an intentional decision we made early on as we did not find any compelling gameplay reason to introduce data collection, particularly for a student project.
+
+Player agency is supported in many practical ways. The game can be paused at any time, exited to the title screen mid-level, or restarted without penalty. Failure states are gentle and simply return the player to a lose screen with an option to try again. Our game does not introduce scores, streaks, or social-comparison mechanics that could potentially encourage addictive or compulsive play. Through these choices, user privacy is preserved and our model supports casual, uncommitted play without forcing long-term engagement.
+
 # 9. Conclusion
 
 - 10% ~500 words
