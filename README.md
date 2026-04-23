@@ -31,7 +31,7 @@
 
 **Escape: Oh Dear Dragon!** is a 2D top-down stealth game with a neon-cyberpunk castle aesthetic. Our brave hero sneaks through the castle's many chambers, each packed with patrolling guards, using stealth and subterfuge to reach the next level, and hopefully find the princess. Oh and did we mention portals? Yeah, we've got those too!
 
-Our game is inspired by Invisible Inc., The Were Cleaner, and the Thief series for their stealth-focused gameplay and emphasis on problem solving over direct confrontation. Players must study patrol routes and sneak through the castle, avoiding being seen (or heard), unless they want to become a snack for the stylish, sunglasses-wearing dragon. 
+Our game is inspired by Invisible Inc., The WereCleaner, and the Thief series for their stealth-focused gameplay and emphasis on problem solving over direct confrontation. Players must study patrol routes and sneak through the castle, avoiding being seen (or heard), unless they want to become a snack for the stylish, sunglasses-wearing dragon. 
 
 The twist mechanic was inspired by Valve's Portal series. Players can place linked portals to quickly and strategically navigate the castle's interior, bypass dangerous chokepoints, or recover from risky plays. This mechanic is built directly into our game's core stealth navigation, creating constant tactical choices between planning safe routes and improvising under pressure. 
 
@@ -62,20 +62,22 @@ The story begins as an all too familiar fantasy trope - rescue the princess from
 - Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
 
 ## Ideation
-During the ideation process, team members took turns proposing their ideas. Our initial list contained several concepts, but three quickly became the frontrunners: a tactical stealth game inspired by Invisible Inc. and The Were Cleaner, a rogue-like, and a Bomberman clone. The team spent a great deal of time debating on the merits of each idea, considering factors such as difficulty of implementation, originality, player enjoyment, and how excited we were about the concept as developers.
+During the ideation process, team members took turns proposing their ideas. Our initial list contained several concepts, but three quickly became the frontrunners: a tactical stealth game inspired by Invisible Inc. and The WereCleaner, a rogue-like, and a Bomberman clone. The team spent a great deal of time debating on the merits of each idea, considering factors such as difficulty of implementation, originality, player enjoyment, and how excited we were about the concept as developers.
 
-https://github.com/user-attachments/assets/b10edfd1-4337-47ff-91ac-f8038991df29
-<p align="center">Video 1: Inspiration - Invisible Inc.</p>
+<div align="center">
+  <img width="640" src="devlog/images/invisible_inc.gif" alt="Invisible Inc. Gameplay">  
+</div>
+<p align="center">Inspiration - Invisible Inc.</p>
 
 https://github.com/user-attachments/assets/74a8758c-af38-4798-808c-7c11fce48a90
-<p align="center">Video 2: Inspiration - The Were Cleaner</p>
+<p align="center">Inspiration - The WereCleaner</p>
 
 Due to the semester-long nature of the course, the difficulty and time it would take to implement a game became deciding factors. Because of that, we decided that the rogue-like would not be feasible to complete to a satisfactory level given our timeframe. We created paper prototypes for the remaining two ideas and presented them to classmates.
 
 For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. 
 
 https://github.com/user-attachments/assets/9940a5db-5fca-4c4e-b8e4-658c5386039b
-<p align="center">Video 3: Paper Prototype - Stealth Game</p>
+<p align="center">Video 1: Paper Prototype - Stealth Game</p>
 
 For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
 
@@ -958,6 +960,53 @@ Along with the user studies above, we ran a structured testing program to valida
 - 15% ~750 words
 
 - Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
+
+## Team Roles
+
+Our team divided responsibilities early on based on each member's prior interests and experience. The full breakdown is shown in _Table 1_ above. Defining roles early gave us a starting point and reduced confusion over ownership. In practice, responsibilities still overlapped so our workflow was more collaborative than the role list suggests.
+
+## Methodology
+
+We initially planned to follow a Scrum-style agile methodology with fixed-length sprints, sprint backlogs, standups, reviews, and retrospectives. In practice, we ran two sprints of uneven length (two weeks and three weeks) before the formal process fell away. Most of the team had not worked in an agile/Scrum context before, and with the pressure of the project timeline, we moved toward lighter-weight coordination that the whole team could participate in and feel comfortable with. 
+
+User stories were translated into issues and placed on our Kanban board during the first sprint, prioritizing tasks that other systems depended on. Unfinished tasks from sprint one and additional user stories from our sprint backlog were added to sprint two. Neither sprint was executed strictly, and as a team we were more successful at tracking what needed to be done rather than enforcing when it had to be done. 
+
+## Communication and Meeting Cadence
+
+Communication was one of the more successful parts of our process. We met three times a week after class to share progress, discuss blockers, and decide what each person should complete before the next meeting. These meetings were not formal Scrum standups though they did share some similarities, and most importantly, kept the team aligned. 
+
+Outside meetings, we used WhatsApp for questions, receiving feedback, and providing progress updates. It worked well for us because it was immediate, familiar, and easy to engage with. Although our process frameworks were inconsistent, our communication habits were reliable, which helped us compensate for weaknesses elsewhere.
+
+## Tools and Documentation
+
+Google Drive became the home for everything that wasn't code, including meeting notes, weekly updates, and supporting documentation. We developed an intuitive and organized folder structure which made it easier to find the latest version of documents and reduced confusion. 
+
+GitHub held our codebase and our Kanban board, and after an initial adjustment period (discussed below), it became the source of all files. We authored a GitHub contributing guide early in the project, covering branching conventions, commit message format, PR etiquette, and a definition of done. Although the guide was not strictly followed, it did establish a set of expectations that the team eventually adapted in our development process.
+
+## The Learning Phase
+
+Early in the project, most development happened through live coding sessions with extended voice calls rather than through the repository. This strategy had some advantages, like quick feedback, team-based problem solving, and strengthening team cohesion, but its limitations became clear as our codebase grew. Contributions were hard to attribute to each individual and integration happened in large bulk commits instead of small, reviewable increments. The repo's history did not reflect the pace at which the work was actually being done, which reduced the value of GitHub as a development tool. 
+
+After speaking with our instructors, we moved development and all of our documentation to our repository. This explains why parts of the repo’s history show work arriving in larger batches, as we were migrating from our earlier approach. Over time, smaller and more granular commits became the norm as we adapted to a more conventional workflow. 
+
+We now acknowledge that it would have been easier to start that way, but experiencing the problems first-hand gave everyone an understanding of why git-based workflows exist. That lesson is likely to stay with us more clearly than if we had followed the correct process from day one.
+
+## Reflection
+
+The process side of the project is where we learned the most. As a team we celebrate: 
+
+- Our consistent meeting schedule
+- Strong group communication
+- Clear shared documentation
+- Successfully shipping a complete game
+
+At the same time, we recognise several weaknesses in how we worked:
+
+- Our adoption of agile was limited and inconsistent
+- Our contributing guide and sprint boards were set up but not followed rigorously
+- Our GitHub workflow developed gradually instead of being established properly from the start
+
+These issues did not prevent us from completing the project, but they made parts of the process less efficient than they should have been. The most important outcome is that we adapted as the project progressed and now have a clearer understanding of how we would organise a similar project in future. In particular, we would establish a repository-centred workflow earlier, keep sprint structures simpler and more realistic, and maintain the strong communication habits that worked well for us throughout. 
 
 # 8. Sustainability, Ethics, and Accessibility
 
