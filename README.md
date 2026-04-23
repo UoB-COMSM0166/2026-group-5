@@ -1135,7 +1135,7 @@ The story ends with the hero freeing the dragon and leaving the princess in the 
 Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with us into the summer project and eventually, our careers. 
 
 <div align="center">
-  <img width="640" src="devlog/images/dragon_flying.gif" alt="Dragon flying">  
+  <img width="540" src="devlog/images/dragon_flying.gif" alt="Dragon flying">  
 </div>
 <p align="center">The stylish dragon soars through the skies.</p>
 
