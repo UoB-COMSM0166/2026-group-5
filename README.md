@@ -878,6 +878,11 @@ We eventually sorted out our approach and finalized the correct sequential rende
 
 ## 6.1 Qualitative
 
+<p align="center">
+  <img src="devlog/images/think_aloud.png" alt="Conducting a think aloud study" width="640">
+</p>
+<p align="center">Think Aloud Study</p>
+
 We chose a think-aloud usability study as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
 
 <p align="center">
@@ -891,8 +896,13 @@ Several recurring issues arose across participants that warranted reconsideratio
 - Sprinting speed was lowered to increase difficulty
 - Additional cover was provided so that breaking line of sight became a viable recovery tactic
 - Controls were reworked to include arrow keys as well as WASD, and the HUD was reworked to more prominently display key bindings
-- A tutorial mode was added to introduce mechanics
+- A tutorial screen was added to introduce mechanics
 - A bug where players could close a door while standing in the frame was fixed
+
+<p align="center">
+  <img src="devlog/images/tutorial.png" alt="Tutorial Screen" width="640">
+</p>
+<p align="center">Tutorial Screen</p>
 
 ## 6.2 Quantitative 
 
@@ -978,6 +988,11 @@ User stories were translated into issues and placed on our Kanban board during t
 
 ## 7.3 Communication and Meeting Cadence
 
+<p align="center">
+  <img src="devlog/images/meeting.png" alt="Whiteboard meeting" width="640">
+</p>
+<p align="center">Week 3 Monday Meeting</p>
+
 Communication was one of the more successful parts of our process. We met three times a week after class to share progress, discuss blockers, and decide what each person should complete before the next meeting. These meetings were not formal Scrum standups though they did share some similarities, and most importantly, kept the team aligned. 
 
 Outside meetings, we used WhatsApp for questions, receiving feedback, and providing progress updates. It worked well for us because it was immediate, familiar, and easy to engage with. Although our process frameworks were inconsistent, our communication habits were reliable, which helped us compensate for weaknesses elsewhere.
@@ -985,6 +1000,11 @@ Outside meetings, we used WhatsApp for questions, receiving feedback, and provid
 ## 7.4 Tools and Documentation
 
 Google Drive became the home for everything that wasn't code, including meeting notes, weekly updates, and supporting documentation. We developed an intuitive and organized folder structure which made it easier to find the latest version of documents and reduced confusion. 
+
+<p align="center">
+  <img src="devlog/images/kanban.png" alt="Kanban Board">
+</p>
+<p align="center">Kanban Board at Project End</p>
 
 GitHub held our codebase and our Kanban board, and after an initial adjustment period (discussed below), it became the source of all files. We authored a GitHub contributing guide early in the project, covering branching conventions, commit message format, PR etiquette, and a definition of done. Although the guide was not strictly followed, it did establish a set of expectations that the team eventually adapted in our development process.
 
@@ -1069,6 +1089,11 @@ We do acknowledge that the current build does not have a colorblind-safe mode, n
 
 On the individual dimension, we intentionally built the game to be playable without collecting personal data of any kind. Our game does not require an account, collects no analytics, does not use third-party tracking scripts, cookies, or persistent storage. A player's session is entirely local to their browser and does not leave any trace on our end once the tab is closed. This was an intentional decision we made early on as we did not find any compelling gameplay reason to introduce data collection, particularly for a student project.
 
+<p align="center">
+  <img src="devlog/images/game_over.png" alt="Game over screen" width="320">
+</p>
+<p align="center">Game Over Screen</p>
+
 Player agency is supported in many practical ways. The game can be paused at any time, exited to the title screen mid-level, or restarted without penalty. Failure states are gentle and simply return the player to a lose screen with an option to try again. Our game does not introduce scores, streaks, or social-comparison mechanics that could potentially encourage addictive or compulsive play. Through these choices, user privacy is preserved and our model supports casual, uncommitted play without forcing long-term engagement.
 
 # 9. Conclusion
@@ -1108,6 +1133,11 @@ The story ends with the hero freeing the dragon and leaving the princess in the 
 ## 9.4 Closing Thoughts
 
 Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with us into the summer project and eventually, our careers. 
+
+<div align="center">
+  <img width="640" src="devlog/images/dragon_flying.gif" alt="Dragon flying">  
+</div>
+<p align="center">The stylish dragon soars through the skies.</p>
 
 # 10. Contribution Statement
 
