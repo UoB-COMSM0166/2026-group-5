@@ -69,7 +69,9 @@ During the ideation process, team members took turns proposing their ideas. Our 
 </div>
 <p align="center">Inspiration - Invisible Inc.</p>
 
-https://github.com/user-attachments/assets/74a8758c-af38-4798-808c-7c11fce48a90
+<div align="center">
+  <img width="640" src="devlog/images/The WereCleaner.gif" alt="WereCleaner Gameplay">  
+</div>
 <p align="center">Inspiration - The WereCleaner</p>
 
 Due to the semester-long nature of the course, the difficulty and time it would take to implement a game became deciding factors. Because of that, we decided that the rogue-like would not be feasible to complete to a satisfactory level given our timeframe. We created paper prototypes for the remaining two ideas and presented them to classmates.
@@ -1019,6 +1021,36 @@ These issues did not prevent us from completing the project, but they made parts
 - 10% ~500 words
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
+
+Building **Escape: Oh Dear Dragon!** gave our team our first experience of taking an idea into a playable build, along with a solid idea of what software engineering in a team looks like. We accomplished what we set out to do and created a 2D stealth game with a neon-cyberpunk asthetic, responsive guard AI, and a story twist that subverts the established "rescue the princess" trope. As a team, we think the game is fun to play and tells a fun, short story, and of that we are proud.
+
+On the technical side, we learned that a stealth game is an AI problem disguised as a level design problem. Every decision about levels, cover objects, and object interactions came down to how the guards interacted with the player and the environment. Getting the NPC state machine and pathfinding algorithm to cooperate was the most challenging and time consuming task, but also one that was most rewarded, as it was the core game mechanic on which everything else hinged.
+
+On the process side, our attempt to adopt Scrum formally was less successful than the Kanban and frequent meetings approach we utilized early on. Our consistent communication and strong documentation allowed us to overcome the challenges that came from not using any formal version control until our project grew in size. The git workflow we eventually settled into was one we arrived at through iteration, and was a valuable learning experience for our team. 
+
+## Next Steps for Escape: Oh Dear Dragon!
+
+The feature we were unable to implement is a consumable item system that we set as a goal in case we finished development ahead of schedule. We planned on implementing invisibility cloaks, guard disguises, and stun bombs that would give the player a more versatile toolkit for handling enemy encounters. 
+
+Some other ideas we have for enhancing the game include:
+- Extending the story into gameplay by moving the princess and the dragon from cutscene characters to encountered NPCs
+- A randomly-generated map mode
+- Variability in guard behaviors
+- Note-driven side objectives
+- Increased focus on accessibility (colorblind-safe colors, remappable controls, resizable UI)
+
+## Sequel Ideas
+
+The story ends with the hero freeing the dragon and leaving the princess in the ruins of the dungeon, having foiled her plans. This narrative lends itself naturally to a sequel as the princess seeks revenge by capturing the hero and imprisoning him. The player would take the role of the hero escaping the princess's dungeon, preserving the game's core stealth mechanic while inverting the power dynamic. The sequel would also be a good place to attempt a 3D game and potentially experiment with cooperative multiplayer.
+
+<div align="center">
+  <img width="640" src="devlog/images/sequel_concept_art.png" alt="Sequel Mockup">  
+</div>
+<p align="center">3D Sequel Mockup</p>
+
+## Closing Thoughts
+
+Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with into the summer project and eventually, our careers. 
 
 # 10. Contribution Statement
 
