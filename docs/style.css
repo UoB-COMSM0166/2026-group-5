@@ -225,7 +225,7 @@ button:hover { filter: brightness(1.08); }
   background: rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   width: fit-content;
-  font-size: calc(8px * var(--s, 1));
+  font-size: calc(9px * var(--s, 1));
   margin-top: 3px !important;
 }
 
