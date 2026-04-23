@@ -1022,7 +1022,7 @@ These issues did not prevent us from completing the project, but they made parts
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
-Building **Escape: Oh Dear Dragon!** gave our team our first experience of taking an idea into a playable build, along with a solid idea of what software engineering in a team looks like. We accomplished what we set out to do and created a 2D stealth game with a neon-cyberpunk asthetic, responsive guard AI, and a story twist that subverts the established "rescue the princess" trope. As a team, we think the game is fun to play and tells a fun, short story, and of that we are proud.
+Building **Escape: Oh Dear Dragon!** gave our team our first experience of taking an idea into a playable build, along with a solid idea of what software engineering in a team looks like. We accomplished what we set out to do and created a 2D stealth game with a neon-cyberpunk aesthetic, responsive guard AI, and a story twist that subverts the established "rescue the princess" trope. As a team, we think the game is fun to play and tells a fun, short story, and of that we are proud.
 
 On the technical side, we learned that a stealth game is an AI problem disguised as a level design problem. Every decision about levels, cover objects, and object interactions came down to how the guards interacted with the player and the environment. Getting the NPC state machine and pathfinding algorithm to cooperate was the most challenging and time consuming task, but also one that was most rewarded, as it was the core game mechanic on which everything else hinged.
 
@@ -1050,7 +1050,7 @@ The story ends with the hero freeing the dragon and leaving the princess in the 
 
 ## Closing Thoughts
 
-Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with into the summer project and eventually, our careers. 
+Ultimately, we appreciate the opportunity to collaborate as a team, learn from each other, and gain experience with the software engineering process from ideation to a working product. We learned many lessons throughout this project and are excited to take this learning with us into the summer project and eventually, our careers. 
 
 # 10. Contribution Statement
 
