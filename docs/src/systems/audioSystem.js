@@ -2,32 +2,32 @@
 // Track sources and gain values intentionally mirror the reference story audio script.
 // Audio track definitions: file path, volume, and looping flag.
 const TRACK_CONFIG = Object.freeze({
-  start: { src: './assets/audio/startScreen.mp3', volume: 0.3, loop: true },
-  intro: { src: './assets/audio/intro.mp3', volume: 0.25, loop: true },
-  playing: { src: './assets/audio/gameplay.mp3', volume: 0.2, loop: true },
-  playing_map1: { src: './assets/audio/mapFoyer.mp3', volume: 0.2, loop: true },
-  playing_map2: { src: './assets/audio/mapLibrary.mp3', volume: 0.2, loop: true },
-  playing_map3: { src: './assets/audio/mapSalon.mp3', volume: 0.2, loop: true },
-  win: { src: './assets/audio/winScreen.mp3', volume: 0.28, loop: true },
-  lose: { src: './assets/audio/loseScreen.mp3', volume: 0.3, loop: true },
-  false_ending: { src: './assets/audio/intro.mp3', volume: 0.24, loop: true },
-  true_ending: { src: './assets/audio/trueEnding.mp3', volume: 0.28, loop: true }
+  start: { src: './assets/audio/music/screens/startScreen.mp3', volume: 0.3, loop: true },
+  intro: { src: './assets/audio/music/screens/intro.mp3', volume: 0.25, loop: true },
+  playing: { src: './assets/audio/music/maps/gameplay.wav', volume: 0.2, loop: true },
+  playing_map1: { src: './assets/audio/music/maps/mapFoyer.mp3', volume: 0.2, loop: true },
+  playing_map2: { src: './assets/audio/music/maps/mapLibrary.mp3', volume: 0.2, loop: true },
+  playing_map3: { src: './assets/audio/music/maps/mapSalon.mp3', volume: 0.2, loop: true },
+  win: { src: './assets/audio/music/screens/winScreen.mp3', volume: 0.28, loop: true },
+  lose: { src: './assets/audio/music/screens/loseScreen.mp3', volume: 0.3, loop: true },
+  false_ending: { src: './assets/audio/music/screens/intro.mp3', volume: 0.24, loop: true },
+  true_ending: { src: './assets/audio/music/screens/trueEnding.mp3', volume: 0.28, loop: true }
 });
 
 // Sound effects.
 const SFX_CONFIG = Object.freeze({
-  cursor: { src: './assets/audio/sfxCursor.wav', volume: 1, cooldownMs: 85 },
-  select: { src: './assets/audio/sfxSelect.wav', volume: 1, cooldownMs: 120 },
-  portal: { src: './assets/audio/sfxPortal.mp3', volume: 1, cooldownMs: 180 },
-  treasure: { src: './assets/audio/sfxTreasure.mp3', volume: 1, cooldownMs: 200 },
-  doorOpen: { src: './assets/audio/sfxDoorOpen.mp3', volume: 1, cooldownMs: 120 },
-  doorClose: { src: './assets/audio/sfxDoorClose.mp3', volume: 1, cooldownMs: 120 },
-  doorLocked: { src: './assets/audio/sfxDoorLocked.wav', volume: 1, cooldownMs: 160 },
-  lightSwitch: { src: './assets/audio/sfxLightSwitch.wav', volume: 1, cooldownMs: 120 },
-  alert: { src: './assets/audio/sfxAlert.mp3', volume: 1, cooldownMs: 220 },
-  running: { src: './assets/audio/sfxRunning.mp3', volume: 0.9, cooldownMs: 0, loop: true },
-  teleportIn: { src: './assets/audio/sfxTeleportIn.mp3', volume: 1, cooldownMs: 120 },
-  teleportOut: { src: './assets/audio/sfxTeleportOut.mp3', volume: 1, cooldownMs: 120 }
+  cursor: { src: './assets/audio/sfx/sfxCursor.wav', volume: 1, cooldownMs: 85 },
+  select: { src: './assets/audio/sfx/sfxSelect.wav', volume: 1, cooldownMs: 120 },
+  portal: { src: './assets/audio/sfx/sfxPortal.mp3', volume: 1, cooldownMs: 180 },
+  treasure: { src: './assets/audio/sfx/sfxTreasure.mp3', volume: 1, cooldownMs: 200 },
+  doorOpen: { src: './assets/audio/sfx/sfxDoorOpen.mp3', volume: 1, cooldownMs: 120 },
+  doorClose: { src: './assets/audio/sfx/sfxDoorClose.mp3', volume: 1, cooldownMs: 120 },
+  doorLocked: { src: './assets/audio/sfx/sfxDoorLocked.wav', volume: 1, cooldownMs: 160 },
+  lightSwitch: { src: './assets/audio/sfx/sfxLightSwitch.wav', volume: 1, cooldownMs: 120 },
+  alert: { src: './assets/audio/sfx/sfxAlert.mp3', volume: 1, cooldownMs: 220 },
+  running: { src: './assets/audio/sfx/sfxRunning.mp3', volume: 0.9, cooldownMs: 0, loop: true },
+  teleportIn: { src: './assets/audio/sfx/sfxTeleportIn.mp3', volume: 1, cooldownMs: 120 },
+  teleportOut: { src: './assets/audio/sfx/sfxTeleportOut.mp3', volume: 1, cooldownMs: 120 }
 });
 
 // Mapping from screen state to the track key that should play.

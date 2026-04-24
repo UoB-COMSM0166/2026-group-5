@@ -3,8 +3,8 @@ import { getImage } from '../core/assetLoader.js';
 const POPUP_DURATION = 1.8;
 const FLOAT_HEIGHT = 22;
 const ICON_PATHS = {
-  key: './assets/images/adapted/interactives/key3232.png',
-  note: './assets/images/sprites/note.png'
+  key: './assets/images/interactives/pickups/key3232.png',
+  note: './assets/images/interactives/pickups/note.png'
 };
 
 const popups = [];

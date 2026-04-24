@@ -1,35 +1,35 @@
 // Sprite catalog: asset paths, character pack definitions, directional resolution.
 // Fallback sprite image paths keyed by entity type and state.
 export const SPRITE_PATHS = {
-  player: './assets/images/sprites/player.png',
-  playerSheet: './assets/images/sprites/player_sheet.png',
+  player: './assets/images/characters/fallback/player.png',
+  playerSheet: './assets/images/characters/fallback/player_sheet.png',
   npc: {
-    PATROL: './assets/images/sprites/npc_patrol.png',
-    SEARCH: './assets/images/sprites/npc_search.png',
-    CHASE: './assets/images/sprites/npc_chase.png'
+    PATROL: './assets/images/characters/fallback/npc_patrol.png',
+    SEARCH: './assets/images/characters/fallback/npc_search.png',
+    CHASE: './assets/images/characters/fallback/npc_chase.png'
   },
   npcSheet: {
-    PATROL: './assets/images/sprites/npc_patrol_sheet.png',
-    SEARCH: './assets/images/sprites/npc_search_sheet.png',
-    CHASE: './assets/images/sprites/npc_chase_sheet.png',
-    RETURN: './assets/images/sprites/npc_patrol_sheet.png'
+    PATROL: './assets/images/characters/fallback/npc_patrol_sheet.png',
+    SEARCH: './assets/images/characters/fallback/npc_search_sheet.png',
+    CHASE: './assets/images/characters/fallback/npc_chase_sheet.png',
+    RETURN: './assets/images/characters/fallback/npc_patrol_sheet.png'
   },
   door: {
-    slide: './assets/images/sprites/door_slides.png',
-    doubleA: './assets/images/sprites/door_double_a.png',
-    doubleB: './assets/images/sprites/door_double_b.png'
+    slide: './assets/images/interactives/doors/door_slides.png',
+    doubleA: './assets/images/interactives/doors/door_double_a.png',
+    doubleB: './assets/images/interactives/doors/door_double_b.png'
   },
   chest: {
-    closed: './assets/images/sprites/chest_closed.png',
-    open: './assets/images/sprites/chest_open.png'
+    closed: './assets/images/interactives/chests/chest_closed.png',
+    open: './assets/images/interactives/chests/chest_open.png'
   },
   button: {
-    on: './assets/images/sprites/button_on.png',
-    off: './assets/images/sprites/button_off.png'
+    on: './assets/images/interactives/buttons/button_on.png',
+    off: './assets/images/interactives/buttons/button_off.png'
   },
   portal: {
-    blue: './assets/images/adapted/interactives/portal_blue3232.png',
-    red: './assets/images/adapted/interactives/portal_red3232.png'
+    blue: './assets/images/interactives/portals/portal_blue3232.png',
+    red: './assets/images/interactives/portals/portal_red3232.png'
   }
 };
 

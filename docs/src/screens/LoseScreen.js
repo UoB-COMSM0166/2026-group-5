@@ -5,7 +5,7 @@ import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
-const CAPTURED = './assets/images/original/drawings/captured.png';
+const CAPTURED = './assets/images/screens/lose/captured.png';
 
 export class LoseScreen extends Screen {
   constructor() {

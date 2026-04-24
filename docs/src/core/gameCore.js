@@ -30,7 +30,7 @@ const PASSAGE_KEY_PROMPT = 'Passage Key found. The exit is unlocked!';
 const PASSAGE_KEY_PROMPT_DURATION = 2.6;
 const NOTE_COLLECTED_PROMPT = 'Note collected. Press Esc to pause and read it.';
 const NOTE_COLLECTED_PROMPT_DURATION = 4;
-const NOTE_COLLECTED_PROMPT_ICON = './assets/images/sprites/key_Esc.png';
+const NOTE_COLLECTED_PROMPT_ICON = './assets/images/ui/controls/key_Esc.png';
 const EXTRACTION_UNLOCKED_PROMPT = 'All chests found. Time to escape!';
 const EXTRACTION_UNLOCKED_PROMPT_DURATION = 2;
 

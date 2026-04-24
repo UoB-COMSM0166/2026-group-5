@@ -19,32 +19,28 @@ function collectPaths() {
   paths.add(SPRITE_PATHS.playerSheet);
   Object.values(SPRITE_PATHS.npc).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.npcSheet).forEach((v) => paths.add(v));
-  collectCharacterPaths().forEach((p) => {
-    if (p !== './assets/images/characters/player/default/down.png') {
-      paths.add(p);
-    }
-  });
+  collectCharacterPaths().forEach((p) => paths.add(p));
   Object.values(SPRITE_PATHS.door).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.chest).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.button).forEach((v) => paths.add(v));
   Object.values(SPRITE_PATHS.portal).forEach((v) => paths.add(v));
-  paths.add('./assets/images/adapted/interactives/key3232.png');
-  paths.add('./assets/images/sprites/key_Esc.png');
-  paths.add('./assets/images/sprites/note.png');
-  paths.add('./assets/images/original/drawings/start_bg.png');
-  paths.add('./assets/images/original/npcs/dragon/dragon.png');
-  paths.add('./assets/images/original/drawings/title_logo.png');
-  paths.add('./assets/images/original/drawings/captured.png');
-  paths.add('./assets/images/tutorial/page0_gameplay1.png');
-  paths.add('./assets/images/tutorial/page1_gameplay2.png');
-  paths.add('./assets/images/tutorial/page2_move_asdw.png');
-  paths.add('./assets/images/tutorial/page3_accelarate.png');
-  paths.add('./assets/images/tutorial/page4_interact_e1.png');
-  paths.add('./assets/images/tutorial/page5_interact_e2.png');
-  paths.add('./assets/images/tutorial/page6_interact_e3.png');
-  paths.add('./assets/images/tutorial/page7_pauced_esc.png');
-  paths.add('./assets/images/tutorial/page8_portal_space.png');
-  paths.add('./assets/images/tutorial/page9_readnotes.png');
+  paths.add('./assets/images/interactives/pickups/key3232.png');
+  paths.add('./assets/images/ui/controls/key_Esc.png');
+  paths.add('./assets/images/interactives/pickups/note.png');
+  paths.add('./assets/images/screens/start/start_bg.png');
+  paths.add('./assets/images/screens/start/dragon.png');
+  paths.add('./assets/images/screens/start/title_logo.png');
+  paths.add('./assets/images/screens/lose/captured.png');
+  paths.add('./assets/images/screens/tutorial/page0_gameplay1.png');
+  paths.add('./assets/images/screens/tutorial/page1_gameplay2.png');
+  paths.add('./assets/images/screens/tutorial/page2_move_asdw.png');
+  paths.add('./assets/images/screens/tutorial/page3_accelarate.png');
+  paths.add('./assets/images/screens/tutorial/page4_interact_e1.png');
+  paths.add('./assets/images/screens/tutorial/page5_interact_e2.png');
+  paths.add('./assets/images/screens/tutorial/page6_interact_e3.png');
+  paths.add('./assets/images/screens/tutorial/page7_pauced_esc.png');
+  paths.add('./assets/images/screens/tutorial/page8_portal_space.png');
+  paths.add('./assets/images/screens/tutorial/page9_readnotes.png');
   STORY_SCREEN_ASSET_PATHS.forEach((path) => paths.add(path));
 
   // v19 intentionally stops probing every potential character variant path.

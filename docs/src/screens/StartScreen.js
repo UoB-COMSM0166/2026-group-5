@@ -5,9 +5,9 @@ import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
-const START_BG = './assets/images/original/drawings/start_bg.png';
-const DRAGON = './assets/images/original/npcs/dragon/dragon.png';
-const TITLE = './assets/images/original/drawings/title_logo.png';
+const START_BG = './assets/images/screens/start/start_bg.png';
+const DRAGON = './assets/images/screens/start/dragon.png';
+const TITLE = './assets/images/screens/start/title_logo.png';
 
 export class StartScreen extends Screen {
   #menu;
