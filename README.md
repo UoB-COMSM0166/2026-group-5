@@ -878,11 +878,6 @@ We eventually sorted out our approach and finalized the correct sequential rende
 
 ## 6.1 Qualitative
 
-<p align="center">
-  <img src="devlog/images/think_aloud.png" alt="Conducting a think aloud study" width="640">
-</p>
-<p align="center">Think Aloud Study</p>
-
 We chose a think-aloud usability study as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
 
 <p align="center">
