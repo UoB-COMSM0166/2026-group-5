@@ -67,26 +67,26 @@ During the ideation process, team members took turns proposing their ideas. Our 
 <div align="center">
   <img width="640" src="devlog/images/invisible_inc.gif" alt="Invisible Inc. Gameplay">  
 </div>
-<p align="center">Inspiration - Invisible Inc.</p>
+<p align="center"><i>Inspiration - Invisible Inc.</i></p>
 
 <div align="center">
   <img width="640" src="devlog/images/The WereCleaner.gif" alt="WereCleaner Gameplay">  
 </div>
-<p align="center">Inspiration - The WereCleaner</p>
+<p align="center"><i>Inspiration - The WereCleaner</i></p>
 
 Due to the semester-long nature of the course, the difficulty and time it would take to implement a game became deciding factors. Because of that, we decided that the rogue-like would not be feasible to complete to a satisfactory level given our timeframe. We created paper prototypes for the remaining two ideas and presented them to classmates.
 
 For the stealth game, we prototyped navigating around rooms, enemy field of view and alert bars, and collecting keys to advance further through the level. 
 
 https://github.com/user-attachments/assets/9940a5db-5fca-4c4e-b8e4-658c5386039b
-<p align="center">Video 1: Paper Prototype - Stealth Game</p>
+<p align="center"><i>Video 1: Paper Prototype - Stealth Game</i></p>
 
 For the Bomberman idea, we prototyped map layout, power-ups, enemy behavior, and dropping bombs to destroy blocks and damage enemies, along with portal mechanics from the Portal game. Ultimately, we voted and decided that we would create the stealth game combined with portal mechanics as the twist, allowing the player additional mechanics for avoiding enemies and navigating levels. 
 
 <p align="center">
     <img width="640" src="devlog/images/prototype_bomberman.jpg" alt="Bomberman Paper Prototype">    
 </p>
-<p align="center">Paper Prototype - Bomberman Clone</p>
+<p align="center"><i>Paper Prototype - Bomberman Clone</i></p>
 
 ## 3.2 Stakeholders
 
@@ -95,7 +95,7 @@ The following figure shows our Stakeholder Onion Model, with layers indicated in
 <p align="center">
     <img width="640" src="devlog/images/onion_model.png" alt="Onion Model">    
 </p>
-<p align="center">Figure 1: Stakeholder Onion Model</p>
+<p align="center"><i>Figure 1: Stakeholder Onion Model</i></p>
 
 The System ring captures direct users of the game (players/playtesters). The Containing System includes those who create, support, and evaluate the product (development team and teaching staff). The Wider Environment captures university-level constraints and infrastructure. Stakeholders here are represented as roles, though the same individuals may serve as lecturers/TAs and also act as assessors.
 
@@ -113,7 +113,7 @@ Our Epics include:
 - **Epic 7**: Inventory and Items
 - **Epic 8**: Game Flow and Feedback
 
-Below are the user stories for our first epic, Stealth and Movement. Please see the appendix for the remaining user stories.
+Below are the user stories for our first epic, Stealth and Movement. Please see [user_stories.md](./devlog/supporting_docs/user_stories.md) for the remaining user stories.
 
 **Epic 1: Stealth and Movement**
 
@@ -133,7 +133,7 @@ Below are the user stories for our first epic, Stealth and Movement. Please see 
 To consolidate our user stories into a player-facing view of the system and scope the behavior we planned to implement, we created the use case diagram shown below. 
 
 <img src="devlog/images/use_case_diagram.svg" alt="Use case diagram">
-<p align="center">Figure 2: Use Case Diagram</p>
+<p align="center"><i>Figure 2: Use Case Diagram</i></p>
 
 The Player has three entry points into the system: starting a new game, viewing the tutorial, or playing a level. Starting a new game _includes_ selecting a playthrough and a difficulty as both are required to load a level. Playing a level _includes_ navigating the map, avoiding detection, collecting items in chests, and reaching the exit. These four are part of the core loop and can't be opted out of. Sprinting, using portals, or pausing the game are modelled as _extends_ relationships because they are optional, as the player can theoretically complete a level only by walking and using the base controls. Pausing the game _extends_ itself further into viewing collected story notes or exiting to the title screen. The full use case specification for the Play Level use case is given below.
 
@@ -658,7 +658,7 @@ classDiagram
     FalseEndingScreen *-- CutscenePlaybackController : owns
     TrueEndingScreen *-- CutscenePlaybackController : owns
 ```
-<p align="center">Figure 3: Class Diagram</p>
+<p align="center"><i>Figure 3: Class Diagram</i></p>
 
 The class diagram above shows the structure of the codebase. Composition is used throughout our project to allow us to build complex behavior from several smaller pieces. For example, GameCore owns its subsystems, Level owns its systems, and ScreenManager owns its screens. This approach gives use clear object lifetimes and makes each subsystem independently testable. With a composition approach, we are able to use GameState as a container that holds the current Level, so swapping levels requires reassignment rather than tearing the world down completely. The screens and the gameplay would are also fully decoupled, which lets us add new screens, like multiple endings, without touching the gameplay loop.
 
@@ -789,9 +789,9 @@ sequenceDiagram
 
     Note over p5: Frame complete, wait for next RAF
 ```
-<p align="center">Figure 4: Game Loop Sequence Diagram</p>
+<p align="center"><i>Figure 4: Game Loop Sequence Diagram</i></p>
 
-Figure 4 below captures how the core game loop functions in our project. The loop begins when p5's draw callback fires, which then causes GameCore.update(dt) to drive each subsystem in a fixed order, ending with render(p) handing the p5 instance to the render system. The ordering of each subsystem matters because several subsystems read state written by earlier ones. For example, MissionSystem checks the player's position after playerSystem has moved them, and the interactionSystem checks door, box, and button states after DoorSystem and RoomSystem have triggered. This rigid approach keeps the game determinisitic and free of inter-system race conditions and makes adding new systems simple. For any new system to be added, we need to only find the right point in the sequence to insert it.
+Figure 4 above captures how the core game loop functions in our project. The loop begins when p5's draw callback fires, which then causes GameCore.update(dt) to drive each subsystem in a fixed order, ending with render(p) handing the p5 instance to the render system. The ordering of each subsystem matters because several subsystems read state written by earlier ones. For example, MissionSystem checks the player's position after playerSystem has moved them, and the interactionSystem checks door, box, and button states after DoorSystem and RoomSystem have triggered. This rigid approach keeps the game determinisitic and free of inter-system race conditions and makes adding new systems simple. For any new system to be added, we need to only find the right point in the sequence to insert it.
 
 ## 4.4 NPC State Machine
 
@@ -827,9 +827,14 @@ stateDiagram-v2
         boosted move speed
     end note
 ```
-<p align="center">Figure 5: NPC State Machine</p>
+<p align="center"><i>Figure 5: NPC State Machine</i></p>
 
 The most complex behavior subsystem in our project is the guard AI, which was modelled as a three-state finite-state machine which lives in npcStateMachine.js. Guards start in a PATROL state and raise their alertLevel (0-100) at 34 per second while the player is in their field of view, decaying at 18 per second otherwise. Crossing the chase threshold (20) with the player still in sight triggers CHASE. Once players break line of sight by hiding behind objects, outrunning guards, or using portals, alert level drops. Once alert level hits 10 or less, guards enter a SEARCH state, scanning their surroundings for 2 seconds. 
+
+<p align="center">
+  <img src="devlog/images/npcsearch.GIF" alt="NPC searching" width="640">
+</p>
+<p align="center"><i>NPC in a SEARCH state</i></p>
 
 PATROL can also be interrupted directly into SEARCH in 3 different ways. Players can toggle light switches off or leave a door open along the guards patrol route to transition guards into SEARCH. Guards who see footsteps left behind by sprinting players will also enter a SEARCH state briefly. Each of these is tagged with a search reason so that guards know where to investigate. For example, turning a light off will cause the guard to move towards the light switch and search the area near the switch. Players who escape chasing guards through a portal will cause the guards to enter into a short confused state at the portal's origin, which provides players with an additional tactic on top of running, hiding, and turning off lights.
 
@@ -850,21 +855,45 @@ Key to developing the kind of game we wanted was to build an NPC movement system
 3. Naturalness (avoid jitter, oscillation, and robotic motion)
 4. Performance (staying close to 60 FPS in a single-threaded JS game loop)
 
+<p align="center">
+  <img src="devlog/images/npccard.GIF" alt="Early NPC pathfinding AI" width="640">
+</p>
+<p align="center"><i>Early iteration of NPC pathfinding AI</i></p>
+
 The guard's decision making has to plan paths in real time. In PATROL and SEARCH (see _Figure 5_), it must find fast, believable routes from any point on the map back to a known waypoint. In CHASE, it must react within a handful of frames as the player changes direction. After reviewing several tracking approaches, we chose **A\* pathfinding** as our global planner because it is a well-established algorithm for shortest-path search on graphs. To make the movement more natural in dynamic environments, we added an intelligent waypoint-skipping mechanism which scans the path backwards from the end and jumps directly to the furthest waypoint an NPC can reach.
 
 This approach was not enough as the guards would still behave clumsily in maps with many obstacles. NPCs would often get stuck in corners and if an obstacle was between them and the player, they could not go around the obstacle to continue the chase. Returning to our research, we adopted a context-based steering approach. The idea is to cast 12 equally-spaced rays around the NPC and then score each direction based on 1) how well it aligns with the desired direction and 2) how far it is from nearby obstacles. Directions that are towards the target and far from obstacles receive higher scores. A weighted sum of all valid direction vectors is then computed and normalized to obtain the final movement direction that naturally avoids obstacles while still heading toward the player. 
 
-These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occasionally still jitter near tight corners as the AI constantly recalculated the best direction. To avoid this, we added three supporting mechanisms:
+These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occasionally still jitter near tight corners as the AI constantly recalculated the best direction. 
+
+<p align="center">
+  <img src="devlog/images/npcjitter.GIF" alt="NPC jittering near tight corners" width="640">
+</p>
+<p align="center"><i>NPC jitter near tight corners</i></p>
+
+To avoid jitter, we added three supporting mechanisms:
 
 1. A three-tier progressive recovery system to prevent the NPC from getting permanently stuck
 2. A smooth-facing algorithm to reduce jitter in rotation
 3. A box-swept traversal check to handle cases where a straight line is clear for the ray but not for the actual body
 
-With this combined approach, we achieved NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
+Combining the global A\* search algorithm with local algorithms like context-based steering, line of sight occlusion, and collision detection allowed us to achieve NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
+
+<p align="center">
+  <img src="devlog/images/npcchase.GIF" alt="NPC chasing the player" width="640">
+</p>
+<p align="center"><i>Final iteration of NPC pursuit AI</i></p>
 
 ## 5.2 Challenge 2: Map Rendering
 
-Our second challenge was map rendering. Initially, we planned on placing all content on a single layer like a jigsaw puzzle but found out that this approach ran counter to the principle of low coupling, resulting in interdependencies between several elements. As a result, we designed a layer rendering architecture where each layer is rendered independently, with transformation states managed with p5's push()/pop() methods. Although we started development with native HTML Canvas, we quickly realized that p5.js was necessary for the project, and after consulting our instructors, we abandoned the original plan and made the switch to p5.
+Our second challenge was map rendering. In the development of our map rendering system, the core focus was to build independent layers that do not interfere with each other. Initially, we planned to place all content on a single layer just like assembling a jigsaw puzzle, adopting an extreme object-oriented design philosophy. However, during practical trials, we discovered that this approach violates the principle of low coupling and leads to excessive interdependency among elements.
+
+Therefore, we designed a layered rendering architecture, in which each layer is rendered independently, including the map layer, lighting layer, character layer, interactive animation effect layer and so on. The transformation states are managed through the push() and pop() functions in p5.js. We originally adopted native Canvas for development, but later realized that p5.js was required for this project. After consulting our instructors, we abandoned the original plan and migrated the entire project to p5.js.
+
+<p align="center">
+  <img src="devlog/images/map.jfif" alt="One of the maps in Escape: Oh Dear Dragon" width="640">
+</p>
+<p align="center"><i>The layout of the salon map</i></p>
 
 Dynamic parsing of map tiles presented other challenges during this process, including:
 
@@ -878,12 +907,17 @@ We eventually sorted out our approach and finalized the correct sequential rende
 
 ## 6.1 Qualitative
 
-We chose a think-aloud usability protocol as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
+<p align="center">
+  <img src="devlog/images/demo_version.png" alt="Escape: Oh Dear Dragon prototype" width="640">
+</p>
+<p align="center"><i>An early prototype used during the think-aloud study</i></p>
+
+We chose a think-aloud usability study as our qualitative method early on in the development process, primarily because our game's difficulty depends on its controls and stealth mechanics. This approach allowed us to see if the player encountered any friction in the moment, rather than relying on them remembering and articulating their difficulties in a post-session questionnaire. Participants were asked to narrate their thoughts while playing an early build of the game, and facilitators from our team recorded observations without intervening. We grouped the resulting observations into four themes, shown in _Figure 6_ below.
 
 <p align="center">
   <img src="devlog/images/think-aloud.jpg" alt="think aloud mindmap" width="900" height="800">
 </p>
-<p align="center">Figure 6: Think Aloud Summary</p>
+<p align="center"><i>Figure 6: Think Aloud Summary</i></p>
 
 Several recurring issues arose across participants that warranted reconsideration. In response we made the following changes to the build:
 
@@ -897,7 +931,7 @@ Several recurring issues arose across participants that warranted reconsideratio
 <p align="center">
   <img src="devlog/images/tutorial.png" alt="Tutorial Screen" width="640">
 </p>
-<p align="center">Tutorial Screen</p>
+<p align="center"><i>Tutorial Screen</i></p>
 
 ## 6.2 Quantitative 
 
@@ -926,14 +960,14 @@ Procedure：Ten participants were split into two groups of five to control for l
 
 </div>
 
-<p align="center">Figure 7: SUS Data Overview</p>
+<p align="center"><i>Figure 7: SUS Data Overview</i></p>
 
 **Graphical Representation**
 
 <p align="center">
   <img src="devlog/images/sus-scores-with-differences.png" alt="SUS Scores with Differences" width="900" height="800">
 </p>
-<p align="center">Figure 8: SUS Scores with Differences</p>
+<p align="center"><i>Figure 8: SUS Scores with Differences</i></p>
 
 **Statistical Analysis**
 
@@ -948,6 +982,7 @@ These results ran counter to our expectation that a second, more advanced level 
 - The deliberately consistent UI layout and controls across levels facilitated knowledge transfer from L1 to L2.
 
 If players do not perceive a meaningfully different gameplay challenge between levels, the interface demands should remain roughly equal and produce near-identical scores, as reflected in our results.
+
 Both levels scored above the acceptable SUS benchmark of 68, confirming that users found the interface accessible regardless of level. Neither condition reached the "Excellent" threshold of 85, indicating room for improvement in interface responsiveness and feedback clarity. Our next design iteration should therefore differentiate levels more through stealth and routing demands rather than relying on larger maps or more guards. Additionally, we should sharpen feedback cues to move our scores closer to the excellent range.
 
 ## 6.3 Testing
@@ -959,8 +994,12 @@ Alongside the user studies above, we carried out a structured testing programme 
 - **Boundary Value Analysis (BVA)** was used for cases around important gameplay and interface boundaries, such as first input, rapid repeated input, small and large browser windows, loading delay, hold thresholds, and repeated door interaction.
 - **Equivalence Partitioning (EP)** was used for NPC status transitions by grouping behaviour into representative classes based on NPC state, player visibility, alert level, and trigger or completion conditions.
 
-**White-box testing** was used to verify selected internal game logic directly. Through console-based execution and module inspection, the team checked internal states, functions, and decision paths that could not be fully confirmed through normal gameplay observation alone. These tests covered screen routing, audio selection, layout calculations, overlay conditions, interaction priority, door state changes, mission unlock logic, and input reset behaviour.
+<p align="center">
+  <img src="devlog/testing/evidences/wt/wt01_wt02.png" alt="White box testing">
+</p>
+<p align="center"><i>White-box Testing</i></p>
 
+**White-box testing** was used to verify selected internal game logic directly. Through console-based execution and module inspection, the team checked internal states, functions, and decision paths that could not be fully confirmed through normal gameplay observation alone. These tests covered screen routing, audio selection, layout calculations, overlay conditions, interaction priority, door state changes, mission unlock logic, and input reset behaviour.
 
 ### Testing Summary
 
@@ -974,7 +1013,7 @@ Alongside the user studies above, we carried out a structured testing programme 
 
 ### Requirement Verification Traceability
 
-| Requirement / expected behaviour | Verification method | Related tests | Result |
+| Requirement / Expected Behaviour | Verification Method | Related Tests | Result |
 |---|---|---|---|
 | The game should launch and enter the correct initial flow | Black-box functional testing | BT01, BT02, BT03, BT16, BT17, BT20 | Passed |
 | The story tutorial should progress and exit correctly | Black-box functional testing, BVA, defect retest | BT04, BT18, BT19, BT24, BT25, BT26, BT27, BT28, BV06, BV07, B02 | Passed |
@@ -1018,7 +1057,7 @@ User stories were translated into issues and placed on our Kanban board during t
 <p align="center">
   <img src="devlog/images/meeting.png" alt="Whiteboard meeting" width="640">
 </p>
-<p align="center">Week 3 Monday Meeting</p>
+<p align="center"><i>Week 3 Monday Meeting</i></p>
 
 Communication was one of the more successful parts of our process. We met three times a week after class to share progress, discuss blockers, and decide what each person should complete before the next meeting. These meetings were not formal Scrum standups though they did share some similarities, and most importantly, kept the team aligned. 
 
@@ -1031,7 +1070,7 @@ Google Drive became the home for everything that wasn't code, including meeting 
 <p align="center">
   <img src="devlog/images/kanban.png" alt="Kanban Board">
 </p>
-<p align="center">Kanban Board at Project End</p>
+<p align="center"><i>Kanban Board at Project End</i></p>
 
 GitHub held our codebase and our Kanban board, and after an initial adjustment period (discussed below), it became the source of all files. We authored a GitHub contributing guide early in the project, covering branching conventions, commit message format, PR etiquette, and a definition of done. Although the guide was not strictly followed, it did establish a set of expectations that the team eventually adapted in our development process.
 
@@ -1075,16 +1114,6 @@ At the same time, we recognise several weaknesses in how we worked:
 - Our contributing guide and sprint boards were set up but not followed rigorously
 - Our GitHub workflow developed gradually instead of being established properly from the start
 
-<p align="center">Process Changes Over Time</p>
-
-| Category        | Before                          | Now  |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow        | There were differences in preferred working styles: some preferred short meetings for updates, while others preferred onsite meetings to discuss ideas and work directly on the project together. | We hold regular meetings for short updates with the whole group, as well as one-to-one meetings when developing or collaborating on the same module.                                        |
-| Workflow        | In the first few weeks, we worked mainly through Google Drive and private chats, so some contributions and progress were harder to track.                                                         | Google Drive is now used only for visualization, and no further updates are made there. All changes are now made and tracked through GitHub.                                                |
-| Documentation   | Some early decisions and contributions were discussed informally, which made them harder to trace later.                                                                                          | Important decisions, meeting notes, and task changes are now documented more consistently to improve transparency.                                                                          |
-| Task Allocation | Responsibilities were not always clearly defined, and some members had different expectations about their roles.                                                                                  | Now each member’s responsibilities are documented to make contributions easier to track. Also we will talk about how to split and rotate tasks so everybody can touch a little bit of code. |
-
-
 These issues did not prevent us from completing the project, but they made parts of the process less efficient than they should have been. The most important outcome is that we adapted as the project progressed and now have a clearer understanding of how we would organise a similar project in future. In particular, we would establish a repository-centred workflow earlier, keep sprint structures simpler and more realistic, and maintain the strong communication habits that worked well for us throughout. 
 
 # 8. Sustainability, Ethics, and Accessibility
@@ -1106,7 +1135,7 @@ On the inclusiveness and diversity front, our initial approach was to make a gam
 <p align="center">
   <img src="devlog/images/keyboard_layout.png" alt="Control Layout" width="640">
 </p>
-<p align="center">Control Layout</p>
+<p align="center"><i>Control Layout</i></p>
 
 A tutorial mode was also added after usability testing to introduce mechanics gradually rather than assuming prior gaming experience. Game text was tested against WCAG contrast ratio guidelines using WebAIM's contrast checker and passed both AA and AAA tests.
 
@@ -1119,7 +1148,7 @@ On the individual dimension, we intentionally built the game to be playable with
 <p align="center">
   <img src="devlog/images/game_over.png" alt="Game over screen" width="320">
 </p>
-<p align="center">Game Over Screen</p>
+<p align="center"><i>Game Over Screen</i></p>
 
 Player agency is supported in many practical ways. The game can be paused at any time, exited to the title screen mid-level, or restarted without penalty. Failure states are gentle and simply return the player to a lose screen with an option to try again. Our game does not introduce scores, streaks, or social-comparison mechanics that could potentially encourage addictive or compulsive play. Through these choices, user privacy is preserved and our model supports casual, uncommitted play without forcing long-term engagement.
 
@@ -1155,7 +1184,7 @@ The story ends with the hero freeing the dragon and leaving the princess in the 
 <div align="center">
   <img width="640" src="devlog/images/sequel_concept_art.png" alt="Sequel Mockup">  
 </div>
-<p align="center">3D Sequel Mockup</p>
+<p align="center"><i>3D Sequel Mockup</i></p>
 
 ## 9.4 Closing Thoughts
 
@@ -1164,7 +1193,7 @@ Ultimately, we appreciate the opportunity to collaborate as a team, learn from e
 <div align="center">
   <img width="540" src="devlog/images/dragon_flying.gif" alt="Dragon flying">  
 </div>
-<p align="center">Onwards to new adventures!</p>
+<p align="center"><i>Onwards to new adventures!</i></p>
 
 # 10. Contribution Statement
 
@@ -1190,3 +1219,30 @@ You can delete this section in your own repo, it's just here for information. in
 - **Documentation** of code (5% of report grade)
   - Organise your code so that it could easily be picked up by another team in the future and developed further.
   - Is your repo clearly organised? Is code well commented throughout?
+
+# References
+
+### 1\. Context‑based Steering \(12‑ray obstacle avoidance\)
+
+Reynolds, C\. W\. \(1999\)\. *Steering Behaviors For Autonomous Characters*\. Game Developers Conference \(GDC\)\.
+This is the foundational paper for character steering\. Our 12‑ray sampling, interest/danger scoring, and weighted vector synthesis all come directly from this work\.
+
+### 2\. Smart Waypoint Skipping
+
+Pelechano, N\., Allbeck, J\. M\., \&amp; Badler, N\. I\. \(2006\)\. *Parameterizing Behavior Sets for Autonomous Virtual Humans*\. ACM SIGGRAPH/Eurographics Symposium on Computer Animation \(SCA\)\.
+This paper supports our “backward scan to the farthest visible waypoint” logic and prevents oscillation between waypoints\.
+
+### 3\. 3‑Tier Progressive Recovery
+
+Van Toll, W\., Cook IV, A\., \&amp; Geraerts, R\. \(2012\)\. *Navigation Meshes and Realistic Dynamic Crowd Simulation*\. Computational Animation and Virtual Worlds\.
+This is the key reference for stuck recovery systems, matching our tiered replan → nudge → edge‑follow design\.
+
+### 4\. Box‑Swept Traversal Check \(Continuous AABB\)
+
+Redon, S\., Lin, M\. C\., \&amp; Manocha, D\. \(2004\)\. *Fast Continuous Collision Detection for Articulated Models*\. ACM Symposium on Solid and Physical Modeling\.
+This paper invented the swept‑box detection we use to fix “line‑of‑sight passes but body collides” issues\.
+
+### 5\. Smooth Facing \&amp; Animation Stabilization
+
+Gleicher, M\. \(2001\)\. *Motion Path Editing*\. ACM SIGGRAPH Symposium on Interactive 3D Graphics\.
+This work supports our smooth facing logic: displacement gating, direction hold time, and sliding‑wall priority\.
