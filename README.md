@@ -952,18 +952,50 @@ Both levels scored above the acceptable SUS benchmark of 68, confirming that use
 
 ## 6.3 Testing
 
-Along with the user studies above, we ran a structured testing program to validate the code itself. The testing documentation lives under testing/ in the repository and is summarised below. Full row-by-row execution records are kept in general_test_table.xlsx and npc_ep_test_cases.xlsx.
+Alongside the user studies above, we carried out a structured testing programme to validate the implemented game systems. Detailed testing artefacts are stored under [`devlog/testing/`](./devlog/testing/) in the repository and are summarised below. The full report is provided in [final_report.md](./devlog/testing/final_report.md).
 
-**Methodology**. We applied four testing techniques. 
+**Black-box testing** was used to verify player-visible behaviour. This included launch flow, screen transitions, gameplay rendering, controls, audio, interactions, objectives, endings, deployment, and overall game-state flow. Within this approach, two specific methods were applied:
 
-| **Technique** | **Number of Cases** | **Systems Tested** |
-| --------------- | ---------- | ---------- | 
-| Black-box testing          | 51       | Used for player-visible behaviour. This covered launch flow, screen transitions, gameplay rendering, controls, audio, interactions, objectives, endings, deployment, and game-state flow. | 
-| White-box testing          | 10       | Used for selected internal logic. These tests checked state routing, audio sync, layout helpers, overlay rendering guards, interaction prompt priority, door state transitions, mission unlock logic, and input reset behaviour. | 
-| Boundary-value testing     | 10       | Used for edge cases. These included first input, rapid input, small and large browser windows, loading delay, hold thresholds, and repeated door interaction. | 
-| Equivalence partitioning   | 7        | Used for NPC state transitions. NPC state behaviour was divided into representative classes based on current NPC state, player visibility, alert level, and trigger/completion condition. | 
+- **Boundary Value Analysis (BVA)** was used for cases around important gameplay and interface boundaries, such as first input, rapid repeated input, small and large browser windows, loading delay, hold thresholds, and repeated door interaction.
+- **Equivalence Partitioning (EP)** was used for NPC status transitions by grouping behaviour into representative classes based on NPC state, player visibility, alert level, and trigger or completion conditions.
 
-**Results**. The final result was 78/78 cases passing with 0 open bugs. Two defects were found during testing and were fixed before submission: B01, a high-severity UI scaling failure when the browser window was resized, and B02, a tutorial-exit bug where pressing E at the end of the story-mode tutorial returned the player to the start page. The failing test rows were retested after each fix and now record Pass, while the bug log keeps the historical defect record for traceability. 
+**White-box testing** was used to verify selected internal game logic directly. Through console-based execution and module inspection, the team checked internal states, functions, and decision paths that could not be fully confirmed through normal gameplay observation alone. These tests covered screen routing, audio selection, layout calculations, overlay conditions, interaction priority, door state changes, mission unlock logic, and input reset behaviour.
+
+
+### Testing Summary
+
+| Approach | Technique | Cases | Result |
+|---|---|---:|---|
+| Black-box | General functional testing | 51 | Passed |
+| Black-box | Boundary Value Analysis (BVA) | 10 | Passed |
+| Black-box | Equivalence Partitioning (EP) | 7 | Passed |
+| White-box | Targeted internal logic and state-path verification | 10 | Passed |
+| **Overall** |  | **78** | **Passed** |
+
+### Requirement Verification Traceability
+
+| Requirement / expected behaviour | Verification method | Related tests | Result |
+|---|---|---|---|
+| The game should launch and enter the correct initial flow | Black-box functional testing | BT01, BT02, BT03, BT16, BT17, BT20 | Passed |
+| The story tutorial should progress and exit correctly | Black-box functional testing, BVA, defect retest | BT04, BT18, BT19, BT24, BT25, BT26, BT27, BT28, BV06, BV07, B02 | Passed |
+| Core gameplay rendering and movement should respond correctly to player input | Black-box functional testing | BT05, BT06, BT41, BT43, BT44 | Passed |
+| The portal system should place and transfer the player correctly between linked locations | Black-box functional testing | BT45, BT46, BT47, BT48, BT49, BT50, BT51, BT52, BT53 | Passed |
+| Doors, chests, lights, notes, and extraction should respond correctly to interaction rules | Black-box functional testing, BVA, white-box | BT29, BT30, BT31, BT32, BT33, BT34, BT35, BT36, BT37, BT38, BV04, BV08, WT08, WT09 | Passed |
+| NPCs should transition correctly between `PATROL`, `SEARCH`, and `CHASE` under representative conditions | Equivalence Partitioning, black-box support cases | EPN01–EPN07, BT39, BT40 | Passed |
+| Overlays and pause-related behaviour should appear only under the correct conditions | Black-box functional testing, white-box | BT21, BT22, BT23, WT06 | Passed |
+| The correct audio behaviour should be applied for the current screen or gameplay state | Black-box functional testing, white-box | BT11, BT12, WT03, WT04 | Passed |
+| Mission progress and objective text should update when unlock conditions are met | Black-box functional testing, white-box | BT37, BT38, WT09 | Passed |
+| Hosted deployment behaviour should match the tested build expectations | Black-box functional testing, BVA | BT01, BT14, BT15, BV05 | Passed |
+| Selected internal logic should behave correctly under direct verification | White-box testing | WT01, WT02, WT05, WT06, WT07, WT10 | Passed |
+
+### Defects Found During Testing
+
+| Bug ID | Description | Status |
+|---|---|---|
+| B01 | UI scaling failed after browser resizing, causing important elements to become misaligned or no longer fully visible | Fixed and retested |
+| B02 | Pressing `E` at the end of the story-mode tutorial returned the player to the start page | Fixed and retested |
+
+In total, **78 test cases** were executed and **78 passed**. These results support confidence in the tested build for normal gameplay progression, common interactions, representative NPC behaviour, and selected internal logic. Testing was conducted primarily in **Google Chrome** using **Live Server** and **GitHub Pages**, so confidence is strongest within that environment and the scenarios covered by the selected test set.
 
 # 7. Process 
 
