@@ -829,7 +829,7 @@ stateDiagram-v2
 ```
 <p align="center"><i>Figure 5: NPC State Machine</i></p>
 
-The most complex behavior subsystem in our project is the guard AI, which was modelled as a three-state finite-state machine which lives in npcStateMachine.js. Guards start in a PATROL state and raise their alertLevel (0-100) at 34 per second while the player is in their field of view, decaying at 18 per second otherwise. Crossing the chase threshold (20) with the player still in sight triggers CHASE. Once players break line of sight by hiding behind objects, outrunning guards, or using portals, alert level drops. Once alert level hits 10 or less, guards enter a SEARCH state, scanning their surroundings for 2 seconds. 
+The most complex behavior subsystem in our project is the guard AI, which was modelled as a three-state finite-state machine which lives in npcStateMachine.js. Guards start in a PATROL state and raise their alertLevel (0-100) at 34 per second while the player is in their field of view[^2], decaying at 18 per second otherwise. Crossing the chase threshold (20) with the player still in sight triggers CHASE. Once players break line of sight by hiding behind objects, outrunning guards, or using portals, alert level drops. Once alert level hits 10 or less, guards enter a SEARCH state, scanning their surroundings for 2 seconds. 
 
 <p align="center">
   <img src="devlog/images/npcsearch.GIF" alt="NPC searching" width="640">
@@ -848,36 +848,38 @@ During the development process, the guard AI's movement and decision making and 
 
 ## 5.1 Challenge 1: NPC Pursuit AI
 
-Key to developing the kind of game we wanted was to build an NPC movement system that would reliably chase the player through multi-room environments and respond to player behavior. This meant balancing four competing goals at the same time:
+Key to developing the kind of game we wanted was to build an NPC movement system that would reliably chase the player through multi-room environments and respond to player behavior[^4]. This meant balancing four competing goals at the same time:
 
 1. Robustness (never getting stuck in narrow corridors or around corners)
 2. Responsiveness (continuously track the player)
 3. Naturalness (avoid jitter, oscillation, and robotic motion)
 4. Performance (staying close to 60 FPS in a single-threaded JS game loop)
 
-<p align="center">
-  <img src="devlog/images/npccard.GIF" alt="Early NPC pathfinding AI" width="640">
-</p>
-<p align="center"><i>Early iteration of NPC pathfinding AI</i></p>
+<div style="display: flex; align-items: center; justify-content: center; gap: 72px;">
+  <img src="devlog/images/npccard.GIF" alt="Early NPC pathfinding AI" style="height: 200px;">
+  <img src="E:\Desktop\Pathfinding Algorithm.png" alt="Improved: A* Pathfinding Algorithm" style="height: 200px;">
+</div>
+<p align="center"><i> Early iteration of NPC pathfinding AI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improved A* Pathfinding Algorithm</i></p>
 
 The guard's decision making has to plan paths in real time. In PATROL and SEARCH (see _Figure 5_), it must find fast, believable routes from any point on the map back to a known waypoint. In CHASE, it must react within a handful of frames as the player changes direction. After reviewing several tracking approaches, we chose **A\* pathfinding** as our global planner because it is a well-established algorithm for shortest-path search on graphs. To make the movement more natural in dynamic environments, we added an intelligent waypoint-skipping mechanism which scans the path backwards from the end and jumps directly to the furthest waypoint an NPC can reach.
 
-This approach was not enough as the guards would still behave clumsily in maps with many obstacles. NPCs would often get stuck in corners and if an obstacle was between them and the player, they could not go around the obstacle to continue the chase. Returning to our research, we adopted a context-based steering approach. The idea is to cast 12 equally-spaced rays around the NPC and then score each direction based on 1) how well it aligns with the desired direction and 2) how far it is from nearby obstacles. Directions that are towards the target and far from obstacles receive higher scores. A weighted sum of all valid direction vectors is then computed and normalized to obtain the final movement direction that naturally avoids obstacles while still heading toward the player. 
+This approach was not enough as the guards would still behave clumsily in maps with many obstacles. NPCs would often get stuck in corners and if an obstacle was between them and the player, they could not go around the obstacle to continue the chase. Returning to our research[^6], we adopted a **context-based steering approach.** [^3]The idea is to cast 12 equally-spaced rays around the NPC and then score each direction based on 1) how well it aligns with the desired direction and 2) how far it is from nearby obstacles. Directions that are towards the target and far from obstacles receive higher scores. A weighted sum of all valid direction vectors is then computed and normalized to obtain the final movement direction that naturally avoids obstacles while still heading toward the player. 
 
 These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occasionally still jitter near tight corners as the AI constantly recalculated the best direction. 
 
-<p align="center">
-  <img src="devlog/images/npcjitter.GIF" alt="NPC jittering near tight corners" width="640">
-</p>
-<p align="center"><i>NPC jitter near tight corners</i></p>
+<div align="center" style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
+  <img src="E:\Desktop\NPCjitter.gif" alt="NPC jittering near tight corners" width="360">
+  <img src="E:\Desktop\Context-based.png" alt="Context-based steering" width="360">
+</div>
+<p align="center"><i> NPC jitter near tight corners &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Improvred Context-based Steering Algorithm</i></p>
 
 To avoid jitter, we added three supporting mechanisms:
 
-1. A three-tier progressive recovery system to prevent the NPC from getting permanently stuck
-2. A smooth-facing algorithm to reduce jitter in rotation
-3. A box-swept traversal check to handle cases where a straight line is clear for the ray but not for the actual body
+1. **A three-tier progressive** recovery system to prevent the NPC from getting permanently stuck
+2. **A smooth-facing algorithm** to reduce jitter in rotation
+3. **A box-swept traversal check**[^5] to handle cases where a straight line is clear for the ray but not for the actual body
 
-Combining the global A\* search algorithm with local algorithms like context-based steering, line of sight occlusion, and collision detection allowed us to achieve NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
+**Combining the global A\* search algorithm with local algorithms like context-based steering,** **line of sight occlusion, and collision detection[^1]** allowed us to achieve NPC behavior that felt close to a human player, helping to strengthen our game's core stealth experience.
 
 <p align="center">
   <img src="devlog/images/npcchase.GIF" alt="NPC chasing the player" width="640">
@@ -943,7 +945,7 @@ Procedure：Ten participants were split into two groups of five to control for l
 - Each participant completed the SUS form after each level, producing both an L1 and L2 score
 
 <div align="center">
-    
+
 | **Participant** | **SUS L1** | **SUS L2** | **Difference** |
 | --------------- | ---------- | ---------- | -------------- |
 | P1              | 67.5       | 72.5       | 5.0            |
@@ -1222,27 +1224,12 @@ You can delete this section in your own repo, it's just here for information. in
 
 # References
 
-### 1\. Context‑based Steering \(12‑ray obstacle avoidance\)
+[^1]: Challacade (2021) Easy enemy AI using collider queries! [Video]. YouTube. Available at: https://youtube.com/shorts/706pUVt3xwg?si=UmY9aQOTHUbNX9AB (Accessed: 25 April 2026).
+[^2]: GDQuest (2021) The Cool Trick Game Developers Use to Make Enemy AI See You [Video]. YouTube. Available at: https://youtube.com/shorts/2EL2MVgVrso?si=MMHA8QBVbZqj2Fqc (Accessed: 25 April 2026).
+[^3]: Kukatoo (2024) How I made enemy AI in my fighting game! [Video]. YouTube. Available at: https://youtu.be/72BpLkyYnPw?si=AeXjLm9aeXgHeLR (Accessed: 25 April 2026).
+[^4]: Reynolds, C.W. (1999) Steering behaviors for autonomous characters. In: Game Developers Conference, 1999, pp. 763-782.
+[^5]: SULAIMAN, H. A., et al. (2013) 'Distance computation using axis aligned bounding box (AABB) parallel distribution of dynamic origin point', in 2013 Annual International Conference on Emerging Research Areas and 2013 International Conference on Microelectronics, Communications and Renewable Energy, Kanjirapally, India, pp. 1–6. https://doi.org/10.1109/AICERA-ICMiCR.2013.6575955
+[^6]: Van Toll, W.G., Cook IV, A.F. & Geraerts, R. (2012) A navigation mesh for dynamic environments. *Computer Animation and Virtual Worlds*, 23(6), pp. 535-546.
 
-Reynolds, C\. W\. \(1999\)\. *Steering Behaviors For Autonomous Characters*\. Game Developers Conference \(GDC\)\.
-This is the foundational paper for character steering\. Our 12‑ray sampling, interest/danger scoring, and weighted vector synthesis all come directly from this work\.
+ 
 
-### 2\. Smart Waypoint Skipping
-
-Pelechano, N\., Allbeck, J\. M\., \&amp; Badler, N\. I\. \(2006\)\. *Parameterizing Behavior Sets for Autonomous Virtual Humans*\. ACM SIGGRAPH/Eurographics Symposium on Computer Animation \(SCA\)\.
-This paper supports our “backward scan to the farthest visible waypoint” logic and prevents oscillation between waypoints\.
-
-### 3\. 3‑Tier Progressive Recovery
-
-Van Toll, W\., Cook IV, A\., \&amp; Geraerts, R\. \(2012\)\. *Navigation Meshes and Realistic Dynamic Crowd Simulation*\. Computational Animation and Virtual Worlds\.
-This is the key reference for stuck recovery systems, matching our tiered replan → nudge → edge‑follow design\.
-
-### 4\. Box‑Swept Traversal Check \(Continuous AABB\)
-
-Redon, S\., Lin, M\. C\., \&amp; Manocha, D\. \(2004\)\. *Fast Continuous Collision Detection for Articulated Models*\. ACM Symposium on Solid and Physical Modeling\.
-This paper invented the swept‑box detection we use to fix “line‑of‑sight passes but body collides” issues\.
-
-### 5\. Smooth Facing \&amp; Animation Stabilization
-
-Gleicher, M\. \(2001\)\. *Motion Path Editing*\. ACM SIGGRAPH Symposium on Interactive 3D Graphics\.
-This work supports our smooth facing logic: displacement gating, direction hold time, and sliding‑wall priority\.
