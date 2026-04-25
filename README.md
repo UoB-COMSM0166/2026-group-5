@@ -39,7 +39,7 @@ The twist mechanic was inspired by Valve's Portal series. Players can place link
   <img width="640" src="devlog/images/cutscene1.png">
 </p>
 
-The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player uncovers an uncomfortable truth: the truth behind the kingdom’s unrest is stranger, darker, and far less convenient than it first appears.
+The story begins as an all too familiar fantasy trope - rescue the princess from the big bad dragon. However, we gradually subvert that premise as the player makes an uncomfortable realization: the truth behind the kingdom’s unrest is stranger, darker, and far less convenient than it first appears.
 
 # 2. Development Team
 
