@@ -857,7 +857,7 @@ Key to developing the kind of game we wanted was to build an NPC movement system
 
 <div style="display: flex; align-items: center; justify-content: center; gap: 72px;">
   <img src="devlog/images/npccard.GIF" alt="Early NPC pathfinding AI" style="height: 200px;">
-  <img src="E:\Desktop\Pathfinding Algorithm.png" alt="Improved: A* Pathfinding Algorithm" style="height: 200px;">
+  <img src="devlog/images/PathfindingAlgorithm.png" alt="Improved: A* Pathfinding Algorithm" style="height: 200px;">
 </div>
 <p align="center"><i> Early iteration of NPC pathfinding AI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improved A* Pathfinding Algorithm</i></p>
 
@@ -868,8 +868,8 @@ This approach was not enough as the guards would still behave clumsily in maps w
 These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occasionally still jitter near tight corners as the AI constantly recalculated the best direction. 
 
 <div align="center" style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
-  <img src="E:\Desktop\NPCjitter.gif" alt="NPC jittering near tight corners" width="360">
-  <img src="E:\Desktop\Context-based.png" alt="Context-based steering" width="360">
+  <img src="devlog/images/NPCjitter.gif" alt="NPC jittering near tight corners" width="360">
+  <img src="devlog/images/Context-based.png" alt="Context-based steering" width="360">
 </div>
 <p align="center"><i> NPC jitter near tight corners &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;  Improvred Context-based Steering Algorithm</i></p>
 
