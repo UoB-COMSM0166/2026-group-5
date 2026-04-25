@@ -868,11 +868,10 @@ This approach was not enough as the guards would still behave clumsily in maps w
 
 These two strategies resulted in guards that could weave through obstacles in a way that appeared human. However, guards would occasionally still jitter near tight corners as the AI constantly recalculated the best direction. 
 
-<center>
-  <img src="devlog/images/npcjitter.GIF" alt="NPC jittering near tight corners" width="360" style="margin-right: 40px;">
-  <img src="devlog/images/contextbased.png" alt="Context-based steering" width="360">
-</center>
-<p align="center"><i> NPC jitter near tight corners &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improvred Context-based Steering Algorithm</i></p>
+<p align="center">
+  <img src="devlog/images/npcjitter.GIF" alt="NPC searching" width="640">
+</p>
+<p align="center"><i>NPC jitter near tight corners</i></p>
 
 To avoid jitter, we added three supporting mechanisms:
 
