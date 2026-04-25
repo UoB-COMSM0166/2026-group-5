@@ -856,10 +856,13 @@ Key to developing the kind of game we wanted was to build an NPC movement system
 4. Performance (staying close to 60 FPS in a single-threaded JS game loop)
 
 <center>
-  <img src="devlog/images/npccard.GIF" height="200" style="margin-right: 40px;">
-  <img src="devlog/images/PathfindingAlgorithm.png" height="200">
+<img src="devlog/images/npccard.GIF" width="300"> &nbsp;&nbsp;&nbsp;&nbsp;
+<img src="devlog/images/PathfindingAlgorithm.png" width="300">
 </center>
-<p align="center"><i> Early iteration of NPC pathfinding AI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improved A* Pathfinding Algorithm</i></p>
+<p align="center">
+<i> Early iteration of NPC pathfinding AI &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improved A* Pathfinding Algorithm</i>
+</p>
+
 
 The guard's decision making has to plan paths in real time. In PATROL and SEARCH (see _Figure 5_), it must find fast, believable routes from any point on the map back to a known waypoint. In CHASE, it must react within a handful of frames as the player changes direction. After reviewing several tracking approaches, we chose **A\* pathfinding** as our global planner because it is a well-established algorithm for shortest-path search on graphs. To make the movement more natural in dynamic environments, we added an intelligent waypoint-skipping mechanism which scans the path backwards from the end and jumps directly to the furthest waypoint an NPC can reach.
 
@@ -869,7 +872,7 @@ These two strategies resulted in guards that could weave through obstacles in a 
 
 <center>
   <img src="devlog/images/npcjitter.gif" alt="NPC jittering near tight corners" width="360" style="margin-right: 40px;">
-  <img src="devlog/images/Context-based.png" alt="Context-based steering" width="360">
+  <img src="devlog/images/contextbased.png" alt="Context-based steering" width="360">
 </center>
 <p align="center"><i> NPC jitter near tight corners &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Improvred Context-based Steering Algorithm</i></p>
 
