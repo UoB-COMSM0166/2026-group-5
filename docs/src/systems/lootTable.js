@@ -111,12 +111,12 @@ const NOTE_IDS_BY_CHEST = Object.freeze({
   }),
   map3: Object.freeze({
     'chest-3-2': 'note_1',
-    'chest-3-4': 'note_2',
+    'chest-3-3': 'note_2',
     'chest-3-5': 'note_3',
     'chest-3-6': 'note_4',
-    'chest-3-8': 'note_5',
-    'chest-3-10': 'note_6',
-    'chest-3-11': 'note_7'
+    'chest-3-7': 'note_5',
+    'chest-3-8': 'note_6',
+    'chest-3-10': 'note_7'
   })
 });
 
