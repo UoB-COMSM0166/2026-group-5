@@ -1130,6 +1130,17 @@ Our reflection on our game's wider impact focuses on the three dimensions that o
 
 ### Environmental
 
+Escape: Oh Dear Dragon! is a client-side browser game which makes no runtime or third-party network requests after initial asset load. This reduces transport and backend processing compared to a more connected game. Renderers intentionally apply culling to reduce rendering work in several places, including mapRenderer, lightingRenderer, and entityRenderer. Assets are loaded in batches in assetLoader rather than repeatedly probing the same paths.
+
+We know we have room for improvement in the environmental dimension. For example, our main draw loop runs continuously even when the game is paused or the player is in a menu. Our assetLoader requests a large set of assets up front, including tutorial/story assets, which helps with UX but increases startup time. 
+
+<p align="center">
+  <img src="devlog/images/loading.png" alt="Asset loading" width="640">
+</p>
+<p align="center"><i>Eager up-front asset loading</i></p>
+
+These and other improvements are something we would address given more time to develop the game.
+
 ### Social
 
 On the inclusiveness and diversity front, our initial approach was to make a game that was playable with one hand to support one-handed players. The original control structure is shown below. However, we also received feedback that this layout felt too clustered for many players, so we added the ability to control the character with the arrow keys. In future iterations, we would develop a similar one hand layout on the right side of the keyboard to accommodate multiple preferences. 
@@ -1139,20 +1150,45 @@ On the inclusiveness and diversity front, our initial approach was to make a gam
 </p>
 <p align="center"><i>Control Layout</i></p>
 
-A tutorial mode was also added after usability testing to introduce mechanics gradually rather than assuming prior gaming experience. Game text was tested against WCAG contrast ratio guidelines using WebAIM's contrast checker and passed both AA and AAA tests.
+A tutorial mode was also added after usability testing to introduce mechanics gradually rather than assuming prior gaming experience. Every combination of text and background was tested against WCAG contrast ratio guidelines using WebAIM's contrast checker and all combinations passed AA, with most passing AAA.
 
-We do acknowledge that the current build does not have a colorblind-safe mode, no option to change text size, and no option to resize the UI, and these are clear accessibility extensions for future versions of the game.
+We do acknowledge that the current build does not have a colorblind-safe mode, no text-resize or UI-scaling option, and these are clear accessibility extensions for future versions of the game.
 
 ### Individual
 
 On the individual dimension, we intentionally built the game to be playable without collecting personal data of any kind. Our game does not require an account, collects no analytics, does not use third-party tracking scripts, cookies, or persistent storage. A player's session is entirely local to their browser and does not leave any trace on our end once the tab is closed. This was an intentional decision we made early on as we did not find any compelling gameplay reason to introduce data collection, particularly for a student project.
+
+Our game has explicit onboarding through the tutorial mode for controls and mechanics. The tutorial also allows players to flip through pages or skip the tutorial altogether, supporting player agency. Rotating tips throughout the game also support competency building as users play the game.
 
 <p align="center">
   <img src="devlog/images/game_over.png" alt="Game over screen" width="320">
 </p>
 <p align="center"><i>Game Over Screen</i></p>
 
-Player agency is supported in many practical ways. The game can be paused at any time, exited to the title screen mid-level, or restarted without penalty. Failure states are gentle and simply return the player to a lose screen with an option to try again. Our game does not introduce scores, streaks, or social-comparison mechanics that could potentially encourage addictive or compulsive play. Through these choices, user privacy is preserved and our model supports casual, uncommitted play without forcing long-term engagement.
+We also support player agency throughout the game. Players can pause the game at any time, exit to the title screen mid-level, or restart without penalty. Failure states are non-punishing and simply return the player to a lose screen with an option to try again. Our game does not introduce scores, streaks, or social-comparison mechanics that could potentially encourage addictive or compulsive play. Through these choices, user privacy is preserved and agency is supported, and our model aligns with casual, uncommitted play without forcing long-term engagement.
+
+## 8.2 Green Software Patterns
+
+Several green software patterns are present throughout this project, and we also acknowledge room for implementing additional software patterns to improve sustainability, particularly when it comes to our image assets. 
+
+### Patterns Present
+
+- **Avoid Tracking Unnecessary Data**: We do not use analytics, local storage, or cookies. Player sessions are completely local.
+- **Avoid an Excessive DOM Size**: The DOM is static and there is no dynamic DOM growth throughout gameplay.
+- **Keep Request Counts Low**: All assets are self-hosted and we do not make any CDN calls and have no external scripts beyond p5.js.
+- **Deprecate GIFs for Animated Content**: The true ending uses MP4 video for the cutscene, which is more efficient than animated GIFs.
+
+### Sustainability Opportunities
+
+<p align="center">
+  <img src="devlog/images/notes.png" alt="Note menu" width="640">
+</p>
+<p align="center"><i>The draw loop still runs while in a menu</i></p>
+
+- **Serve Images in Modern Formats**: Sustainability could be improved by converting assets to a WebP format while preserving quality.
+- **Optimize Image Size**: Some assets are larger than their display dimensions.
+- **Minify Web Assets**: p5.js can be switched to the minified p5.min.js.
+- **Minimize Main Thread Work**: The p5 draw loop runs even when the game is paused. Preventing the loop when the game is paused would reduce CPU usage. 
 
 # 9. Conclusion
 
