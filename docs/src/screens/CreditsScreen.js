@@ -3,13 +3,15 @@ import { Screen } from './Screen.js';
 import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx } from '../utils/screenLayout.js';
 
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
+
 export class CreditsScreen extends Screen {
   constructor() {
-    super('credits', 'Press Enter to return to title');
+    super('credits', 'Press Enter / E to return to title');
   }
 
   handleKey(key, state, api) {
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       api.exitToTitle?.();
       return true;
     }
@@ -30,7 +32,7 @@ export class CreditsScreen extends Screen {
 
     setFont(p, Math.max(10, sx(12, layout)), FONTS.ui);
     p.fill('#d6d6d6');
-    p.text('Press Enter to return to title', layout.width / 2, layout.height / 2 + 28);
+    p.text('Press Enter / E to return to title', layout.width / 2, layout.height / 2 + 28);
     p.pop();
 
     state.prompt = this.promptText;

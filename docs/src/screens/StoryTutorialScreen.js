@@ -17,24 +17,28 @@ const TUTORIAL_PAGES = Object.freeze([
   './assets/images/screens/tutorial/page8_portal_space.png',
   './assets/images/screens/tutorial/page9_readnotes.png'
 ]);
+const PREVIOUS_PAGE_KEYS = new Set(['ArrowLeft', 'a', 'A']);
+const NEXT_PAGE_KEYS = new Set(['ArrowRight', 'd', 'D']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
+const HOLD_SKIP_KEYS = new Set([' ', 'Spacebar']);
 
 export class TutorialScreen extends Screen {
   #pageIndex;
   #turnDir;
   #turnT;
   #turning;
-  #eKeyTimer;
-  #eKeyHolding;
-  static SKIP_HOLD_TIME = 0.8; // seconds to hold E to skip
+  #spaceKeyTimer;
+  #spaceKeyHolding;
+  static SKIP_HOLD_TIME = 0.8; // seconds to hold Space to skip
 
   constructor() {
-    super('tutorial', 'Press ← → to flip pages');
+    super('tutorial', 'Press Left / Right or A / D to flip pages');
     this.#pageIndex = 0;
     this.#turnDir = 0;
     this.#turnT = 0;
     this.#turning = false;
-    this.#eKeyTimer = 0;
-    this.#eKeyHolding = false;
+    this.#spaceKeyTimer = 0;
+    this.#spaceKeyHolding = false;
   }
 
   reset() {
@@ -42,8 +46,8 @@ export class TutorialScreen extends Screen {
     this.#turnDir = 0;
     this.#turnT = 0;
     this.#turning = false;
-    this.#eKeyTimer = 0;
-    this.#eKeyHolding = false;
+    this.#spaceKeyTimer = 0;
+    this.#spaceKeyHolding = false;
   }
 
   update(state, deltaTime, api) {
@@ -56,18 +60,18 @@ export class TutorialScreen extends Screen {
       return;
     }
 
-    // Handle long press E: non-last pages jump to last page (last page does nothing)
-    if (this.#eKeyHolding) {
-      this.#eKeyTimer += deltaTime;
-      if (this.#eKeyTimer >= TutorialScreen.SKIP_HOLD_TIME) {
-        this.#eKeyHolding = false;
-        this.#eKeyTimer = 0;
+    // Handle long press Space: non-last pages jump to last page (last page does nothing)
+    if (this.#spaceKeyHolding) {
+      this.#spaceKeyTimer += deltaTime;
+      if (this.#spaceKeyTimer >= TutorialScreen.SKIP_HOLD_TIME) {
+        this.#spaceKeyHolding = false;
+        this.#spaceKeyTimer = 0;
         const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
         if (!isLastPage) {
           // Non-last pages: jump directly to last page
           this.#pageIndex = TUTORIAL_PAGES.length - 1;
         }
-        // Last page: no action (Enter key handles continue)
+        // Last page: no action (confirm key handles continue)
       }
     }
   }
@@ -75,26 +79,26 @@ export class TutorialScreen extends Screen {
   handleKey(key, state, api) {
     if (this.#turning) return true;
 
-    // Handle E key press/release for skip (ignore key repeat)
-    if (key === 'e' || key === 'E') {
-      if (!this.#eKeyHolding) {
-        this.#eKeyHolding = true;
-        this.#eKeyTimer = 0;
+    // Handle Space key press/release for skip (ignore key repeat)
+    if (HOLD_SKIP_KEYS.has(key)) {
+      if (!this.#spaceKeyHolding) {
+        this.#spaceKeyHolding = true;
+        this.#spaceKeyTimer = 0;
       }
       return true;
     }
 
-    if (key === 'ArrowLeft' && this.#pageIndex > 0) {
+    if (PREVIOUS_PAGE_KEYS.has(key) && this.#pageIndex > 0) {
       this.#startTurn(-1);
       return true;
     }
-    if (key === 'ArrowRight') {
+    if (NEXT_PAGE_KEYS.has(key)) {
       if (this.#pageIndex < TUTORIAL_PAGES.length - 1) {
         this.#startTurn(1);
       }
       return true;
     }
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       // On last page: Story Mode continues, non-story returns to START
       if (this.#pageIndex === TUTORIAL_PAGES.length - 1) {
         if (state.story?.fromStoryMode) {
@@ -110,9 +114,9 @@ export class TutorialScreen extends Screen {
   }
 
   onKeyUp(key, state, api) {
-    if (key === 'e' || key === 'E') {
-      this.#eKeyHolding = false;
-      this.#eKeyTimer = 0;
+    if (HOLD_SKIP_KEYS.has(key)) {
+      this.#spaceKeyHolding = false;
+      this.#spaceKeyTimer = 0;
     }
   }
 
@@ -179,7 +183,7 @@ export class TutorialScreen extends Screen {
     this.#drawPageContent(p, pageImg, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawNavButtons(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
     this.#drawPageIndicator(p, tutorialX, tutorialY, tutorialW, tutorialH, layout);
-    // Only show skip progress on non-last pages (long-press E does nothing on last page)
+    // Only show skip progress on non-last pages (long-press Space does nothing on last page)
     const isLastPage = this.#pageIndex === TUTORIAL_PAGES.length - 1;
     if (!isLastPage) {
       this.#drawSkipProgress(p, tutorialX, tutorialY, tutorialH, layout);
@@ -189,11 +193,11 @@ export class TutorialScreen extends Screen {
     let bottomText;
     const fromStory = state.story?.fromStoryMode;
     if (isLastPage && fromStory) {
-      bottomText = 'Press Enter to continue';
+      bottomText = 'Press Enter / E to continue';
     } else if (isLastPage) {
-      bottomText = 'Press Enter to return';
+      bottomText = 'Press Enter / E to return';
     } else {
-      bottomText = 'Press ← → to flip pages, hold E to end';
+      bottomText = 'Press Left / Right or A / D to flip pages, hold Space to end';
     }
 
     p.fill('#a0a0a0');
@@ -264,9 +268,9 @@ export class TutorialScreen extends Screen {
   }
 
   #drawSkipProgress(p, x, y, h, layout) {
-    if (!this.#eKeyHolding) return;
+    if (!this.#spaceKeyHolding) return;
 
-    const progress = Math.min(this.#eKeyTimer / TutorialScreen.SKIP_HOLD_TIME, 1);
+    const progress = Math.min(this.#spaceKeyTimer / TutorialScreen.SKIP_HOLD_TIME, 1);
     const barW = sx(120, layout);
     const barH = sy(4, layout);
     const barX = x + (sx(760, layout) - barW) / 2;

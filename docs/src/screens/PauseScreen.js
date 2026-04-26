@@ -22,6 +22,9 @@ const NOTE_READER_BODY_TOP = 58;
 const NOTE_READER_BODY_BOTTOM = 22;
 const NOTE_READER_LINE_HEIGHT = 28;
 const NOTE_READER_PAGE_STEP = 5;
+const NAV_UP_KEYS = new Set(['ArrowUp', 'w', 'W']);
+const NAV_DOWN_KEYS = new Set(['ArrowDown', 's', 'S']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class PauseScreen extends Screen {
   constructor() {
@@ -80,34 +83,34 @@ export class PauseScreen extends Screen {
 
     if (pause.view === PAUSE_VIEWS.MENU) {
       this.#drawPauseMenuView(p, layout, pause);
-      state.prompt = 'Arrow Up / Down to choose, Enter to confirm, Escape to resume';
+      state.prompt = 'Arrow Up / Down or W / S to choose, Enter / E to confirm, Escape to resume';
       return;
     }
 
     if (pause.view === PAUSE_VIEWS.NOTES) {
       this.#drawNotesListView(p, state, layout, pause);
-      state.prompt = 'Arrow Up / Down to choose a note, Enter to read, Escape to go back';
+      state.prompt = 'Arrow Up / Down or W / S to choose a note, Enter / E to read, Escape to go back';
       return;
     }
 
     this.#drawNoteReaderView(p, state, layout, pause);
-    state.prompt = 'Arrow Up / Down to scroll, Enter / Escape to return';
+    state.prompt = 'Arrow Up / Down or W / S to scroll, Enter / E / Escape to return';
   }
 
   #handleMainMenuKey(key, pause, api) {
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       pause.menuIndex = (pause.menuIndex - 1 + MAIN_MENU_OPTIONS.length) % MAIN_MENU_OPTIONS.length;
       api.setMessage?.(MAIN_MENU_OPTIONS[pause.menuIndex].label, 0.5);
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       pause.menuIndex = (pause.menuIndex + 1) % MAIN_MENU_OPTIONS.length;
       api.setMessage?.(MAIN_MENU_OPTIONS[pause.menuIndex].label, 0.5);
       return true;
     }
 
-    if (key !== 'Enter') return false;
+    if (!CONFIRM_KEYS.has(key)) return false;
 
     const selected = MAIN_MENU_OPTIONS[pause.menuIndex]?.id;
     if (selected === 'resume') {
@@ -141,17 +144,17 @@ export class PauseScreen extends Screen {
       return true;
     }
 
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       pause.notesIndex = (pause.notesIndex - 1 + notes.length) % notes.length;
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       pause.notesIndex = (pause.notesIndex + 1) % notes.length;
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       const selected = notes[pause.notesIndex];
       if (selected) {
         pause.selectedNoteId = selected.id;
@@ -165,12 +168,12 @@ export class PauseScreen extends Screen {
   }
 
   #handleNoteReaderKey(key, pause) {
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       pause.noteReaderScroll = Math.max(0, pause.noteReaderScroll - 1);
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       pause.noteReaderScroll += 1;
       return true;
     }
@@ -195,7 +198,7 @@ export class PauseScreen extends Screen {
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       pause.view = PAUSE_VIEWS.NOTES;
       pause.noteReaderScroll = 0;
       return true;
@@ -282,7 +285,7 @@ export class PauseScreen extends Screen {
       p,
       layout,
       'READ NOTES',
-      notes.length ? 'Enter to open note' : 'No notes collected yet'
+      notes.length ? 'Enter / E to open note' : 'No notes collected yet'
     );
 
     const box = this.#getContentBox(layout);
@@ -363,7 +366,7 @@ export class PauseScreen extends Screen {
       this.#drawListScrollCues(p, box, layout, visible.hasAbove, visible.hasBelow);
     }
 
-    this.#drawFooterHint(p, layout, 'UP / DOWN scroll  |  ESC / Enter return');
+    this.#drawFooterHint(p, layout, 'UP / DOWN scroll  |  ESC / Enter / E return');
     p.pop();
   }
 

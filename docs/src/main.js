@@ -161,7 +161,7 @@ new window.p5((p) => {
 
   p.keyPressed = (event) => {
     if (event) event.preventDefault?.();
-    game.onKeyPressed?.(p.key, p.keyCode);
+    game.onKeyPressed?.(p.key, event?.code || p.keyCode);
     return false;
   };
 

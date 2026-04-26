@@ -126,7 +126,7 @@ export class TrueEndingScreen extends Screen {
   #cutscene;
 
   constructor() {
-    super('true_ending', 'Press Enter to advance');
+    super('true_ending', 'Press Enter / E to advance');
     this.#cutscene = new CutscenePlaybackController();
   }
 

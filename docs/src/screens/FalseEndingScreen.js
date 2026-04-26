@@ -29,7 +29,7 @@ export class FalseEndingScreen extends Screen {
   #cutscene;
 
   constructor() {
-    super('false_ending', 'Press Enter to advance');
+    super('false_ending', 'Press Enter / E to advance');
     this.#cutscene = new CutscenePlaybackController();
   }
 

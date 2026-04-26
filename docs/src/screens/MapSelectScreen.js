@@ -8,12 +8,15 @@ const ROUTE_OPTIONS = Object.freeze([
   { label: 'LIBRARY (NORMAL)', route: 'library', levelId: 'map2' },
   { label: 'SALON (HARD)', route: 'salon', levelId: 'map3' }
 ]);
+const NAV_UP_KEYS = new Set(['ArrowUp', 'w', 'W']);
+const NAV_DOWN_KEYS = new Set(['ArrowDown', 's', 'S']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class MapSelectScreen extends Screen {
   #selectedIndex;
 
   constructor() {
-    super('map_select', 'Arrow Up / Down to choose, Enter to confirm');
+    super('map_select', 'Arrow Up / Down or W / S to choose, Enter / E to confirm');
     this.#selectedIndex = 0;
   }
 
@@ -22,19 +25,19 @@ export class MapSelectScreen extends Screen {
   }
 
   handleKey(key, state, api) {
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       this.#selectedIndex = (this.#selectedIndex - 1 + ROUTE_OPTIONS.length) % ROUTE_OPTIONS.length;
       api.setMessage?.(ROUTE_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       this.#selectedIndex = (this.#selectedIndex + 1) % ROUTE_OPTIONS.length;
       api.setMessage?.(ROUTE_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       const option = ROUTE_OPTIONS[this.#selectedIndex];
       state.story.selectedRoute = option.route;
       state.story.normalMode = false;

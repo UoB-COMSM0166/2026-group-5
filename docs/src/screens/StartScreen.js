@@ -8,12 +8,15 @@ import { SCREEN_STATES } from '../core/gameState.js';
 const START_BG = './assets/images/screens/start/start_bg.png';
 const DRAGON = './assets/images/screens/start/dragon.png';
 const TITLE = './assets/images/screens/start/title_logo.png';
+const NAV_UP_KEYS = new Set(['ArrowUp', 'w', 'W']);
+const NAV_DOWN_KEYS = new Set(['ArrowDown', 's', 'S']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class StartScreen extends Screen {
   #menu;
 
   constructor() {
-    super('start', 'Arrow Up / Down to choose, Enter to confirm');
+    super('start', 'Arrow Up / Down or W / S to choose, Enter / E to confirm');
     this.#menu = {
       selectedIndex: 0,
       options: ['STORY MODE', 'NORMAL MODE', 'TUTORIAL']
@@ -25,20 +28,20 @@ export class StartScreen extends Screen {
   }
 
   handleKey(key, state, api) {
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       this.#menu.selectedIndex =
         (this.#menu.selectedIndex - 1 + this.#menu.options.length) % this.#menu.options.length;
       api.setMessage?.(this.#menu.options[this.#menu.selectedIndex], 0.6);
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       this.#menu.selectedIndex = (this.#menu.selectedIndex + 1) % this.#menu.options.length;
       api.setMessage?.(this.#menu.options[this.#menu.selectedIndex], 0.6);
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       const option = this.#menu.options[this.#menu.selectedIndex];
       if (option === 'STORY MODE') {
         state.story.fromStoryMode = true;

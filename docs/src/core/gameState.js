@@ -42,7 +42,7 @@ export class GameState {
     this.#previousScreen = SCREEN_STATES.START;
     this.#levelId = null;
     this.#level = null;
-    this.#prompt = 'Press Enter to start';
+    this.#prompt = 'Press Enter / E to start';
     this.#meta = {
       collected: 0,
       target: 0,

@@ -9,12 +9,15 @@ const DIFFICULTY_OPTIONS = Object.freeze([
   { label: 'LIBRARY (NORMAL)', levelId: 'map2' },
   { label: 'SALON (HARD)', levelId: 'map3' }
 ]);
+const NAV_UP_KEYS = new Set(['ArrowUp', 'w', 'W']);
+const NAV_DOWN_KEYS = new Set(['ArrowDown', 's', 'S']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class DifficultySelectScreen extends Screen {
   #selectedIndex;
 
   constructor() {
-    super('difficulty_select', 'Arrow Up / Down to choose, Enter to confirm');
+    super('difficulty_select', 'Arrow Up / Down or W / S to choose, Enter / E to confirm');
     this.#selectedIndex = 0;
   }
 
@@ -23,19 +26,19 @@ export class DifficultySelectScreen extends Screen {
   }
 
   handleKey(key, state, api) {
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       this.#selectedIndex = (this.#selectedIndex - 1 + DIFFICULTY_OPTIONS.length) % DIFFICULTY_OPTIONS.length;
       api.setMessage?.(DIFFICULTY_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       this.#selectedIndex = (this.#selectedIndex + 1) % DIFFICULTY_OPTIONS.length;
       api.setMessage?.(DIFFICULTY_OPTIONS[this.#selectedIndex].label, 0.6);
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       const option = DIFFICULTY_OPTIONS[this.#selectedIndex];
       state.story.normalMode = true;
       api.loadStoryLevel?.(option.levelId);

@@ -4,35 +4,40 @@ import { setFont, FONTS } from '../utils/fonts.js';
 import { getLayout, sx, sy, centerGroupY } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
+const NAV_UP_KEYS = new Set(['ArrowUp', 'w', 'W']);
+const NAV_DOWN_KEYS = new Set(['ArrowDown', 's', 'S']);
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
+const HOLD_UNLOCK_KEYS = new Set([' ', 'Spacebar']);
+
 export class PlaythroughSelectScreen extends Screen {
   #selectedIndex;
-  #eKeyHolding;
-  #eKeyTimer;
-  static SKIP_HOLD_TIME = 1.2; // seconds to hold E to unlock
+  #spaceKeyHolding;
+  #spaceKeyTimer;
+  static SKIP_HOLD_TIME = 1.2; // seconds to hold Space to unlock
 
   constructor() {
-    super('playthrough_select', 'Arrow Up / Down to choose, Enter to confirm');
+    super('playthrough_select', 'Arrow Up / Down or W / S to choose, Enter / E to confirm');
     this.#selectedIndex = 0;
-    this.#eKeyHolding = false;
-    this.#eKeyTimer = 0;
+    this.#spaceKeyHolding = false;
+    this.#spaceKeyTimer = 0;
   }
 
   reset(state) {
     const secondUnlocked = Boolean(state?.story?.secondPlaythroughUnlocked);
     // Default to second playthrough if unlocked, otherwise first
     this.#selectedIndex = secondUnlocked ? 1 : 0;
-    this.#eKeyHolding = false;
-    this.#eKeyTimer = 0;
+    this.#spaceKeyHolding = false;
+    this.#spaceKeyTimer = 0;
   }
 
   update(state, deltaTime, api) {
-    // Track E key hold for unlock
-    if (this.#eKeyHolding) {
-      this.#eKeyTimer += deltaTime;
-      if (this.#eKeyTimer >= PlaythroughSelectScreen.SKIP_HOLD_TIME) {
+    // Track Space key hold for unlock
+    if (this.#spaceKeyHolding) {
+      this.#spaceKeyTimer += deltaTime;
+      if (this.#spaceKeyTimer >= PlaythroughSelectScreen.SKIP_HOLD_TIME) {
         // Unlock second playthrough
-        this.#eKeyHolding = false;
-        this.#eKeyTimer = 0;
+        this.#spaceKeyHolding = false;
+        this.#spaceKeyTimer = 0;
         if (!state.story?.secondPlaythroughUnlocked) {
           state.story.secondPlaythroughUnlocked = true;
           api.setMessage?.('Second playthrough unlocked', 1.2);
@@ -44,13 +49,13 @@ export class PlaythroughSelectScreen extends Screen {
   handleKey(key, state, api) {
     const options = this.#getOptions(state);
 
-    if (key === 'e' || key === 'E') {
-      // Start tracking E key hold for unlock
-      this.#eKeyHolding = true;
+    if (HOLD_UNLOCK_KEYS.has(key)) {
+      // Start tracking Space key hold for unlock
+      this.#spaceKeyHolding = true;
       return true;
     }
 
-    if (key === 'ArrowUp') {
+    if (NAV_UP_KEYS.has(key)) {
       const secondUnlocked = Boolean(state.story?.secondPlaythroughUnlocked);
       if (this.#selectedIndex === 0 && !secondUnlocked) {
         return true;
@@ -60,7 +65,7 @@ export class PlaythroughSelectScreen extends Screen {
       return true;
     }
 
-    if (key === 'ArrowDown') {
+    if (NAV_DOWN_KEYS.has(key)) {
       const secondUnlocked = Boolean(state.story?.secondPlaythroughUnlocked);
       if (this.#selectedIndex === 0 && !secondUnlocked) {
         return true;
@@ -70,7 +75,7 @@ export class PlaythroughSelectScreen extends Screen {
       return true;
     }
 
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       const option = options[this.#selectedIndex];
       if (!option.enabled) {
         api.setMessage?.('Complete the first playthrough to unlock this.', 1.2);
@@ -85,9 +90,9 @@ export class PlaythroughSelectScreen extends Screen {
   }
 
   onKeyUp(key, state, api) {
-    if (key === 'e' || key === 'E') {
-      this.#eKeyHolding = false;
-      this.#eKeyTimer = 0;
+    if (HOLD_UNLOCK_KEYS.has(key)) {
+      this.#spaceKeyHolding = false;
+      this.#spaceKeyTimer = 0;
     }
   }
 
@@ -224,7 +229,7 @@ export class PlaythroughSelectScreen extends Screen {
   }
 
   #getSkipButtonRect(layout) {
-    const w = sx(200, layout);
+    const w = sx(300, layout);
     const h = sy(36, layout);
     const x = layout.offsetX + layout.width - w - sx(80, layout);
     const y = layout.offsetY + sy(20, layout);
@@ -244,7 +249,7 @@ export class PlaythroughSelectScreen extends Screen {
     p.fill(unlocked ? '#ead7c2' : '#fff4d6');
     p.textAlign(p.CENTER, p.CENTER);
     setFont(p, Math.max(10, sx(14, layout)), FONTS.ui, 'bold');
-    const text = unlocked ? 'UNLOCKED' : 'SKIP (Hold E)';
+    const text = unlocked ? 'UNLOCKED' : 'SKIP (Hold Space)';
     p.text(text, btn.x + btn.w / 2, btn.y + btn.h / 2 + sy(1, layout));
 
     // Description below button in faint color

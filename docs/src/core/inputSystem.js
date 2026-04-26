@@ -22,7 +22,7 @@ export class InputSystem {
     this.#RIGHT_CODES = new Set(['KeyD', 'ArrowRight']);
     this.#UP_CODES = new Set(['KeyW', 'ArrowUp']);
     this.#DOWN_CODES = new Set(['KeyS', 'ArrowDown']);
-    this.#SPRINT_CODES = new Set(['ShiftLeft', 'ShiftRight']);
+    this.#SPRINT_CODES = new Set(['ShiftLeft', 'ShiftRight', 'Shift']);
   }
 
   // Record or remove a key press with a high-resolution timestamp.
@@ -67,7 +67,7 @@ export class InputSystem {
       this.#portalPlacePressed = true;
       this.#spaceHeld = true;
     }
-    if (k === 'e') this.#interactPressed = true;
+    if (k === 'e' || k === 'enter') this.#interactPressed = true;
     if (k === 'enter' || isSpace) this.#confirmPressed = true;
   }
 

@@ -6,14 +6,15 @@ import { getLayout, sx, sy } from '../utils/screenLayout.js';
 import { SCREEN_STATES } from '../core/gameState.js';
 
 const CAPTURED = './assets/images/screens/lose/captured.png';
+const CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class LoseScreen extends Screen {
   constructor() {
-    super('lose', 'Press Enter to retry');
+    super('lose', 'Press Enter / E to retry');
   }
 
   handleKey(key, state, api) {
-    if (key === 'Enter') {
+    if (CONFIRM_KEYS.has(key)) {
       if (api.restartCurrentStoryRun) api.restartCurrentStoryRun();
       else api.restartLevel?.();
       return true;
@@ -62,7 +63,7 @@ export class LoseScreen extends Screen {
 
     p.fill(255, 255, 255, 255 * enter * blinkAlpha);
     setFont(p, Math.max(12, sx(12, layout)), FONTS.ui);
-    p.text('Press Enter to retry', layout.width / 2, sy(265, layout));
+    p.text('Press Enter / E to retry', layout.width / 2, sy(265, layout));
     p.pop();
   }
 

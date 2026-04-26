@@ -36,7 +36,7 @@ export class IntroScreen extends Screen {
   #cutscene;
 
   constructor() {
-    super('intro', 'Press Enter to advance');
+    super('intro', 'Press Enter / E to advance');
     this.#cutscene = new CutscenePlaybackController();
   }
 

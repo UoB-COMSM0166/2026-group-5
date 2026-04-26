@@ -1,5 +1,6 @@
 // Shared ES6 controller for cutscene reveal/advance playback state.
 const DEFAULT_FINISH_HOLD_MS = 1000;
+const ADVANCE_KEYS = new Set(['Enter', 'e', 'E']);
 
 export class CutscenePlaybackController {
   #timeOffsetMs;
@@ -30,7 +31,7 @@ export class CutscenePlaybackController {
   }
 
   handleEnter(key, state, api, sceneList, options = {}) {
-    if (key !== 'Enter') return false;
+    if (!ADVANCE_KEYS.has(key)) return false;
 
     const elapsed = this.getElapsed(state.screenTimeMs);
     const currentSceneIndex = this.#getActiveSceneIndex(sceneList, elapsed);
@@ -71,7 +72,7 @@ export class CutscenePlaybackController {
 
   getPrompt(sceneList, scene, elapsed, progress, options = {}) {
     if (this.#isSequenceFinished(sceneList, elapsed)) return '';
-    return 'Press Enter to advance';
+    return 'Press Enter / E to advance';
   }
 
   isSceneFullyRevealed(scene, elapsed, progress, options = {}) {

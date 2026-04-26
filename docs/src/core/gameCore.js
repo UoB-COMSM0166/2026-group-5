@@ -21,6 +21,8 @@ const MENU_NAV_SCREENS = new Set([
   SCREEN_STATES.MAP_SELECT,
   SCREEN_STATES.PAUSE
 ]);
+const MENU_NAV_KEYS = new Set(['ArrowUp', 'ArrowDown', 'w', 'W', 's', 'S']);
+const MENU_CONFIRM_KEYS = new Set(['Enter', 'e', 'E']);
 const DOOR_STATE_OPEN = 'OPEN';
 const DOOR_STATE_CLOSED = 'CLOSED';
 const DOOR_STATE_LOCKED = 'LOCKED';
@@ -124,7 +126,7 @@ export class GameCore {
     s.meta.objective = s.level.missionSystem.getObjectiveText(s.meta.collected, s.meta.target);
     s.meta.exitDistanceText = s.level.missionSystem.isUnlocked() ? `${s.level.missionSystem.getDistanceToExit(s.level.player).toFixed(0)} px` : 'locked';
     s.inventory = new Inventory();
-    s.prompt = 'Arrow Up / Down to choose, Enter to confirm';
+    s.prompt = 'Arrow Up / Down or W / S to choose, Enter / E to confirm';
     this.#lastChasingNpcIds.clear();
     this.#syncHud();
   }
@@ -308,11 +310,11 @@ export class GameCore {
 
   // play SFX for menu navigation and non-playing screen interactions
   #playNonPlayingKeySfx(key, screen) {
-    if ((key === 'ArrowUp' || key === 'ArrowDown') && MENU_NAV_SCREENS.has(screen)) {
+    if (MENU_NAV_KEYS.has(key) && MENU_NAV_SCREENS.has(screen)) {
       this.#audio.playSfx('cursor');
       return;
     }
-    if (key === 'Enter') this.#audio.playSfx('select');
+    if (MENU_CONFIRM_KEYS.has(key)) this.#audio.playSfx('select');
   }
 
   // maps player interactions to SFX
@@ -651,7 +653,10 @@ export class GameCore {
       const a = this.#audio.getState(); this.#state.audio.currentTrack = a.currentKey; this.#state.audio.muted = a.muted; this.#syncHud(); return;
     }
     this.#input.onKeyPressed(key, keyCode);
-    if (keyCode === 27 && s.screen === SCREEN_STATES.PLAYING) { this.#togglePause(); return; }
+    if ((keyCode === 27 || keyCode === 'Escape' || key === 'Escape') && s.screen === SCREEN_STATES.PLAYING) {
+      this.#togglePause();
+      return;
+    }
     const a = this.#audio.getState(); s.audio.currentTrack = a.currentKey; s.audio.muted = a.muted; this.#syncHud();
   }
 
