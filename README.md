@@ -1248,6 +1248,19 @@ Ultimately, we appreciate the opportunity to collaborate as a team, learn from e
 
 - Summarize your team's use of AI so we know where to give you credit for work done.
 
+AI was used throughout the project primarily as a support tool for development and collaboration. During planning, we used AI to help brainstorm ideas, compare architectural approaches, and prototype before deciding which options best fit our vision of the game. When drafting our epics and user stories, AI was used to review and provide feedback to reduce repetition and improve clarity. 
+
+AI was also used during implementation as a debugging tool to help identify possible causes of errors and suggest fixes, in addition to reviewing code structure. One of the greatest uses of AI was in supporting team communication by translating documents between team members. This allowed each member to write in a language that was familiar and comfortable, helping to speed up communication when compared to writing in a non-native language.
+
+AI also played a role in the developing assets. We used tools including GPT-5.4, DALL-E, Doubao, Nanobanana, and Veo to generate and refine visual assets. We felt this appropriate as the focus of this program is on the software development process, and not graphic design. Detailed prompts were written to generate asset and cutscene concepts in a pixel-art style by specifying tone, composition, lighting, palette, and constraints through both positive and negative prompting. A sample prompt is shown below.
+
+<div align="center">
+  <img height="480" src="devlog/images/ai_prompt.png" alt="Sample AI asset generation prompt">  
+</div>
+<p align="center"><i>A sample prompt for generating assets</i></p>
+
+All AI outputs were reviewed by our team. Suggestions, generated visuals, and rewritten text were assessed for quality and fit with our project’s goals. By using AI this way, it functioned as a productivity tool and final judgment remained with the team.
+
 ### Additional Marks
 
 You can delete this section in your own repo, it's just here for information. in addition to the marks above, we will be marking you on the following two points:
